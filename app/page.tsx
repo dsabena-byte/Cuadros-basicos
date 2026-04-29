@@ -1,3 +1,4 @@
+import Script from "next/script";
 import { buildDataset } from "@/lib/dataset";
 import type { DataRow } from "@/lib/parse";
 
@@ -121,10 +122,20 @@ export default async function Page() {
 
       <div id="content"></div>
 
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" />
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" />
-      <script dangerouslySetInnerHTML={{ __html: preloadedScript }} />
-      <script src="/dashboard.js" />
+      <Script
+        src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
+        strategy="beforeInteractive"
+      />
+      <Script
+        src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"
+        strategy="beforeInteractive"
+      />
+      <Script
+        id="preload-data"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: preloadedScript }}
+      />
+      <Script src="/dashboard.js" strategy="afterInteractive" />
     </>
   );
 }
