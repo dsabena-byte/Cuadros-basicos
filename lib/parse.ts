@@ -62,13 +62,32 @@ export function tiendaKeyFromHMPDV(tienda: string): string {
 }
 
 function decodeCsvBuffer(buffer: Buffer): string {
+  // 1) BOM UTF-8 explícito → UTF-8 garantizado
+  if (buffer.length >= 3 && buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf) {
+    return buffer.toString("utf8").slice(1);
+  }
+
   const utf8 = buffer.toString("utf8");
-  if (utf8.includes("Ã©") || utf8.includes("Ã³") || utf8.includes("Ã±")) {
+
+  // 2) Si al decodificar como UTF-8 aparecen caracteres de reemplazo (U+FFFD),
+  //    el archivo NO era UTF-8 válido → fallback a windows-1252
+  if (utf8.includes("\uFFFD")) {
     return new TextDecoder("windows-1252").decode(buffer);
   }
-  if (/[\x80-\x9f]/.test(utf8)) {
+
+  // 3) Mojibake clásico: el archivo era UTF-8 pero alguien lo guardó
+  //    desde otra herramienta como Latin1, así que vemos "Ã©" en lugar de "é"
+  if (
+    utf8.includes("Ã©") ||
+    utf8.includes("Ã³") ||
+    utf8.includes("Ã±") ||
+    utf8.includes("Ã¡") ||
+    utf8.includes("Ãº") ||
+    utf8.includes("Ã­")
+  ) {
     return new TextDecoder("windows-1252").decode(buffer);
   }
+
   return utf8;
 }
 
