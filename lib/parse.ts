@@ -125,7 +125,7 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
   });
   const map = new Map<string, ContactoRow>();
   for (const r of parsed.data) {
-    const numero = pick(r, "N TIENDA", "NUMERO", "NRO TIENDA", "ID TIENDA").trim();
+    const numero = pick(r, "N° TIENDA", "N TIENDA", "Nº TIENDA", "NUMERO", "NRO TIENDA", "ID TIENDA").trim();
     const nombre = pick(r, "TIENDA", "TIENDA HMPDV", "NOMBRE TIENDA").trim();
     const cadena = pick(r, "CADENA", "CLIENTE", "CLIENTE/CADENA").trim();
     const promotor = pick(r, "PROMOTOR").trim();
