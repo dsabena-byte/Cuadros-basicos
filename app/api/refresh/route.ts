@@ -11,7 +11,6 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
-
   const url = new URL(request.url);
   const provided =
     request.headers.get("x-refresh-secret") ?? url.searchParams.get("secret") ?? "";
@@ -19,7 +18,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Revalidar la home y el endpoint de datos
   revalidatePath("/");
+  revalidatePath("/api/data");
+
   return NextResponse.json({ ok: true, refreshedAt: new Date().toISOString() });
 }
 
