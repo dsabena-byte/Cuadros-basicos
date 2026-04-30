@@ -1,30 +1,27 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { buildDataset } from "@/lib/dataset";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
-export async function POST(request: Request) {
-  const expected = process.env.REFRESH_SECRET;
-  if (!expected) {
-    return NextResponse.json(
-      { error: "REFRESH_SECRET no está configurado en el server" },
-      { status: 500 },
-    );
+export async function GET() {
+  const folderId = process.env.DRIVE_FOLDER_ID;
+  if (!folderId) {
+    return NextResponse.json({ error: "DRIVE_FOLDER_ID no está definido" }, { status: 500 });
   }
-  const url = new URL(request.url);
-  const provided =
-    request.headers.get("x-refresh-secret") ?? url.searchParams.get("secret") ?? "";
-  if (provided !== expected) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const dataset = await buildDataset(folderId);
+    return NextResponse.json(dataset, {
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        "CDN-Cache-Control": "no-store",
+        "Vercel-CDN-Cache-Control": "no-store",
+      },
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Error desconocido";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
-
-  // Revalidar la home y el endpoint de datos
-  revalidatePath("/");
-  revalidatePath("/api/data");
-
-  return NextResponse.json({ ok: true, refreshedAt: new Date().toISOString() });
-}
-
-export async function GET(request: Request) {
-  return POST(request);
 }
