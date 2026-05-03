@@ -1127,55 +1127,53 @@ function fsComputeFS(rows) {
 }
 
 function fsBuildPromotorTable() {
-  // Respetamos todos los filtros menos promotor y mes (manejamos mes manualmente).
-  const dataAll = fsApplyFilters(fsData, { mes: true, promotor: true });
-  if (dataAll.length === 0) return null;
-
-  const months = [...new Set(dataAll.map(r => r.month))].sort();
-  if (months.length === 0) return null;
-
-  const f = fsGetFilters();
-  const currentMonth = f.mes || months[months.length - 1];
-  const currIdx = months.indexOf(currentMonth);
-  const prevMonth = currIdx > 0 ? months[currIdx - 1] : null;
-
-  const dataCurr = dataAll.filter(r => r.month === currentMonth);
-  const dataPrev = prevMonth ? dataAll.filter(r => r.month === prevMonth) : [];
+  // Respetamos todos los filtros menos promotor (queremos verlos a todos).
+  // Mes se respeta si está seteado; si no, se agrega todo el período.
+  const data = fsApplyFilters(fsData, { promotor: true });
+  if (data.length === 0) return null;
 
   // Categorías a mostrar: orden fijo conocido + el resto al final
-  const catsInData = [...new Set(dataCurr.map(r => r.category))];
+  const catsInData = [...new Set(data.map(r => r.category))];
   const cats = [
     ...FS_CATEGORY_ORDER.filter(c => catsInData.includes(c)),
     ...catsInData.filter(c => !FS_CATEGORY_ORDER.includes(c)).sort(),
   ];
 
   const promotores = [...new Set(
-    dataCurr.map(r => r.promotor).filter(p => p && p !== 'Sin asignar')
+    data.map(r => r.promotor).filter(p => p && p !== 'Sin asignar')
   )].sort();
 
-  const cellFor = (rows, promotor, cat) =>
-    fsComputeFS(rows.filter(r => r.promotor === promotor && r.category === cat));
+  const cellFor = (rs, promotor, cat) =>
+    fsComputeFS(rs.filter(r => r.promotor === promotor && r.category === cat));
 
   const rows = promotores.map(p => {
     const byCat = {};
     cats.forEach(cat => {
-      const curr = cellFor(dataCurr, p, cat);
-      const prev = prevMonth ? cellFor(dataPrev, p, cat) : null;
-      const delta = (curr !== null && prev !== null) ? curr - prev : null;
-      byCat[cat] = { curr, prev, delta };
+      const curr = cellFor(data, p, cat);
+      const target = fsTargetFor(cat);
+      const delta = (curr !== null && target !== null) ? curr - target : null;
+      byCat[cat] = { curr, delta };
     });
     return { promotor: p, byCat };
   });
 
   const totalByCat = {};
   cats.forEach(cat => {
-    const curr = fsComputeFS(dataCurr.filter(r => r.category === cat));
-    const prev = prevMonth ? fsComputeFS(dataPrev.filter(r => r.category === cat)) : null;
-    const delta = (curr !== null && prev !== null) ? curr - prev : null;
-    totalByCat[cat] = { curr, prev, delta };
+    const curr = fsComputeFS(data.filter(r => r.category === cat));
+    const target = fsTargetFor(cat);
+    const delta = (curr !== null && target !== null) ? curr - target : null;
+    totalByCat[cat] = { curr, delta };
   });
 
-  return { rows, total: totalByCat, cats, currentMonth, prevMonth };
+  // Etiqueta de scope para el subtítulo
+  const f = fsGetFilters();
+  const months = [...new Set(data.map(r => r.month))].sort();
+  let scopeLabel = '';
+  if (f.mes) scopeLabel = fsMonthLabel(f.mes);
+  else if (months.length === 1) scopeLabel = fsMonthLabel(months[0]);
+  else if (months.length > 1) scopeLabel = fsMonthLabel(months[0]) + ' — ' + fsMonthLabel(months[months.length - 1]);
+
+  return { rows, total: totalByCat, cats, scopeLabel };
 }
 
 function fsCellClass(value, target) {
@@ -1201,15 +1199,12 @@ function fsFmtCellPct(v) {
 function fsFmtDelta(d) {
   if (d === null) return '';
   const v = Math.round(d * 100) / 100;
-  if (Math.abs(v) < 0.005) return '0,00';
-  return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + '%';
+  if (Math.abs(v) < 0.005) return '0,00 pp';
+  return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + ' pp';
 }
 
 function fsRenderPromotorTableHtml(t) {
-  const monthLabel = fsMonthLabel(t.currentMonth);
-  const subtitle = t.prevMonth
-    ? monthLabel + ' · Δ vs ' + fsMonthLabel(t.prevMonth)
-    : monthLabel;
+  const subtitle = (t.scopeLabel ? t.scopeLabel + ' · ' : '') + 'Δ vs objetivo';
 
   let html = '<div class="card fs-promotor-card">' +
     '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap;">' +
