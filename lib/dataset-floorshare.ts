@@ -65,12 +65,28 @@ const CLIENTE_ALIASES_RAW: Record<string, string> = {
   "walmart": "Changomas",
 };
 
-// Overrides puntuales por número de tienda. Para casos donde el nombre de
-// la tienda no comienza con la cadena (ej: "772 - Av. San Martín 1253"
-// que es Cetrogar pero el prefijo "Av." haría inferir Naldo Lombardi).
-const STORE_OVERRIDES: Record<string, string> = {
-  "772": "Cetrogar Sa",
-};
+// Overrides puntuales para tiendas cuyo nombre no comienza con la cadena.
+// El match requiere número + substring del nombre, porque el número solo
+// no es único entre cadenas (la misma fila numérica aparece en distintos
+// CSVs de Floor Share).
+type StoreOverride = { number: string; nameContains: string; cliente: string };
+const STORE_OVERRIDES: StoreOverride[] = [
+  { number: "772", nameContains: "av. san martin", cliente: "Cetrogar Sa" },
+];
+
+function lookupStoreOverride(number: string, name: string): string | undefined {
+  if (!number || !name) return undefined;
+  const ln = name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase();
+  for (const o of STORE_OVERRIDES) {
+    if (o.number !== number) continue;
+    if (!ln.includes(o.nameContains)) continue;
+    return o.cliente;
+  }
+  return undefined;
+}
 
 // Tiendas a excluir del dataset. Match case-insensitive sin acentos contra
 // substring del storeName.
@@ -235,7 +251,7 @@ export async function buildFloorShareDataset(
         // Cliente: prioridad override → inferencia desde el nombre.
         // No usamos contactos.cadena porque el lookup por número solo es
         // ambiguo (varias cadenas comparten número de tienda).
-        const overridden = r.storeNumber ? STORE_OVERRIDES[r.storeNumber] : undefined;
+        const overridden = lookupStoreOverride(r.storeNumber, r.storeName);
         const rawCliente =
           overridden || inferClienteFromName(r.storeName, cadenasByFirstWord);
         // Promotor / supervisor sí los tomamos de contactos cuando hay match.
