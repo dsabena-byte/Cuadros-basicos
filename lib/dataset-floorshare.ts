@@ -52,6 +52,19 @@ const CLIENTE_ALIASES_RAW: Record<string, string> = {
   "av": "Naldo Lombardi",
   "naldo": "Naldo Lombardi",
   "naldo lombardi": "Naldo Lombardi",
+  "tio": "Tio Musa",
+  "tio musa": "Tio Musa",
+  "ama": "Ama Hogar",
+  "ama hogar": "Ama Hogar",
+  "cetrogar": "Cetrogar Sa",
+  "cetrogar sa": "Cetrogar Sa",
+};
+
+// Overrides puntuales por número de tienda. Para casos donde el nombre de
+// la tienda no comienza con la cadena (ej: "772 - Av. San Martín 1253"
+// que es Cetrogar pero el prefijo "Av." haría inferir Naldo Lombardi).
+const STORE_OVERRIDES: Record<string, string> = {
+  "772": "Cetrogar Sa",
 };
 
 function canonicalizeKey(s: string): string {
@@ -82,6 +95,8 @@ const MULTI_WORD_BRANDS = [
   "Saturno Hogar",
   "Rodo Hogar",
   "On City",
+  "Tio Musa",
+  "Ama Hogar",
 ];
 
 function titleCaseWord(s: string): string {
@@ -193,10 +208,14 @@ export async function buildFloorShareDataset(
       }
       parsedCount++;
       for (const r of rows) {
-        const contacto = lookupContacto(contactos, r.storeNumber, r.storeName);
+        // Cliente: prioridad override → inferencia desde el nombre.
+        // No usamos contactos.cadena porque el lookup por número solo es
+        // ambiguo (varias cadenas comparten número de tienda).
+        const overridden = r.storeNumber ? STORE_OVERRIDES[r.storeNumber] : undefined;
         const rawCliente =
-          contacto?.cadena ||
-          inferClienteFromName(r.storeName, cadenasByFirstWord);
+          overridden || inferClienteFromName(r.storeName, cadenasByFirstWord);
+        // Promotor / supervisor sí los tomamos de contactos cuando hay match.
+        const contacto = lookupContacto(contactos, r.storeNumber, r.storeName);
         allRows.push({
           ...r,
           cliente: canonicalizeCliente(rawCliente),
