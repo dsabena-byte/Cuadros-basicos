@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 export const metadata: Metadata = {
-  title: "Dashboard Cumplimiento CB",
-  description: "Dashboard de cumplimiento Cuadros Básicos · Infaltables · Estratégicos",
+  title: "Dashboard Trade Marketing",
+  description: "Dashboard Trade Marketing — Cuadros Básicos · Infaltables · Estratégico · Floor Share",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
