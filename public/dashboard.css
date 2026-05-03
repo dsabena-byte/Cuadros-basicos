@@ -59,16 +59,42 @@
   .sku-meta { font-size: 10px; color: #64748b; }
   .sku-pct { text-align: right; }
   .sku-vals { font-size: 10px; color: #64748b; margin-top: 2px; }
+  /* ============= TABS ============= */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; }
+  .tab { padding: 10px 18px; background: transparent; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748b; margin-bottom: -2px; transition: color .15s, border-color .15s; }
+  .tab:hover { color: #0f172a; }
+  .tab.active { color: #1e40af; border-bottom-color: #1e40af; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* ============= FLOOR SHARE ============= */
+  .filters-fs { grid-template-columns: repeat(7, 1fr) auto; }
+  .fs-headline { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: white; border-radius: 12px; padding: 28px 32px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(15,23,42,0.15); }
+  .fs-headline-label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85; margin-bottom: 8px; font-weight: 600; }
+  .fs-headline-value { font-size: 56px; font-weight: 800; color: #e63946; line-height: 1; margin-bottom: 6px; }
+  .fs-headline-sub { font-size: 13px; opacity: 0.75; }
+  .fs-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .fs-mini-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .fs-mini-label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; letter-spacing: .3px; margin-bottom: 6px; }
+  .fs-mini-value { font-size: 24px; font-weight: 700; color: #e63946; line-height: 1.1; }
+  .fs-mini-sub { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  .fs-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .fs-charts > .chart-box:only-child { grid-column: 1 / -1; }
+  .fs-gap-table th, .fs-gap-table td { padding: 8px 10px; }
+
   @media (max-width: 1200px) {
     .filters { grid-template-columns: repeat(4, 1fr); }
+    .filters-fs { grid-template-columns: repeat(4, 1fr); }
     .kpis { grid-template-columns: repeat(4, 1fr); }
     .charts { grid-template-columns: 1fr; }
+    .fs-charts { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
     body { padding: 10px; }
     h1 { font-size: 18px; }
     .card { padding: 12px; }
     .filters { grid-template-columns: repeat(2, 1fr); }
+    .filters-fs { grid-template-columns: repeat(2, 1fr); }
     .reset-btn { grid-column: 1 / -1; height: 40px; }
     .kpis { grid-template-columns: repeat(2, 1fr); }
     .kpi .value { font-size: 20px; }
@@ -77,4 +103,7 @@
     .sku-grid { grid-template-columns: 1fr; }
     table { font-size: 11px; }
     th, td { padding: 6px; }
+    .tab { padding: 8px 12px; font-size: 13px; }
+    .fs-headline { padding: 20px 22px; }
+    .fs-headline-value { font-size: 42px; }
   }

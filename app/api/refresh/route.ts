@@ -18,8 +18,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Revalidar la home y el endpoint de datos
-  revalidatePath("/");
+  // La home es dinámica y consume /api/data desde el cliente,
+  // así que sólo revalidamos el endpoint de datos.
   revalidatePath("/api/data");
 
   return NextResponse.json({ ok: true, refreshedAt: new Date().toISOString() });

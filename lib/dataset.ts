@@ -3,14 +3,20 @@ import {
   parseContactosCsv,
   parseDataCsv,
   parseSemanaFromFilename,
+  type ContactoRow,
   type DataRow,
 } from "./parse";
+import {
+  buildFloorShareDataset,
+  type FloorShareDataset,
+} from "./dataset-floorshare";
 
 export type Dataset = {
   rows: DataRow[];
   semanas: number[];
   generatedAt: string;
   fileCount: number;
+  floorShare: FloorShareDataset | null;
 };
 
 const CONTACTOS_NAME_PATTERNS = [
@@ -33,7 +39,7 @@ export async function buildDataset(folderId: string): Promise<Dataset> {
   const csvFiles = files.filter((f) => isCsv(f.name));
 
   const contactosFile = csvFiles.find((f) => isContactos(f.name));
-  let contactos = new Map();
+  let contactos: Map<string, ContactoRow> = new Map();
   if (contactosFile) {
     const buf = await downloadFile(contactosFile.id);
     contactos = parseContactosCsv(buf);
@@ -42,7 +48,7 @@ export async function buildDataset(folderId: string): Promise<Dataset> {
   const dataFiles = csvFiles.filter((f) => f !== contactosFile);
 
   const bySemana = new Map<number, DataRow[]>();
-  await Promise.all(
+  const cbPromise = Promise.all(
     dataFiles.map(async (file) => {
       const semana = parseSemanaFromFilename(file.name);
       if (semana === null) return;
@@ -55,6 +61,13 @@ export async function buildDataset(folderId: string): Promise<Dataset> {
     }),
   );
 
+  const fsPromise = buildFloorShareDataset(folderId, contactos).catch((err) => {
+    console.error("[dataset] floor share falló, sigo sin él:", err);
+    return null;
+  });
+
+  const [, floorShare] = await Promise.all([cbPromise, fsPromise]);
+
   const allRows: DataRow[] = [];
   for (const rows of bySemana.values()) allRows.push(...rows);
 
@@ -65,5 +78,6 @@ export async function buildDataset(folderId: string): Promise<Dataset> {
     semanas,
     generatedAt: new Date().toISOString(),
     fileCount: dataFiles.length,
+    floorShare,
   };
 }

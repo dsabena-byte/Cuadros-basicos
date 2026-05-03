@@ -12,7 +12,7 @@ Drive (carpeta "Tablero CB")
                     │
                     │   onChange (Apps Script)
                     ▼
-        POST /api/refresh   →   Vercel revalida la página
+        POST /api/refresh   →   Vercel revalida /api/data
                     │
                     ▼
                 Next.js page (lee Drive, arma dataset, sirve dashboard)
@@ -23,7 +23,7 @@ Drive (carpeta "Tablero CB")
 ```
 app/
   layout.tsx                   Shell HTML
-  page.tsx                     Server component: lee dataset y renderiza dashboard
+  page.tsx                     Shell HTML, fetch del dataset desde el cliente
   api/data/route.ts            JSON crudo del dataset (debug / consumo externo)
   api/refresh/route.ts         Webhook con secret → revalida la home
 
@@ -135,6 +135,30 @@ TIPO DE TIENDA; EMAIL_PROMOTOR
 
 El join con los CSVs de datos se hace por **número de tienda** (el prefijo
 numérico de `TIENDA HMPDV`).
+
+### CSVs de Floor Share
+
+Van en la subcarpeta `floor-share/` dentro de "Tablero CB". Convención de
+nombre: **`YYYY-MM_CATEGORIA.csv`** (ej: `2026-01_COCCION.csv`,
+`2026-04_LAVADO.csv`, `2026-03_REFRIGERACION.csv`).
+
+El parser es tolerante: acepta espacios extras alrededor del separador o
+antes de `.csv`, y normaliza la categoría a minúsculas (se muestra
+capitalizada en el dashboard). Si el nombre no matchea el patrón, el
+archivo se ignora con un warning en los logs del server.
+
+Formato del CSV (pivot con doble header, exportado de la planilla):
+
+```
+Subcategoría Participación Anaquel ; Marca1 ;     ; Marca2 ;     ; …
+                                   ; Unid.  ; %Part; Unid.  ; %Part; …
+124 - Frávega Once Ciudad         ; 12     ; 5,2 ; 8      ; 3,5 ; …
+…
+```
+
+El join con contactos se hace por número de tienda (igual que CB). El %
+de Floor Share se recalcula desde unidades — el `%Part` del archivo se
+ignora para el cálculo.
 
 ## Desarrollo local
 
