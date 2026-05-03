@@ -670,8 +670,9 @@ if (btnExportEl) {
     html = html.replace(/<div id="content">[\s\S]*?<\/div>(?=\s*<scr)/, '<div id="content"></div>');
     const dataJSON = JSON.stringify(allData);
     const semanasJSON = JSON.stringify([...semanasCargadas]);
+    const fsJSON = JSON.stringify(window.__PRELOADED_FLOORSHARE__ || null);
     const closeTag = '</' + 'script>';
-    const dataScript = '<script>window.__PRELOADED_DATA__=' + dataJSON + ';window.__PRELOADED_SEMANAS__=' + semanasJSON + ';' + closeTag;
+    const dataScript = '<script>window.__PRELOADED_DATA__=' + dataJSON + ';window.__PRELOADED_SEMANAS__=' + semanasJSON + ';window.__PRELOADED_FLOORSHARE__=' + fsJSON + ';' + closeTag;
     html = html.replace('<head>', '<head>\n' + dataScript);
     const now = new Date();
     const ts = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
@@ -752,3 +753,444 @@ if (allData.length > 0) {
   populateFilters();
 }
 render();
+
+// ============= FLOOR SHARE =============
+const FS_DREAN = 'Drean';
+const FS_DREAN_COLOR = '#e63946';
+const FS_COMPETIDORES = ['Whirlpool', 'Gafa', 'Electrolux', 'Philco'];
+const FS_MES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+let fsData = [];
+let fsCharts = [];
+let fsSortKey = 'fsDrean', fsSortDir = 'desc';
+
+if (window.__PRELOADED_FLOORSHARE__ && Array.isArray(window.__PRELOADED_FLOORSHARE__.rows)) {
+  fsData = window.__PRELOADED_FLOORSHARE__.rows;
+}
+
+function fsMonthLabel(code) {
+  if (!code) return '';
+  const m = code.match(/^(\d{4})-(\d{2})$/);
+  if (!m) return code;
+  const idx = parseInt(m[2], 10) - 1;
+  return (FS_MES_NOMBRES[idx] || m[2]) + ' ' + m[1];
+}
+
+function fsTitleCase(s) {
+  if (!s) return '';
+  return s.toString().replace(/\b\p{L}/gu, c => c.toUpperCase());
+}
+
+function fsDestroyCharts() {
+  fsCharts.forEach(c => { try { c.destroy(); } catch (e) {} });
+  fsCharts = [];
+}
+
+function fsGetFilters() {
+  return {
+    mes: document.getElementById('fsMes')?.value || '',
+    cliente: document.getElementById('fsCliente')?.value || '',
+    categoria: document.getElementById('fsCategoria')?.value || '',
+    subcategoria: document.getElementById('fsSubcategoria')?.value || '',
+    tienda: document.getElementById('fsTienda')?.value || '',
+    supervisor: document.getElementById('fsSupervisor')?.value || '',
+    promotor: document.getElementById('fsPromotor')?.value || '',
+  };
+}
+
+function fsApplyFilters(data, opts) {
+  const f = fsGetFilters();
+  const skip = opts || {};
+  return data.filter(r => {
+    if (!skip.mes && f.mes && r.month !== f.mes) return false;
+    if (f.cliente && r.cliente !== f.cliente) return false;
+    if (f.categoria && r.category !== f.categoria) return false;
+    if (f.subcategoria && (r.subcategory || '') !== f.subcategoria) return false;
+    if (f.tienda && r.storeName !== f.tienda) return false;
+    if (f.supervisor && r.supervisor !== f.supervisor) return false;
+    if (f.promotor && r.promotor !== f.promotor) return false;
+    return true;
+  });
+}
+
+function fsFillSelect(id, items, current, formatter) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const v = current && items.map(String).includes(String(current)) ? current : '';
+  let html = '<option value="">' + (sel.options[0]?.text || 'Todos') + '</option>';
+  items.forEach(i => {
+    const sel2 = String(i) === String(v) ? 'selected' : '';
+    const label = formatter ? formatter(i) : escapeHtml(i);
+    html += '<option value="' + escapeHtml(i) + '" ' + sel2 + '>' + label + '</option>';
+  });
+  sel.innerHTML = html;
+}
+
+function fsPopulateFilters() {
+  const f = fsGetFilters();
+
+  const meses = [...new Set(fsData.map(r => r.month))].sort();
+  fsFillSelect('fsMes', meses, f.mes, fsMonthLabel);
+
+  let pool = fsData;
+  if (f.mes) pool = pool.filter(r => r.month === f.mes);
+
+  const clientes = [...new Set(pool.map(r => r.cliente))].sort();
+  fsFillSelect('fsCliente', clientes, f.cliente);
+
+  let poolCli = pool;
+  if (f.cliente) poolCli = poolCli.filter(r => r.cliente === f.cliente);
+
+  const cats = [...new Set(poolCli.map(r => r.category))].sort();
+  fsFillSelect('fsCategoria', cats, f.categoria, fsTitleCase);
+
+  let poolCat = poolCli;
+  if (f.categoria) poolCat = poolCat.filter(r => r.category === f.categoria);
+
+  const subs = [...new Set(poolCat.map(r => r.subcategory).filter(s => s))].sort();
+  fsFillSelect('fsSubcategoria', subs, f.subcategoria, fsTitleCase);
+
+  let poolSub = poolCat;
+  if (f.subcategoria) poolSub = poolSub.filter(r => (r.subcategory || '') === f.subcategoria);
+
+  const tiendas = [...new Set(poolSub.map(r => r.storeName))].sort();
+  fsFillSelect('fsTienda', tiendas, f.tienda);
+
+  const sups = [...new Set(poolSub.map(r => r.supervisor))].sort();
+  fsFillSelect('fsSupervisor', sups, f.supervisor);
+
+  let poolSup = poolSub;
+  if (f.supervisor) poolSup = poolSup.filter(r => r.supervisor === f.supervisor);
+
+  const proms = [...new Set(poolSup.map(r => r.promotor))].sort();
+  fsFillSelect('fsPromotor', proms, f.promotor);
+}
+
+function fsSumUnitsByBrand(rows) {
+  const map = {};
+  let total = 0;
+  let totalFromColumn = 0;
+  rows.forEach(r => {
+    const isTotal = r.brand && r.brand.toLowerCase() === 'total';
+    if (isTotal) {
+      totalFromColumn += r.units || 0;
+    } else {
+      map[r.brand] = (map[r.brand] || 0) + (r.units || 0);
+      total += r.units || 0;
+    }
+  });
+  return { byBrand: map, totalUnits: totalFromColumn || total };
+}
+
+function fsBrandShare(rows, brand) {
+  const { byBrand, totalUnits } = fsSumUnitsByBrand(rows);
+  if (!totalUnits) return null;
+  const u = byBrand[brand] || 0;
+  return (u / totalUnits) * 100;
+}
+
+function fmtPctFs(p) {
+  if (p === null || p === undefined || isNaN(p)) return '—';
+  return (Math.round(p * 10) / 10).toFixed(1) + '%';
+}
+
+function fsRender() {
+  fsDestroyCharts();
+  const cont = document.getElementById('fsContent');
+  if (!cont) return;
+
+  const fsLoaded = window.__PRELOADED_FLOORSHARE__;
+  if (!fsLoaded || !Array.isArray(fsData) || fsData.length === 0) {
+    cont.innerHTML = '<div class="empty card">📁 No hay datos de floor share aún. Subí archivos a la subcarpeta <code>floor-share/</code> de Drive con el formato <code>YYYY-MM_categoria.csv</code>.</div>';
+    return;
+  }
+
+  const f = fsGetFilters();
+  const data = fsApplyFilters(fsData);
+  if (data.length === 0) {
+    cont.innerHTML = '<div class="empty card">🔍 Sin datos para los filtros seleccionados</div>';
+    return;
+  }
+
+  const drean = fsBrandShare(data, FS_DREAN);
+  const { totalUnits, byBrand } = fsSumUnitsByBrand(data);
+  const dreanUnits = byBrand[FS_DREAN] || 0;
+  const scopeLabel = f.categoria ? fsTitleCase(f.categoria) : 'todas las categorías';
+
+  let html = '';
+
+  // Headline
+  html += '<div class="fs-headline">' +
+    '<div class="fs-headline-label">Floor Share Drean — ' + escapeHtml(scopeLabel) + '</div>' +
+    '<div class="fs-headline-value">' + fmtPctFs(drean) + '</div>' +
+    '<div class="fs-headline-sub">' + Math.round(dreanUnits).toLocaleString('es-AR') + ' unidades exhibidas / ' + Math.round(totalUnits).toLocaleString('es-AR') + ' total piso</div>' +
+    '</div>';
+
+  // Breakdown por categoría — solo si categoria = Todas
+  if (!f.categoria) {
+    const byCat = {};
+    data.forEach(r => {
+      const k = r.category;
+      if (!byCat[k]) byCat[k] = [];
+      byCat[k].push(r);
+    });
+    const cats = Object.keys(byCat).sort();
+    if (cats.length > 1) {
+      html += '<div class="fs-breakdown">';
+      cats.forEach(cat => {
+        const share = fsBrandShare(byCat[cat], FS_DREAN);
+        const sums = fsSumUnitsByBrand(byCat[cat]);
+        html += '<div class="fs-mini-card">' +
+          '<div class="fs-mini-label">' + escapeHtml(fsTitleCase(cat)) + '</div>' +
+          '<div class="fs-mini-value">' + fmtPctFs(share) + '</div>' +
+          '<div class="fs-mini-sub">' + Math.round(sums.byBrand[FS_DREAN] || 0).toLocaleString('es-AR') + ' / ' + Math.round(sums.totalUnits).toLocaleString('es-AR') + '</div>' +
+          '</div>';
+      });
+      html += '</div>';
+    }
+  }
+
+  // Charts grid
+  html += '<div class="fs-charts">';
+  html += '<div class="chart-box"><h3>📊 Ranking de marcas</h3><div class="chart-wrap tall"><canvas id="fsChRanking"></canvas></div></div>';
+
+  // Evolución mensual
+  const dataNoMes = fsApplyFilters(fsData, { mes: true });
+  const monthsInScope = [...new Set(dataNoMes.map(r => r.month))].sort();
+  if (monthsInScope.length > 1) {
+    html += '<div class="chart-box"><h3>📈 Evolución mensual — Drean</h3><div class="chart-wrap"><canvas id="fsChEvol"></canvas></div></div>';
+  }
+  html += '</div>';
+
+  // Gap vs competidores
+  html += '<div class="card"><h3 style="font-size:14px;margin-bottom:10px;">🎯 Gap vs competidores clave</h3>' +
+    '<div class="table-wrap"><table class="fs-gap-table"><thead><tr>' +
+    '<th>Competidor</th><th>FS competidor</th><th>FS Drean</th><th>Gap (pp)</th>' +
+    '</tr></thead><tbody>';
+  FS_COMPETIDORES.forEach(comp => {
+    const compShare = fsBrandShare(data, comp);
+    const dreanShare = drean;
+    if (compShare === null && (byBrand[comp] || 0) === 0) return;
+    const gap = (dreanShare !== null && compShare !== null) ? (dreanShare - compShare) : null;
+    const gapClass = gap === null ? 'pct-gray' : gap >= 0 ? 'pct-green' : 'pct-red';
+    const gapTxt = gap === null ? '—' : (gap >= 0 ? '+' : '') + (Math.round(gap * 10) / 10).toFixed(1) + ' pp';
+    html += '<tr>' +
+      '<td>' + escapeHtml(comp) + '</td>' +
+      '<td>' + fmtPctFs(compShare) + '</td>' +
+      '<td>' + fmtPctFs(dreanShare) + '</td>' +
+      '<td><span class="pct ' + gapClass + '">' + gapTxt + '</span></td>' +
+      '</tr>';
+  });
+  html += '</tbody></table></div></div>';
+
+  // Tabla detallada por tienda
+  html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+    '<h3 style="font-size:14px;">📋 Detalle por tienda</h3>' +
+    '<button class="upload-btn" id="fsBtnExport" style="background:#10b981;">📥 Exportar CSV</button>' +
+    '</div><div class="table-wrap"><table id="fsTablaDet"><thead><tr>' +
+    '<th data-sort="storeName">Tienda</th>' +
+    '<th data-sort="cliente">Cliente</th>' +
+    '<th data-sort="totalExh">Total piso</th>' +
+    '<th data-sort="dreanExh">Drean</th>' +
+    '<th data-sort="fsDrean">FS Drean</th>' +
+    '</tr></thead><tbody id="fsTBody"></tbody></table></div></div>';
+
+  cont.innerHTML = html;
+
+  fsRenderRanking(data);
+  if (monthsInScope.length > 1) fsRenderEvolucion();
+  fsRenderTabla(data);
+  fsAttachExport(data);
+  fsAttachTablaSort(data);
+}
+
+function fsRenderRanking(rows) {
+  const ctx = document.getElementById('fsChRanking');
+  if (!ctx) return;
+  const { byBrand, totalUnits } = fsSumUnitsByBrand(rows);
+  const entries = Object.entries(byBrand)
+    .filter(([b, u]) => u > 0 && b.toLowerCase() !== 'otros' && b.toLowerCase() !== 'total')
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+  if (entries.length === 0 || totalUnits === 0) return;
+
+  const labels = entries.map(([b]) => b);
+  const values = entries.map(([, u]) => (u / totalUnits) * 100);
+  const colors = labels.map(b => b === FS_DREAN ? FS_DREAN_COLOR : '#3b82f6');
+
+  fsCharts.push(new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Floor Share %', data: values.map(v => v.toFixed(1)), backgroundColor: colors }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 50 } },
+      scales: { x: { beginAtZero: true, ticks: { callback: v => v + '%' } } },
+      plugins: { legend: { display: false } }
+    },
+    plugins: [valueLabelsPlugin('horizontal')]
+  }));
+}
+
+function fsRenderEvolucion() {
+  const ctx = document.getElementById('fsChEvol');
+  if (!ctx) return;
+  const dataNoMes = fsApplyFilters(fsData, { mes: true });
+  const byMonth = {};
+  dataNoMes.forEach(r => {
+    if (!byMonth[r.month]) byMonth[r.month] = [];
+    byMonth[r.month].push(r);
+  });
+  const months = Object.keys(byMonth).sort();
+  const series = months.map(m => fsBrandShare(byMonth[m], FS_DREAN));
+
+  fsCharts.push(new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: months.map(fsMonthLabel),
+      datasets: [{
+        label: 'FS Drean',
+        data: series.map(v => v === null ? null : v.toFixed(1)),
+        borderColor: FS_DREAN_COLOR,
+        backgroundColor: FS_DREAN_COLOR + '30',
+        tension: 0.3, borderWidth: 2, fill: true,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } },
+      plugins: { legend: { display: false } }
+    }
+  }));
+}
+
+function fsBuildTablaRows(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const key = r.storeNumber + '||' + r.storeName;
+    if (!map[key]) {
+      map[key] = {
+        storeNumber: r.storeNumber, storeName: r.storeName,
+        cliente: r.cliente, supervisor: r.supervisor, promotor: r.promotor,
+        totalExh: 0, dreanExh: 0, brandExh: {}
+      };
+    }
+    const row = map[key];
+    if (r.brand.toLowerCase() === 'total') {
+      row.totalExh += r.units || 0;
+    } else {
+      row.brandExh[r.brand] = (row.brandExh[r.brand] || 0) + (r.units || 0);
+      if (r.brand === FS_DREAN) row.dreanExh += r.units || 0;
+    }
+  });
+  return Object.values(map).map(row => {
+    if (row.totalExh === 0) {
+      row.totalExh = Object.values(row.brandExh).reduce((a, b) => a + b, 0);
+    }
+    row.fsDrean = row.totalExh > 0 ? (row.dreanExh / row.totalExh) * 100 : 0;
+    return row;
+  });
+}
+
+function fsRenderTabla(rows) {
+  const tbody = document.getElementById('fsTBody');
+  if (!tbody) return;
+  const tabla = fsBuildTablaRows(rows);
+  tabla.sort((a, b) => {
+    const va = a[fsSortKey], vb = b[fsSortKey];
+    if (typeof va === 'string') return fsSortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+    return fsSortDir === 'asc' ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
+  });
+  if (tabla.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px;">Sin datos</td></tr>';
+    return;
+  }
+  tbody.innerHTML = tabla.map(r =>
+    '<tr>' +
+    '<td>' + escapeHtml(r.storeNumber ? (r.storeNumber + ' - ' + r.storeName) : r.storeName) + '</td>' +
+    '<td>' + escapeHtml(r.cliente || '—') + '</td>' +
+    '<td>' + Math.round(r.totalExh).toLocaleString('es-AR') + '</td>' +
+    '<td>' + Math.round(r.dreanExh).toLocaleString('es-AR') + '</td>' +
+    '<td><span class="pct ' + pctClass(r.fsDrean) + '">' + fmtPctFs(r.fsDrean) + '</span></td>' +
+    '</tr>'
+  ).join('');
+}
+
+function fsAttachTablaSort(rows) {
+  document.querySelectorAll('#fsTablaDet th').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.sort;
+      if (fsSortKey === k) fsSortDir = fsSortDir === 'asc' ? 'desc' : 'asc';
+      else { fsSortKey = k; fsSortDir = 'desc'; }
+      fsRenderTabla(rows);
+    });
+  });
+}
+
+function fsAttachExport(rows) {
+  const btn = document.getElementById('fsBtnExport');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const tabla = fsBuildTablaRows(rows);
+    const headers = ['Numero', 'Tienda', 'Cliente', 'Supervisor', 'Promotor', 'Total piso', 'Drean exhibido', 'FS Drean %'];
+    const lines = [headers.join(';')];
+    tabla.forEach(r => {
+      lines.push([
+        r.storeNumber,
+        '"' + (r.storeName || '').replace(/"/g, '""') + '"',
+        '"' + (r.cliente || '').replace(/"/g, '""') + '"',
+        '"' + (r.supervisor || '').replace(/"/g, '""') + '"',
+        '"' + (r.promotor || '').replace(/"/g, '""') + '"',
+        Math.round(r.totalExh),
+        Math.round(r.dreanExh),
+        (Math.round(r.fsDrean * 10) / 10).toFixed(1).replace('.', ','),
+      ].join(';'));
+    });
+    const csv = '﻿' + lines.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'floor-share-detalle-' + new Date().toISOString().slice(0, 10) + '.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+['fsMes','fsCliente','fsCategoria','fsSubcategoria','fsTienda','fsSupervisor','fsPromotor'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('change', () => { fsPopulateFilters(); fsRender(); });
+});
+
+const fsBtnReset = document.getElementById('fsBtnReset');
+if (fsBtnReset) {
+  fsBtnReset.addEventListener('click', () => {
+    ['fsMes','fsCliente','fsCategoria','fsSubcategoria','fsTienda','fsSupervisor','fsPromotor'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    fsPopulateFilters();
+    fsRender();
+  });
+}
+
+if (fsData.length > 0) fsPopulateFilters();
+fsRender();
+
+// ============= TABS =============
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab').forEach(b => {
+      const active = b.dataset.tab === target;
+      b.classList.toggle('active', active);
+      b.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      const active = p.id === 'tab-' + target;
+      p.classList.toggle('active', active);
+      if (active) p.removeAttribute('hidden');
+      else p.setAttribute('hidden', '');
+    });
+  });
+});

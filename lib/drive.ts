@@ -49,6 +49,26 @@ export async function listFolderFiles(folderId: string): Promise<DriveFile[]> {
   return files;
 }
 
+export async function findSubfolderId(
+  parentId: string,
+  name: string,
+): Promise<string | null> {
+  const drive = getDriveClient();
+  const escaped = name.replace(/'/g, "\\'");
+  const res = await drive.files.list({
+    q:
+      `'${parentId}' in parents and trashed = false ` +
+      `and mimeType = 'application/vnd.google-apps.folder' ` +
+      `and name = '${escaped}'`,
+    fields: "files(id, name)",
+    pageSize: 10,
+    supportsAllDrives: true,
+    includeItemsFromAllDrives: true,
+  });
+  const folder = res.data.files?.[0];
+  return folder?.id ?? null;
+}
+
 export async function downloadFile(fileId: string): Promise<Buffer> {
   const drive = getDriveClient();
   const res = await drive.files.get(
