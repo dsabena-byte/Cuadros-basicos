@@ -780,7 +780,6 @@ function fsGetFilters() {
     mes: document.getElementById('fsMes')?.value || '',
     cliente: document.getElementById('fsCliente')?.value || '',
     categoria: document.getElementById('fsCategoria')?.value || '',
-    subcategoria: document.getElementById('fsSubcategoria')?.value || '',
     tienda: document.getElementById('fsTienda')?.value || '',
     supervisor: document.getElementById('fsSupervisor')?.value || '',
     promotor: document.getElementById('fsPromotor')?.value || '',
@@ -794,7 +793,6 @@ function fsApplyFilters(data, opts) {
     if (!skip.mes && f.mes && r.month !== f.mes) return false;
     if (f.cliente && r.cliente !== f.cliente) return false;
     if (f.categoria && r.category !== f.categoria) return false;
-    if (f.subcategoria && (r.subcategory || '') !== f.subcategoria) return false;
     if (f.tienda && r.storeName !== f.tienda) return false;
     if (f.supervisor && r.supervisor !== f.supervisor) return false;
     if (f.promotor && r.promotor !== f.promotor) return false;
@@ -836,19 +834,13 @@ function fsPopulateFilters() {
   let poolCat = poolCli;
   if (f.categoria) poolCat = poolCat.filter(r => r.category === f.categoria);
 
-  const subs = [...new Set(poolCat.map(r => r.subcategory).filter(s => s))].sort();
-  fsFillSelect('fsSubcategoria', subs, f.subcategoria, fsTitleCase);
-
-  let poolSub = poolCat;
-  if (f.subcategoria) poolSub = poolSub.filter(r => (r.subcategory || '') === f.subcategoria);
-
-  const tiendas = [...new Set(poolSub.map(r => r.storeName))].sort();
+  const tiendas = [...new Set(poolCat.map(r => r.storeName))].sort();
   fsFillSelect('fsTienda', tiendas, f.tienda);
 
-  const sups = [...new Set(poolSub.map(r => r.supervisor))].sort();
+  const sups = [...new Set(poolCat.map(r => r.supervisor))].sort();
   fsFillSelect('fsSupervisor', sups, f.supervisor);
 
-  let poolSup = poolSub;
+  let poolSup = poolCat;
   if (f.supervisor) poolSup = poolSup.filter(r => r.supervisor === f.supervisor);
 
   const proms = [...new Set(poolSup.map(r => r.promotor))].sort();
@@ -1148,7 +1140,7 @@ function fsAttachExport(rows) {
 
 // ============= INIT FLOOR SHARE (listeners + render inicial) =============
 function initFSControls() {
-['fsMes','fsCliente','fsCategoria','fsSubcategoria','fsTienda','fsSupervisor','fsPromotor'].forEach(id => {
+['fsMes','fsCliente','fsCategoria','fsTienda','fsSupervisor','fsPromotor'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('change', () => { fsPopulateFilters(); fsRender(); });
 });
@@ -1156,7 +1148,7 @@ function initFSControls() {
 const fsBtnReset = document.getElementById('fsBtnReset');
 if (fsBtnReset) {
   fsBtnReset.addEventListener('click', () => {
-    ['fsMes','fsCliente','fsCategoria','fsSubcategoria','fsTienda','fsSupervisor','fsPromotor'].forEach(id => {
+    ['fsMes','fsCliente','fsCategoria','fsTienda','fsSupervisor','fsPromotor'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
@@ -1235,7 +1227,6 @@ function buildShell() {
           <div><label>Mes</label><select id="fsMes"><option value="">Todos</option></select></div>
           <div><label>Cliente / Cadena</label><select id="fsCliente"><option value="">Todos</option></select></div>
           <div><label>Categoría</label><select id="fsCategoria"><option value="">Todas</option></select></div>
-          <div><label>Subcategoría</label><select id="fsSubcategoria"><option value="">Todas</option></select></div>
           <div><label>Tienda</label><select id="fsTienda"><option value="">Todas</option></select></div>
           <div><label>Supervisor</label><select id="fsSupervisor"><option value="">Todos</option></select></div>
           <div><label>Promotor</label><select id="fsPromotor"><option value="">Todos</option></select></div>

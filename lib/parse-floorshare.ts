@@ -3,8 +3,7 @@ import Papa from "papaparse";
 export type FloorShareRow = {
   month: string;          // YYYY-MM
   monthLabel: string;     // "Octubre 2025"
-  category: string;       // "cocinas"
-  subcategory: string;    // "" if none
+  category: string;       // "coccion"
   storeNumber: string;    // "124"
   storeName: string;      // "Frávega Once Ciudad (Casa Central)"
   brand: string;          // "Drean"
@@ -28,14 +27,24 @@ export function monthLabelFromCode(code: string): string {
 
 export function parseFloorShareFilename(
   name: string,
-): { month: string; category: string; subcategory: string } | null {
-  const base = name.replace(/\.csv$/i, "");
-  const m = base.match(/^(\d{4})-(\d{2})_([^_]+)(?:_(.+))?$/);
+): { month: string; category: string } | null {
+  // Convención: "YYYY-MM_CATEGORIA.csv". Tolerante a:
+  // - espacios extras alrededor del separador o antes de .csv
+  // - mayúsculas/minúsculas en la extensión
+  // - underscores extra en la categoría (se colapsan a espacios)
+  const base = name.replace(/\s*\.csv\s*$/i, "");
+  const m = base.match(/^\s*(\d{4})\s*-\s*(\d{2})\s*_\s*(.+?)\s*$/);
   if (!m) return null;
+  const monthNum = parseInt(m[2], 10);
+  if (monthNum < 1 || monthNum > 12) return null;
   const month = `${m[1]}-${m[2]}`;
-  const category = m[3].trim().toLowerCase();
-  const subcategory = (m[4] ?? "").trim().toLowerCase();
-  return { month, category, subcategory };
+  const category = m[3]
+    .replace(/_+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+  if (!category) return null;
+  return { month, category };
 }
 
 function decodeCsvBuffer(buffer: Buffer): string {
@@ -104,7 +113,7 @@ function splitStoreCell(cell: string): { number: string; name: string } | null {
 
 export function parseFloorShareCsv(
   buffer: Buffer,
-  meta: { month: string; category: string; subcategory: string },
+  meta: { month: string; category: string },
 ): FloorShareRow[] {
   const text = decodeCsvBuffer(buffer).replace(/^﻿/, "");
   const firstLine = text.split("\n")[0] ?? "";
@@ -151,7 +160,6 @@ export function parseFloorShareCsv(
         month: meta.month,
         monthLabel,
         category: meta.category,
-        subcategory: meta.subcategory,
         storeNumber: store.number,
         storeName: store.name,
         brand: pair.brand,
