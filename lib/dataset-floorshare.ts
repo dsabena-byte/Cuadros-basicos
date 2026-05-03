@@ -58,6 +58,11 @@ const CLIENTE_ALIASES_RAW: Record<string, string> = {
   "ama hogar": "Ama Hogar",
   "cetrogar": "Cetrogar Sa",
   "cetrogar sa": "Cetrogar Sa",
+  "castillojujuy": "Castillo",
+  "mi": "Mi Casa",
+  "mia": "Mi Casa",
+  "mi casa": "Mi Casa",
+  "walmart": "Changomas",
 };
 
 // Overrides puntuales por número de tienda. Para casos donde el nombre de
@@ -66,6 +71,23 @@ const CLIENTE_ALIASES_RAW: Record<string, string> = {
 const STORE_OVERRIDES: Record<string, string> = {
   "772": "Cetrogar Sa",
 };
+
+// Tiendas a excluir del dataset. Match case-insensitive sin acentos contra
+// substring del storeName.
+const EXCLUDED_STORE_PATTERNS = [
+  "m y a representaciones",
+  "manuel y ricardo braude",
+];
+
+function isExcludedStore(storeName: string): boolean {
+  if (!storeName) return false;
+  const normalized = storeName
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+  return EXCLUDED_STORE_PATTERNS.some((p) => normalized.includes(p));
+}
 
 function canonicalizeKey(s: string): string {
   return (s || "")
@@ -97,6 +119,7 @@ const MULTI_WORD_BRANDS = [
   "On City",
   "Tio Musa",
   "Ama Hogar",
+  "Mi Casa",
 ];
 
 function titleCaseWord(s: string): string {
@@ -208,6 +231,7 @@ export async function buildFloorShareDataset(
       }
       parsedCount++;
       for (const r of rows) {
+        if (isExcludedStore(r.storeName)) continue;
         // Cliente: prioridad override → inferencia desde el nombre.
         // No usamos contactos.cadena porque el lookup por número solo es
         // ambiguo (varias cadenas comparten número de tienda).

@@ -1347,7 +1347,7 @@ function buildShell() {
   const root = document.getElementById('root');
   if (!root) return;
   root.innerHTML = `
-    <h1>📊 Dashboard Cumplimiento Cuadros Básicos</h1>
+    <h1>Dashboard Trade Marketing</h1>
     <div class="sub">Análisis multi-semana · CB · Infaltables · Estratégico · Floor Share</div>
 
     <div class="tabs" role="tablist">
