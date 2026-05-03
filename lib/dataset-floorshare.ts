@@ -28,6 +28,48 @@ function isCsv(name: string): boolean {
   return /\.csv$/i.test(name);
 }
 
+// Unifica variantes de nombre de cliente al canónico. La key se compara
+// normalizada (lowercase, sin acentos, sin puntos, espacios colapsados).
+const CLIENTE_ALIASES_RAW: Record<string, string> = {
+  "walmater": "Changomas",
+  "chango": "Changomas",
+  "changomas": "Changomas",
+  "authogar": "Autohogar",
+  "autohogar": "Autohogar",
+  "casa": "La Casa Del Audio",
+  "casa del audio": "La Casa Del Audio",
+  "la casa del audio": "La Casa Del Audio",
+  "fravega": "Frávega",
+  "fravega sa": "Frávega",
+  "fravega s a": "Frávega",
+  "electronica": "On City",
+  "on city": "On City",
+  "radio sapienza": "Radio Sapienza",
+  "radio sapienza sa": "Radio Sapienza",
+  "saturno hogar": "Saturno Hogar",
+  "saturno hogar sa": "Saturno Hogar",
+  "tevelin": "Tevelín",
+  "av": "Naldo Lombardi",
+  "naldo": "Naldo Lombardi",
+  "naldo lombardi": "Naldo Lombardi",
+};
+
+function canonicalizeKey(s: string): string {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function canonicalizeCliente(s: string): string {
+  if (!s) return s;
+  const key = canonicalizeKey(s);
+  return CLIENTE_ALIASES_RAW[key] || s;
+}
+
 // Marcas multi-palabra que el matching por primera palabra fallaría.
 // Se chequean primero (orden importa: la más larga primero).
 const MULTI_WORD_BRANDS = [
@@ -152,11 +194,12 @@ export async function buildFloorShareDataset(
       parsedCount++;
       for (const r of rows) {
         const contacto = lookupContacto(contactos, r.storeNumber, r.storeName);
+        const rawCliente =
+          contacto?.cadena ||
+          inferClienteFromName(r.storeName, cadenasByFirstWord);
         allRows.push({
           ...r,
-          cliente:
-            contacto?.cadena ||
-            inferClienteFromName(r.storeName, cadenasByFirstWord),
+          cliente: canonicalizeCliente(rawCliente),
           promotor: contacto?.promotor || "Sin asignar",
           supervisor: contacto?.supervisor || "Sin asignar",
         });
