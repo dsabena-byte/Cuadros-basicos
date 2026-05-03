@@ -73,11 +73,22 @@
   .fs-headline-label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85; margin-bottom: 8px; font-weight: 600; }
   .fs-headline-value { font-size: 56px; font-weight: 800; color: #e63946; line-height: 1; margin-bottom: 6px; }
   .fs-headline-sub { font-size: 13px; opacity: 0.75; }
+  .fs-headline-target { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 18px; font-weight: 700; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.2); }
+  .fs-headline-target .fs-target-label { font-size: 13px; font-weight: 600; opacity: 0.85; text-transform: uppercase; letter-spacing: .5px; }
+  .fs-headline-target .fs-target-val { font-size: 22px; font-weight: 800; }
   .fs-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
   .fs-mini-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .fs-mini-label { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 600; letter-spacing: .3px; margin-bottom: 6px; }
   .fs-mini-value { font-size: 24px; font-weight: 700; color: #e63946; line-height: 1.1; }
   .fs-mini-sub { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+  .fs-mini-target { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1; }
+  .fs-mini-target .fs-target-val { color: #475569; }
+  .fs-delta-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; line-height: 1.4; }
+  .fs-delta-pos { background: #d1fae5; color: #065f46; }
+  .fs-delta-neg { background: #fee2e2; color: #991b1b; }
+  .fs-headline-target .fs-delta-pill { background: rgba(255,255,255,0.18); color: white; font-size: 16px; padding: 4px 14px; }
+  .fs-headline-target .fs-delta-pill.fs-delta-pos { background: #10b981; color: white; }
+  .fs-headline-target .fs-delta-pill.fs-delta-neg { background: #ef4444; color: white; }
   .fs-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .fs-charts > .chart-box:only-child { grid-column: 1 / -1; }
   .fs-gap-table th, .fs-gap-table td { padding: 8px 10px; }

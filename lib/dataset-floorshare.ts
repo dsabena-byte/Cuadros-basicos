@@ -28,6 +28,114 @@ function isCsv(name: string): boolean {
   return /\.csv$/i.test(name);
 }
 
+// Unifica variantes de nombre de cliente al canónico. La key se compara
+// normalizada (lowercase, sin acentos, sin puntos, espacios colapsados).
+const CLIENTE_ALIASES_RAW: Record<string, string> = {
+  "walmater": "Changomas",
+  "chango": "Changomas",
+  "changomas": "Changomas",
+  "authogar": "Autohogar",
+  "autohogar": "Autohogar",
+  "casa": "La Casa Del Audio",
+  "casa del audio": "La Casa Del Audio",
+  "la casa del audio": "La Casa Del Audio",
+  "fravega": "Frávega",
+  "fravega sa": "Frávega",
+  "fravega s a": "Frávega",
+  "electronica": "On City",
+  "on city": "On City",
+  "radio sapienza": "Radio Sapienza",
+  "radio sapienza sa": "Radio Sapienza",
+  "saturno hogar": "Saturno Hogar",
+  "saturno hogar sa": "Saturno Hogar",
+  "tevelin": "Tevelín",
+  "av": "Naldo Lombardi",
+  "naldo": "Naldo Lombardi",
+  "naldo lombardi": "Naldo Lombardi",
+  "tio": "Tio Musa",
+  "tio musa": "Tio Musa",
+  "ama": "Ama Hogar",
+  "ama hogar": "Ama Hogar",
+  "cetrogar": "Cetrogar Sa",
+  "cetrogar sa": "Cetrogar Sa",
+};
+
+// Overrides puntuales por número de tienda. Para casos donde el nombre de
+// la tienda no comienza con la cadena (ej: "772 - Av. San Martín 1253"
+// que es Cetrogar pero el prefijo "Av." haría inferir Naldo Lombardi).
+const STORE_OVERRIDES: Record<string, string> = {
+  "772": "Cetrogar Sa",
+};
+
+function canonicalizeKey(s: string): string {
+  return (s || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/\./g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function canonicalizeCliente(s: string): string {
+  if (!s) return s;
+  const key = canonicalizeKey(s);
+  return CLIENTE_ALIASES_RAW[key] || s;
+}
+
+// Marcas multi-palabra que el matching por primera palabra fallaría.
+// Se chequean primero (orden importa: la más larga primero).
+const MULTI_WORD_BRANDS = [
+  "La Casa Del Audio",
+  "Casa Del Audio",
+  "Radio Sapienza",
+  "Oscar Barbieri",
+  "Genesio Hogar",
+  "Petenatti Hogar",
+  "Saturno Hogar",
+  "Rodo Hogar",
+  "On City",
+  "Tio Musa",
+  "Ama Hogar",
+];
+
+function titleCaseWord(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+function inferClienteFromName(
+  storeName: string,
+  cadenasByFirstWord: Map<string, string>,
+): string {
+  const trimmed = (storeName || "").trim();
+  if (!trimmed) return "Sin asignar";
+  const lower = trimmed.toLowerCase();
+
+  for (const brand of MULTI_WORD_BRANDS) {
+    const bl = brand.toLowerCase();
+    if (lower === bl || lower.startsWith(bl + " ")) return brand;
+  }
+
+  const first = lower.split(/\s+/)[0] || "";
+  if (!first) return "Sin asignar";
+  const known = cadenasByFirstWord.get(first);
+  if (known) return known;
+  return titleCaseWord(first);
+}
+
+function buildCadenasByFirstWord(
+  contactos: Map<string, ContactoRow>,
+): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const c of contactos.values()) {
+    const cadena = (c.cadena || "").trim();
+    if (!cadena) continue;
+    const first = cadena.toLowerCase().split(/\s+/)[0];
+    if (first && !map.has(first)) map.set(first, cadena);
+  }
+  return map;
+}
+
 function lookupContacto(
   contactos: Map<string, ContactoRow>,
   storeNumber: string,
@@ -72,6 +180,7 @@ export async function buildFloorShareDataset(
     return null;
   }
   const csvFiles = files.filter((f) => isCsv(f.name));
+  const cadenasByFirstWord = buildCadenasByFirstWord(contactos);
 
   const allRows: FloorShareEnrichedRow[] = [];
   let parsedCount = 0;
@@ -99,10 +208,17 @@ export async function buildFloorShareDataset(
       }
       parsedCount++;
       for (const r of rows) {
+        // Cliente: prioridad override → inferencia desde el nombre.
+        // No usamos contactos.cadena porque el lookup por número solo es
+        // ambiguo (varias cadenas comparten número de tienda).
+        const overridden = r.storeNumber ? STORE_OVERRIDES[r.storeNumber] : undefined;
+        const rawCliente =
+          overridden || inferClienteFromName(r.storeName, cadenasByFirstWord);
+        // Promotor / supervisor sí los tomamos de contactos cuando hay match.
         const contacto = lookupContacto(contactos, r.storeNumber, r.storeName);
         allRows.push({
           ...r,
-          cliente: contacto?.cadena || "Sin asignar",
+          cliente: canonicalizeCliente(rawCliente),
           promotor: contacto?.promotor || "Sin asignar",
           supervisor: contacto?.supervisor || "Sin asignar",
         });
