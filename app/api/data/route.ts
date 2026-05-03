@@ -3,8 +3,7 @@ import { buildDataset } from "@/lib/dataset";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 0;
-export const fetchCache = "force-no-store";
+export const revalidate = 60;
 
 export async function GET() {
   const folderId = process.env.DRIVE_FOLDER_ID;
@@ -15,9 +14,7 @@ export async function GET() {
     const dataset = await buildDataset(folderId);
     return NextResponse.json(dataset, {
       headers: {
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        "CDN-Cache-Control": "no-store",
-        "Vercel-CDN-Cache-Control": "no-store",
+        "Cache-Control": "s-maxage=60, stale-while-revalidate=300",
       },
     });
   } catch (err) {

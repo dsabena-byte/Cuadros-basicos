@@ -172,14 +172,6 @@ let semanasCargadas = new Set();
 let chartInstances = [];
 let sortKey = 'pctCB', sortDir = 'asc';
 
-// Cargar datos pre-embebidos si existen
-if (typeof window.__PRELOADED_DATA__ !== 'undefined' && Array.isArray(window.__PRELOADED_DATA__)) {
-  allData = window.__PRELOADED_DATA__;
-  if (Array.isArray(window.__PRELOADED_SEMANAS__)) {
-    semanasCargadas = new Set(window.__PRELOADED_SEMANAS__);
-  }
-}
-
 // ============= PARSEO CSV =============
 function parseCSVText(text, semana) {
   if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
@@ -657,7 +649,8 @@ function attachSortHandlers() {
   });
 }
 
-// ============= EXPORTAR =============
+// ============= INIT CB (listeners + render inicial) =============
+function initCBControls() {
 const btnExportEl = document.getElementById('btnExport');
 if (btnExportEl) {
   btnExportEl.addEventListener('click', () => {
@@ -747,12 +740,12 @@ if (btnResetEl) {
   });
 }
 
-// ============= INIT =============
 if (allData.length > 0) {
   updateBadges();
   populateFilters();
 }
 render();
+}
 
 // ============= FLOOR SHARE =============
 const FS_DREAN = 'Drean';
@@ -763,10 +756,6 @@ const FS_MES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio'
 let fsData = [];
 let fsCharts = [];
 let fsSortKey = 'fsDrean', fsSortDir = 'desc';
-
-if (window.__PRELOADED_FLOORSHARE__ && Array.isArray(window.__PRELOADED_FLOORSHARE__.rows)) {
-  fsData = window.__PRELOADED_FLOORSHARE__.rows;
-}
 
 function fsMonthLabel(code) {
   if (!code) return '';
@@ -1157,6 +1146,8 @@ function fsAttachExport(rows) {
   });
 }
 
+// ============= INIT FLOOR SHARE (listeners + render inicial) =============
+function initFSControls() {
 ['fsMes','fsCliente','fsCategoria','fsSubcategoria','fsTienda','fsSupervisor','fsPromotor'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('change', () => { fsPopulateFilters(); fsRender(); });
@@ -1176,8 +1167,10 @@ if (fsBtnReset) {
 
 if (fsData.length > 0) fsPopulateFilters();
 fsRender();
+}
 
 // ============= TABS =============
+function initTabs() {
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.tab;
@@ -1194,3 +1187,131 @@ document.querySelectorAll('.tab').forEach(btn => {
     });
   });
 });
+}
+
+// ============= SHELL HTML =============
+function buildShell() {
+  const root = document.getElementById('root');
+  if (!root) return;
+  root.innerHTML = `
+    <h1>📊 Dashboard Cumplimiento Cuadros Básicos</h1>
+    <div class="sub">Análisis multi-semana · CB · Infaltables · Estratégico · Floor Share</div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="cb" role="tab" aria-selected="true">Cumplimiento CB</button>
+      <button class="tab" data-tab="floorshare" role="tab" aria-selected="false">Floor Share</button>
+    </div>
+
+    <section id="tab-cb" class="tab-panel active">
+      <div class="card upload-card">
+        <div class="upload-row">
+          <input type="file" id="fileInput" accept=".csv" multiple style="display:none" />
+          <button class="upload-btn">+ Sumar semana(s)</button>
+          <button class="upload-btn" id="btnExport" style="background:#10b981">📥 Exportar HTML con datos</button>
+          <div class="upload-info" id="dataInfo"></div>
+          <div id="semanasBadges" style="margin-left:auto"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="filters">
+          <div><label>Mes</label><select id="fMes"><option value="">Todos</option></select></div>
+          <div><label>Semana</label><select id="fSemana"><option value="">Todos</option></select></div>
+          <div><label>Categoría</label><select id="fDivision"><option value="">Todos</option></select></div>
+          <div><label>Supervisor</label><select id="fSupervisor"><option value="">Todos</option></select></div>
+          <div><label>Promotor</label><select id="fPromotor"><option value="">Todos</option></select></div>
+          <div><label>Cliente / Cadena</label><select id="fCliente"><option value="">Todos</option></select></div>
+          <div><label>Tienda</label><select id="fTienda"><option value="">Todos</option></select></div>
+          <button class="reset-btn" id="btnReset">↺ Limpiar</button>
+        </div>
+      </div>
+
+      <div id="content"></div>
+    </section>
+
+    <section id="tab-floorshare" class="tab-panel" hidden>
+      <div class="card">
+        <div class="filters filters-fs">
+          <div><label>Mes</label><select id="fsMes"><option value="">Todos</option></select></div>
+          <div><label>Cliente / Cadena</label><select id="fsCliente"><option value="">Todos</option></select></div>
+          <div><label>Categoría</label><select id="fsCategoria"><option value="">Todas</option></select></div>
+          <div><label>Subcategoría</label><select id="fsSubcategoria"><option value="">Todas</option></select></div>
+          <div><label>Tienda</label><select id="fsTienda"><option value="">Todas</option></select></div>
+          <div><label>Supervisor</label><select id="fsSupervisor"><option value="">Todos</option></select></div>
+          <div><label>Promotor</label><select id="fsPromotor"><option value="">Todos</option></select></div>
+          <button class="reset-btn" id="fsBtnReset">↺ Limpiar</button>
+        </div>
+      </div>
+
+      <div id="fsContent"></div>
+    </section>
+  `;
+}
+
+function showLoader() {
+  const root = document.getElementById('root');
+  if (root) root.innerHTML = '<div class="card empty">⏳ Cargando dashboard…</div>';
+}
+
+function showError(msg) {
+  const root = document.getElementById('root');
+  if (root) root.innerHTML = '<div class="card empty">⚠️ ' + escapeHtml(msg) + '</div>';
+}
+
+function applyDataset(data) {
+  allData = Array.isArray(data && data.rows) ? data.rows : [];
+  semanasCargadas = new Set(Array.isArray(data && data.semanas) ? data.semanas : []);
+  fsData = (data && data.floorShare && Array.isArray(data.floorShare.rows)) ? data.floorShare.rows : [];
+  window.__DATA__ = data || null;
+  window.__PRELOADED_FLOORSHARE__ = (data && data.floorShare) || null;
+}
+
+async function boot() {
+  // Modo "viewer offline": HTML exportado con datos pre-embebidos
+  const hasPreloaded = typeof window.__PRELOADED_DATA__ !== 'undefined' && Array.isArray(window.__PRELOADED_DATA__);
+  if (hasPreloaded) {
+    applyDataset({
+      rows: window.__PRELOADED_DATA__,
+      semanas: Array.isArray(window.__PRELOADED_SEMANAS__) ? window.__PRELOADED_SEMANAS__ : [],
+      floorShare: window.__PRELOADED_FLOORSHARE__ || null,
+    });
+    buildShell();
+    initCBControls();
+    initFSControls();
+    initTabs();
+    return;
+  }
+
+  showLoader();
+  let data;
+  try {
+    const res = await fetch('/api/data', { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+  } catch (err) {
+    showError('No se pudo cargar el dataset: ' + (err && err.message ? err.message : err));
+    return;
+  }
+  if (data && data.error) {
+    showError(data.error);
+    return;
+  }
+
+  applyDataset(data);
+
+  if (allData.length === 0 && fsData.length === 0) {
+    showError('No se encontraron CSVs con datos en la carpeta de Drive.');
+    return;
+  }
+
+  buildShell();
+  initCBControls();
+  initFSControls();
+  initTabs();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}

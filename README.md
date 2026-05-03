@@ -12,7 +12,7 @@ Drive (carpeta "Tablero CB")
                     │
                     │   onChange (Apps Script)
                     ▼
-        POST /api/refresh   →   Vercel revalida la página
+        POST /api/refresh   →   Vercel revalida /api/data
                     │
                     ▼
                 Next.js page (lee Drive, arma dataset, sirve dashboard)
@@ -23,7 +23,7 @@ Drive (carpeta "Tablero CB")
 ```
 app/
   layout.tsx                   Shell HTML
-  page.tsx                     Server component: lee dataset y renderiza dashboard
+  page.tsx                     Shell HTML, fetch del dataset desde el cliente
   api/data/route.ts            JSON crudo del dataset (debug / consumo externo)
   api/refresh/route.ts         Webhook con secret → revalida la home
 
