@@ -752,6 +752,13 @@ const FS_DREAN = 'Drean';
 const FS_DREAN_COLOR = '#e63946';
 const FS_COMPETIDORES = ['Whirlpool', 'Gafa', 'Electrolux', 'Philco'];
 const FS_MES_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+// Objetivos por categoría (Floor Share Drean %). Keys = `r.category` normalizado.
+const FS_TARGETS = { lavado: 32, refrigeracion: 25, coccion: 23 };
+function fsTargetFor(cat) {
+  if (!cat) return null;
+  const key = String(cat).trim().toLowerCase();
+  return Object.prototype.hasOwnProperty.call(FS_TARGETS, key) ? FS_TARGETS[key] : null;
+}
 
 let fsData = [];
 let fsCharts = [];
@@ -900,11 +907,21 @@ function fsRender() {
 
   let html = '';
 
-  // Headline
+  // Headline (con objetivo + desvío si hay categoría seleccionada)
+  const headlineTarget = fsTargetFor(f.categoria);
+  let headlineTargetHtml = '';
+  if (headlineTarget !== null && drean !== null) {
+    const delta = drean - headlineTarget;
+    const deltaCls = delta >= 0 ? 'fs-delta-pos' : 'fs-delta-neg';
+    const deltaTxt = (delta >= 0 ? '+' : '') + (Math.round(delta * 10) / 10).toFixed(1) + ' pp';
+    headlineTargetHtml = '<div class="fs-headline-target">Objetivo: ' + headlineTarget + '% · ' +
+      '<span class="' + deltaCls + '">Desvío ' + deltaTxt + '</span></div>';
+  }
   html += '<div class="fs-headline">' +
     '<div class="fs-headline-label">Floor Share Drean — ' + escapeHtml(scopeLabel) + '</div>' +
     '<div class="fs-headline-value">' + fmtPctFs(drean) + '</div>' +
     '<div class="fs-headline-sub">' + Math.round(dreanUnits).toLocaleString('es-AR') + ' unidades exhibidas / ' + Math.round(totalUnits).toLocaleString('es-AR') + ' total piso</div>' +
+    headlineTargetHtml +
     '</div>';
 
   // Breakdown por categoría — solo si categoria = Todas
@@ -921,10 +938,20 @@ function fsRender() {
       cats.forEach(cat => {
         const share = fsBrandShare(byCat[cat], FS_DREAN);
         const sums = fsSumUnitsByBrand(byCat[cat]);
+        const target = fsTargetFor(cat);
+        let targetHtml = '';
+        if (target !== null && share !== null) {
+          const delta = share - target;
+          const deltaCls = delta >= 0 ? 'fs-delta-pos' : 'fs-delta-neg';
+          const deltaTxt = (delta >= 0 ? '+' : '') + (Math.round(delta * 10) / 10).toFixed(1) + ' pp';
+          targetHtml = '<div class="fs-mini-target">Obj: ' + target + '% · ' +
+            '<span class="' + deltaCls + '">' + deltaTxt + '</span></div>';
+        }
         html += '<div class="fs-mini-card">' +
           '<div class="fs-mini-label">' + escapeHtml(fsTitleCase(cat)) + '</div>' +
           '<div class="fs-mini-value">' + fmtPctFs(share) + '</div>' +
           '<div class="fs-mini-sub">' + Math.round(sums.byBrand[FS_DREAN] || 0).toLocaleString('es-AR') + ' / ' + Math.round(sums.totalUnits).toLocaleString('es-AR') + '</div>' +
+          targetHtml +
           '</div>';
       });
       html += '</div>';
@@ -942,6 +969,14 @@ function fsRender() {
     html += '<div class="chart-box"><h3>📈 Evolución mensual — Drean</h3><div class="chart-wrap"><canvas id="fsChEvol"></canvas></div></div>';
   }
   html += '</div>';
+
+  // Floor Share por cliente
+  const clientesEntries = fsBuildClienteShares(data);
+  if (clientesEntries.length > 0) {
+    const minH = Math.max(280, clientesEntries.length * 26 + 60);
+    html += '<div class="chart-box"><h3>🏪 Floor Share Drean por cliente</h3>' +
+      '<div class="chart-wrap" style="height:' + minH + 'px"><canvas id="fsChClientes"></canvas></div></div>';
+  }
 
   // Gap vs competidores
   html += '<div class="card"><h3 style="font-size:14px;margin-bottom:10px;">🎯 Gap vs competidores clave</h3>' +
@@ -969,8 +1004,8 @@ function fsRender() {
     '<h3 style="font-size:14px;">📋 Detalle por tienda</h3>' +
     '<button class="upload-btn" id="fsBtnExport" style="background:#10b981;">📥 Exportar CSV</button>' +
     '</div><div class="table-wrap"><table id="fsTablaDet"><thead><tr>' +
-    '<th data-sort="storeName">Tienda</th>' +
     '<th data-sort="cliente">Cliente</th>' +
+    '<th data-sort="storeName">Tienda</th>' +
     '<th data-sort="totalExh">Total piso</th>' +
     '<th data-sort="dreanExh">Drean</th>' +
     '<th data-sort="fsDrean">FS Drean</th>' +
@@ -980,9 +1015,68 @@ function fsRender() {
 
   fsRenderRanking(data);
   if (monthsInScope.length > 1) fsRenderEvolucion();
+  if (clientesEntries.length > 0) fsRenderClientes(clientesEntries);
   fsRenderTabla(data);
   fsAttachExport(data);
   fsAttachTablaSort(data);
+}
+
+// Calcula FS Drean por cliente, ordenado descendente. Excluye "Sin asignar" si
+// hubiese para que no entre en el ranking visual.
+function fsBuildClienteShares(rows) {
+  const map = {};
+  rows.forEach(r => {
+    const cli = r.cliente || 'Sin asignar';
+    if (!map[cli]) map[cli] = { totalUnits: 0, dreanUnits: 0 };
+    if ((r.brand || '').toLowerCase() === 'total') {
+      map[cli].totalUnits += r.units || 0;
+    } else {
+      if (r.brand === FS_DREAN) map[cli].dreanUnits += r.units || 0;
+      // si no hay fila "Total", reconstruimos total sumando todas las marcas
+      if (!map[cli]._hasTotal) map[cli]._sumByBrand = (map[cli]._sumByBrand || 0) + (r.units || 0);
+    }
+    if ((r.brand || '').toLowerCase() === 'total') map[cli]._hasTotal = true;
+  });
+  const out = [];
+  Object.keys(map).forEach(cli => {
+    const m = map[cli];
+    const total = m._hasTotal ? m.totalUnits : m._sumByBrand || 0;
+    if (total <= 0) return;
+    if (cli === 'Sin asignar') return;
+    out.push({ cliente: cli, share: (m.dreanUnits / total) * 100, dreanUnits: m.dreanUnits, totalUnits: total });
+  });
+  out.sort((a, b) => b.share - a.share);
+  return out;
+}
+
+function fsRenderClientes(entries) {
+  const ctx = document.getElementById('fsChClientes');
+  if (!ctx || entries.length === 0) return;
+  const labels = entries.map(e => e.cliente);
+  const values = entries.map(e => (Math.round(e.share * 10) / 10));
+  fsCharts.push(new Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'FS Drean %', data: values, backgroundColor: FS_DREAN_COLOR }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      layout: { padding: { right: 50 } },
+      scales: { x: { beginAtZero: true, ticks: { callback: v => v + '%' } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const e = entries[ctx.dataIndex];
+              const total = Math.round(e.totalUnits).toLocaleString('es-AR');
+              const drean = Math.round(e.dreanUnits).toLocaleString('es-AR');
+              return ctx.parsed.x.toFixed(1) + '% · ' + drean + ' / ' + total;
+            }
+          }
+        }
+      }
+    },
+    plugins: [valueLabelsPlugin('horizontal')]
+  }));
 }
 
 function fsRenderRanking(rows) {
@@ -1087,8 +1181,8 @@ function fsRenderTabla(rows) {
   }
   tbody.innerHTML = tabla.map(r =>
     '<tr>' +
-    '<td>' + escapeHtml(r.storeNumber ? (r.storeNumber + ' - ' + r.storeName) : r.storeName) + '</td>' +
     '<td>' + escapeHtml(r.cliente || '—') + '</td>' +
+    '<td>' + escapeHtml(r.storeNumber ? (r.storeNumber + ' - ' + r.storeName) : r.storeName) + '</td>' +
     '<td>' + Math.round(r.totalExh).toLocaleString('es-AR') + '</td>' +
     '<td>' + Math.round(r.dreanExh).toLocaleString('es-AR') + '</td>' +
     '<td><span class="pct ' + pctClass(r.fsDrean) + '">' + fmtPctFs(r.fsDrean) + '</span></td>' +
@@ -1112,13 +1206,13 @@ function fsAttachExport(rows) {
   if (!btn) return;
   btn.addEventListener('click', () => {
     const tabla = fsBuildTablaRows(rows);
-    const headers = ['Numero', 'Tienda', 'Cliente', 'Supervisor', 'Promotor', 'Total piso', 'Drean exhibido', 'FS Drean %'];
+    const headers = ['Cliente', 'Numero', 'Tienda', 'Supervisor', 'Promotor', 'Total piso', 'Drean exhibido', 'FS Drean %'];
     const lines = [headers.join(';')];
     tabla.forEach(r => {
       lines.push([
+        '"' + (r.cliente || '').replace(/"/g, '""') + '"',
         r.storeNumber,
         '"' + (r.storeName || '').replace(/"/g, '""') + '"',
-        '"' + (r.cliente || '').replace(/"/g, '""') + '"',
         '"' + (r.supervisor || '').replace(/"/g, '""') + '"',
         '"' + (r.promotor || '').replace(/"/g, '""') + '"',
         Math.round(r.totalExh),

@@ -28,6 +28,57 @@ function isCsv(name: string): boolean {
   return /\.csv$/i.test(name);
 }
 
+// Marcas multi-palabra que el matching por primera palabra fallaría.
+// Se chequean primero (orden importa: la más larga primero).
+const MULTI_WORD_BRANDS = [
+  "La Casa Del Audio",
+  "Casa Del Audio",
+  "Radio Sapienza",
+  "Oscar Barbieri",
+  "Genesio Hogar",
+  "Petenatti Hogar",
+  "Saturno Hogar",
+  "Rodo Hogar",
+  "On City",
+];
+
+function titleCaseWord(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+}
+
+function inferClienteFromName(
+  storeName: string,
+  cadenasByFirstWord: Map<string, string>,
+): string {
+  const trimmed = (storeName || "").trim();
+  if (!trimmed) return "Sin asignar";
+  const lower = trimmed.toLowerCase();
+
+  for (const brand of MULTI_WORD_BRANDS) {
+    const bl = brand.toLowerCase();
+    if (lower === bl || lower.startsWith(bl + " ")) return brand;
+  }
+
+  const first = lower.split(/\s+/)[0] || "";
+  if (!first) return "Sin asignar";
+  const known = cadenasByFirstWord.get(first);
+  if (known) return known;
+  return titleCaseWord(first);
+}
+
+function buildCadenasByFirstWord(
+  contactos: Map<string, ContactoRow>,
+): Map<string, string> {
+  const map = new Map<string, string>();
+  for (const c of contactos.values()) {
+    const cadena = (c.cadena || "").trim();
+    if (!cadena) continue;
+    const first = cadena.toLowerCase().split(/\s+/)[0];
+    if (first && !map.has(first)) map.set(first, cadena);
+  }
+  return map;
+}
+
 function lookupContacto(
   contactos: Map<string, ContactoRow>,
   storeNumber: string,
@@ -72,6 +123,7 @@ export async function buildFloorShareDataset(
     return null;
   }
   const csvFiles = files.filter((f) => isCsv(f.name));
+  const cadenasByFirstWord = buildCadenasByFirstWord(contactos);
 
   const allRows: FloorShareEnrichedRow[] = [];
   let parsedCount = 0;
@@ -102,7 +154,9 @@ export async function buildFloorShareDataset(
         const contacto = lookupContacto(contactos, r.storeNumber, r.storeName);
         allRows.push({
           ...r,
-          cliente: contacto?.cadena || "Sin asignar",
+          cliente:
+            contacto?.cadena ||
+            inferClienteFromName(r.storeName, cadenasByFirstWord),
           promotor: contacto?.promotor || "Sin asignar",
           supervisor: contacto?.supervisor || "Sin asignar",
         });
