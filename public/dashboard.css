@@ -92,6 +92,27 @@
   .fs-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .fs-charts > .chart-box:only-child { grid-column: 1 / -1; }
   .fs-gap-table th, .fs-gap-table td { padding: 8px 10px; }
+  .fs-cliente-promotor { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; align-items: start; }
+  .fs-cliente-promotor > .chart-box:only-child,
+  .fs-cliente-promotor > .fs-promotor-card:only-child { grid-column: 1 / -1; }
+  .fs-promotor-card { padding: 12px 14px; }
+  .fs-promotor-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .fs-promotor-table th { background: #1e3a8a; color: white; font-weight: 700; text-align: center; padding: 6px 8px; border: 1px solid #1e3a8a; font-size: 11px; letter-spacing: 0.3px; }
+  .fs-promotor-table th.fs-pt-name { background: #f8fafc; color: #1e293b; text-align: center; }
+  .fs-promotor-table td { padding: 5px 8px; border: 1px solid #e2e8f0; }
+  .fs-promotor-table td.fs-pt-name { font-size: 12px; color: #1e293b; white-space: nowrap; }
+  .fs-promotor-table td.fs-pt-pct { text-align: center; font-weight: 700; font-size: 12px; min-width: 64px; }
+  .fs-promotor-table td.fs-pt-delta { text-align: center; font-size: 11px; color: #475569; min-width: 70px; white-space: nowrap; }
+  .fs-promotor-table tr.fs-pt-total td { background: #1e3a8a; color: white; font-weight: 800; font-size: 12px; border-color: #1e3a8a; }
+  .fs-promotor-table tr.fs-pt-total td.fs-pt-pct { color: white; }
+  .fs-promotor-table tr.fs-pt-total td.fs-pt-delta { color: rgba(255,255,255,0.85); }
+  .fs-cell-green  { background: #c6f6d5; color: #064e3b; }
+  .fs-cell-yellow { background: #fef3c7; color: #78350f; }
+  .fs-cell-red    { background: #fecaca; color: #7f1d1d; }
+  .fs-cell-na     { background: #f1f5f9; color: #94a3b8; }
+  .fs-arrow-up   { color: #16a34a; font-weight: 700; }
+  .fs-arrow-down { color: #dc2626; font-weight: 700; }
+  .fs-arrow-eq   { color: #64748b; font-weight: 700; }
 
   @media (max-width: 1200px) {
     .filters { grid-template-columns: repeat(4, 1fr); }
@@ -99,6 +120,7 @@
     .kpis { grid-template-columns: repeat(4, 1fr); }
     .charts { grid-template-columns: 1fr; }
     .fs-charts { grid-template-columns: 1fr; }
+    .fs-cliente-promotor { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
     body { padding: 10px; }
