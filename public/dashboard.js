@@ -798,11 +798,11 @@ function fsApplyFilters(data, opts) {
   const skip = opts || {};
   return data.filter(r => {
     if (!skip.mes && f.mes && r.month !== f.mes) return false;
-    if (f.cliente && r.cliente !== f.cliente) return false;
-    if (f.categoria && r.category !== f.categoria) return false;
-    if (f.tienda && r.storeName !== f.tienda) return false;
-    if (f.supervisor && r.supervisor !== f.supervisor) return false;
-    if (f.promotor && r.promotor !== f.promotor) return false;
+    if (!skip.cliente && f.cliente && r.cliente !== f.cliente) return false;
+    if (!skip.categoria && f.categoria && r.category !== f.categoria) return false;
+    if (!skip.tienda && f.tienda && r.storeName !== f.tienda) return false;
+    if (!skip.supervisor && f.supervisor && r.supervisor !== f.supervisor) return false;
+    if (!skip.promotor && f.promotor && r.promotor !== f.promotor) return false;
     return true;
   });
 }
@@ -907,6 +907,7 @@ function fsRender() {
   const drean = fsBrandShare(data, FS_DREAN);
   const { totalUnits, byBrand } = fsSumUnitsByBrand(data);
   const dreanUnits = byBrand[FS_DREAN] || 0;
+  const uniqueStores = new Set(data.map(r => (r.storeNumber || '') + '|' + (r.storeName || ''))).size;
   const scopeLabel = f.categoria ? fsTitleCase(f.categoria) : 'todas las categorías';
 
   let html = '';
@@ -928,7 +929,7 @@ function fsRender() {
   html += '<div class="fs-headline">' +
     '<div class="fs-headline-label">Floor Share Drean — ' + escapeHtml(scopeLabel) + '</div>' +
     '<div class="fs-headline-value">' + fmtPctFs(drean) + '</div>' +
-    '<div class="fs-headline-sub">' + Math.round(dreanUnits).toLocaleString('es-AR') + ' unidades exhibidas / ' + Math.round(totalUnits).toLocaleString('es-AR') + ' total piso</div>' +
+    '<div class="fs-headline-sub">' + uniqueStores.toLocaleString('es-AR') + ' tiendas · ' + Math.round(dreanUnits).toLocaleString('es-AR') + ' unidades exhibidas / ' + Math.round(totalUnits).toLocaleString('es-AR') + ' total piso</div>' +
     headlineTargetHtml +
     '</div>';
 
@@ -980,12 +981,22 @@ function fsRender() {
   }
   html += '</div>';
 
-  // Floor Share por cliente
+  // Floor Share por cliente + tabla performance equipo (lado a lado)
   const clientesEntries = fsBuildClienteShares(data);
-  if (clientesEntries.length > 0) {
-    const minH = Math.max(280, clientesEntries.length * 26 + 60);
-    html += '<div class="chart-box"><h3>🏪 Floor Share Drean por cliente</h3>' +
-      '<div class="chart-wrap" style="height:' + minH + 'px"><canvas id="fsChClientes"></canvas></div></div>';
+  const promotorTable = fsBuildPromotorTable();
+  const hasClientes = clientesEntries.length > 0;
+  const hasPromotor = promotorTable && promotorTable.rows.length > 0;
+  if (hasClientes || hasPromotor) {
+    html += '<div class="fs-cliente-promotor">';
+    if (hasClientes) {
+      const minH = Math.max(280, clientesEntries.length * 26 + 60);
+      html += '<div class="chart-box"><h3>🏪 Floor Share Drean por cliente</h3>' +
+        '<div class="chart-wrap" style="height:' + minH + 'px"><canvas id="fsChClientes"></canvas></div></div>';
+    }
+    if (hasPromotor) {
+      html += fsRenderPromotorTableHtml(promotorTable);
+    }
+    html += '</div>';
   }
 
   // Tabla detallada por tienda
@@ -1095,6 +1106,146 @@ function fsRenderRanking(rows) {
     },
     plugins: [valueLabelsPlugin('horizontal')]
   }));
+}
+
+// ============= PERFORMANCE POR PROMOTOR =============
+const FS_CATEGORY_ORDER = ['lavado', 'refrigeracion', 'coccion'];
+
+function fsComputeFS(rows) {
+  let drean = 0, totalRow = 0, brandSum = 0;
+  rows.forEach(r => {
+    const u = r.units || 0;
+    if ((r.brand || '').toLowerCase() === 'total') {
+      totalRow += u;
+    } else {
+      brandSum += u;
+      if (r.brand === FS_DREAN) drean += u;
+    }
+  });
+  const total = totalRow > 0 ? totalRow : brandSum;
+  return total > 0 ? (drean / total) * 100 : null;
+}
+
+function fsBuildPromotorTable() {
+  // Respetamos todos los filtros menos promotor y mes (manejamos mes manualmente).
+  const dataAll = fsApplyFilters(fsData, { mes: true, promotor: true });
+  if (dataAll.length === 0) return null;
+
+  const months = [...new Set(dataAll.map(r => r.month))].sort();
+  if (months.length === 0) return null;
+
+  const f = fsGetFilters();
+  const currentMonth = f.mes || months[months.length - 1];
+  const currIdx = months.indexOf(currentMonth);
+  const prevMonth = currIdx > 0 ? months[currIdx - 1] : null;
+
+  const dataCurr = dataAll.filter(r => r.month === currentMonth);
+  const dataPrev = prevMonth ? dataAll.filter(r => r.month === prevMonth) : [];
+
+  // Categorías a mostrar: orden fijo conocido + el resto al final
+  const catsInData = [...new Set(dataCurr.map(r => r.category))];
+  const cats = [
+    ...FS_CATEGORY_ORDER.filter(c => catsInData.includes(c)),
+    ...catsInData.filter(c => !FS_CATEGORY_ORDER.includes(c)).sort(),
+  ];
+
+  const promotores = [...new Set(
+    dataCurr.map(r => r.promotor).filter(p => p && p !== 'Sin asignar')
+  )].sort();
+
+  const cellFor = (rows, promotor, cat) =>
+    fsComputeFS(rows.filter(r => r.promotor === promotor && r.category === cat));
+
+  const rows = promotores.map(p => {
+    const byCat = {};
+    cats.forEach(cat => {
+      const curr = cellFor(dataCurr, p, cat);
+      const prev = prevMonth ? cellFor(dataPrev, p, cat) : null;
+      const delta = (curr !== null && prev !== null) ? curr - prev : null;
+      byCat[cat] = { curr, prev, delta };
+    });
+    return { promotor: p, byCat };
+  });
+
+  const totalByCat = {};
+  cats.forEach(cat => {
+    const curr = fsComputeFS(dataCurr.filter(r => r.category === cat));
+    const prev = prevMonth ? fsComputeFS(dataPrev.filter(r => r.category === cat)) : null;
+    const delta = (curr !== null && prev !== null) ? curr - prev : null;
+    totalByCat[cat] = { curr, prev, delta };
+  });
+
+  return { rows, total: totalByCat, cats, currentMonth, prevMonth };
+}
+
+function fsCellClass(value, target) {
+  if (value === null || target === null) return 'fs-cell-na';
+  const delta = value - target;
+  if (delta >= -2) return 'fs-cell-green';
+  if (delta >= -6) return 'fs-cell-yellow';
+  return 'fs-cell-red';
+}
+
+function fsArrow(delta) {
+  if (delta === null) return '';
+  if (Math.abs(delta) < 0.005) return '<span class="fs-arrow-eq">=</span>';
+  if (delta > 0) return '<span class="fs-arrow-up">↑</span>';
+  return '<span class="fs-arrow-down">↓</span>';
+}
+
+function fsFmtCellPct(v) {
+  if (v === null) return '—';
+  return (Math.round(v * 100) / 100).toFixed(2).replace('.', ',') + ' %';
+}
+
+function fsFmtDelta(d) {
+  if (d === null) return '';
+  const v = Math.round(d * 100) / 100;
+  if (Math.abs(v) < 0.005) return '0,00';
+  return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + '%';
+}
+
+function fsRenderPromotorTableHtml(t) {
+  const monthLabel = fsMonthLabel(t.currentMonth);
+  const subtitle = t.prevMonth
+    ? monthLabel + ' · Δ vs ' + fsMonthLabel(t.prevMonth)
+    : monthLabel;
+
+  let html = '<div class="card fs-promotor-card">' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap;">' +
+    '<h3 style="font-size:14px;">👥 Performance por promotor</h3>' +
+    '<span style="font-size:11px;color:#64748b;">' + escapeHtml(subtitle) + '</span>' +
+    '</div>' +
+    '<div class="table-wrap"><table class="fs-promotor-table"><thead><tr>' +
+    '<th class="fs-pt-name">Promotor</th>';
+  t.cats.forEach(cat => {
+    html += '<th class="fs-pt-cat" colspan="2">FS ' + escapeHtml(fsTitleCase(cat).toUpperCase()) + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  t.rows.forEach(row => {
+    html += '<tr><td class="fs-pt-name">' + escapeHtml(row.promotor) + '</td>';
+    t.cats.forEach(cat => {
+      const c = row.byCat[cat];
+      const cls = fsCellClass(c.curr, fsTargetFor(cat));
+      html += '<td class="' + cls + ' fs-pt-pct">' + fsFmtCellPct(c.curr) + '</td>' +
+        '<td class="fs-pt-delta">' + fsFmtDelta(c.delta) + ' ' + fsArrow(c.delta) + '</td>';
+    });
+    html += '</tr>';
+  });
+
+  // Total row
+  html += '<tr class="fs-pt-total"><td class="fs-pt-name">FLOORSHARE TOTAL EQUIPO</td>';
+  t.cats.forEach(cat => {
+    const c = t.total[cat];
+    const cls = fsCellClass(c.curr, fsTargetFor(cat));
+    html += '<td class="' + cls + ' fs-pt-pct">' + fsFmtCellPct(c.curr) + '</td>' +
+      '<td class="fs-pt-delta">' + fsFmtDelta(c.delta) + ' ' + fsArrow(c.delta) + '</td>';
+  });
+  html += '</tr>';
+
+  html += '</tbody></table></div></div>';
+  return html;
 }
 
 const FS_BRAND_PALETTE = ['#3b82f6','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f97316','#84cc16','#ec4899','#a855f7','#14b8a6'];
