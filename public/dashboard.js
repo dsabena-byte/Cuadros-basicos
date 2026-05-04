@@ -492,11 +492,27 @@ function render() {
   if (!showRankPromotor && !showRankCliente) html += '<div class="chart-box" style="grid-column: 1 / -1;"><h3>🏬 Cumplimiento por Tienda</h3><div class="chart-wrap tall"><canvas id="chTiendas"></canvas></div></div>';
   html += '</div>';
 
-  html += '<div class="card"><h3 style="font-size:14px; margin-bottom:10px;">📋 Detalle por Tienda</h3><div class="table-wrap"><table id="tablaDet"><thead><tr>' +
-    '<th data-sort="tienda">Tienda</th><th data-sort="promotor">Promotor</th><th data-sort="cliente">Cliente</th>' +
-    '<th data-sort="targetCB">Tgt CB</th><th data-sort="realCB">Real CB</th>' +
-    '<th data-sort="pctCB">% CB</th><th data-sort="pctInf">% Inf</th><th data-sort="pctEst">% Est</th>' +
-    '</tr></thead><tbody id="tBody"></tbody></table></div></div>';
+  html += '<div class="card"><h3 style="font-size:14px; margin-bottom:10px;">📋 Detalle por Tienda</h3><div class="table-wrap"><table id="tablaDet" class="tbl-detalle">' +
+    '<thead>' +
+      '<tr>' +
+        '<th rowspan="2" data-sort="tienda">Tienda</th>' +
+        '<th rowspan="2" data-sort="promotor">Promotor</th>' +
+        '<th rowspan="2" data-sort="cliente">Cliente</th>' +
+        '<th rowspan="2" data-sort="targetCB">Tgt CB</th>' +
+        '<th rowspan="2" data-sort="realCB">Real CB</th>' +
+        '<th colspan="3" class="td-grp td-grp-total">Total</th>' +
+        '<th colspan="3" class="td-grp td-grp-lavado">Lavado</th>' +
+        '<th colspan="3" class="td-grp td-grp-refrigeracion">Refrigeración</th>' +
+        '<th colspan="3" class="td-grp td-grp-coccion">Cocción</th>' +
+      '</tr>' +
+      '<tr>' +
+        '<th data-sort="pctCB">% CB</th><th data-sort="pctInf">% Inf</th><th data-sort="pctEst">% Est</th>' +
+        '<th>% CB</th><th>% Inf</th><th>% Est</th>' +
+        '<th>% CB</th><th>% Inf</th><th>% Est</th>' +
+        '<th>% CB</th><th>% Inf</th><th>% Est</th>' +
+      '</tr>' +
+    '</thead>' +
+    '<tbody id="tBody"></tbody></table></div></div>';
 
   if (f.tienda || f.cliente) {
     html += '<div class="card"><h3 style="font-size:14px; margin-bottom:10px;">🔍 Detalle de SKUs — ' + escapeHtml(f.tienda || f.cliente) + '</h3><div id="skuDetalle"></div></div>';
@@ -635,14 +651,71 @@ function renderRankTiendas(data) {
   }));
 }
 
-function renderTabla(data) {
-  const porTienda = rankBy(data, 'tienda');
-  porTienda.forEach(r => {
-    const sample = data.find(d => d.tienda === r.key);
-    r.promotor = sample ? sample.promotor : '';
-    r.cliente = sample ? sample.cliente : '';
-    r.tienda = r.key;
+const CB_DETALLE_CATS = [
+  { key: 'lavado',         match: s => /lavad/.test(s) },
+  { key: 'refrigeracion',  match: s => /refrigerac/.test(s) },
+  { key: 'coccion',        match: s => /cocci/.test(s) },
+];
+
+function detalleCategoryKey(division) {
+  const n = (division || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  for (const c of CB_DETALLE_CATS) if (c.match(n)) return c.key;
+  return null;
+}
+
+function emptyAcc() { return { tCB: 0, rCB: 0, tInf: 0, rInf: 0 }; }
+function pctsFromAcc(b) {
+  const tEst = b.tCB - b.tInf, rEst = b.rCB - b.rInf;
+  return {
+    pctCB:  b.tCB  > 0 ? (b.rCB  / b.tCB)  * 100 : null,
+    pctInf: b.tInf > 0 ? (b.rInf / b.tInf) * 100 : null,
+    pctEst: tEst   > 0 ? (rEst   / tEst)   * 100 : null,
+    targetCB: b.tCB, realCB: b.rCB,
+  };
+}
+
+function buildDetalleTienda(data) {
+  const map = new Map();
+  data.forEach(r => {
+    const t = r.tienda;
+    if (!map.has(t)) {
+      map.set(t, {
+        tienda: t,
+        promotor: r.promotor,
+        cliente: r.cliente,
+        total: emptyAcc(),
+        cats: { lavado: emptyAcc(), refrigeracion: emptyAcc(), coccion: emptyAcc() },
+      });
+    }
+    const e = map.get(t);
+    e.total.tCB += r.targetCB; e.total.rCB += r.realCB;
+    e.total.tInf += r.targetInf; e.total.rInf += r.realInf;
+    const ck = detalleCategoryKey(r.division);
+    if (ck && e.cats[ck]) {
+      e.cats[ck].tCB += r.targetCB; e.cats[ck].rCB += r.realCB;
+      e.cats[ck].tInf += r.targetInf; e.cats[ck].rInf += r.realInf;
+    }
   });
+  return [...map.values()].map(e => {
+    const totalP = pctsFromAcc(e.total);
+    return {
+      tienda: e.tienda,
+      promotor: e.promotor,
+      cliente: e.cliente,
+      targetCB: totalP.targetCB,
+      realCB: totalP.realCB,
+      pctCB:  totalP.pctCB,
+      pctInf: totalP.pctInf,
+      pctEst: totalP.pctEst,
+      lavado:        pctsFromAcc(e.cats.lavado),
+      refrigeracion: pctsFromAcc(e.cats.refrigeracion),
+      coccion:       pctsFromAcc(e.cats.coccion),
+    };
+  });
+}
+
+function renderTabla(data) {
+  const porTienda = buildDetalleTienda(data);
   porTienda.sort((a, b) => {
     const va = a[sortKey], vb = b[sortKey];
     if (typeof va === 'string') return sortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
@@ -650,15 +723,18 @@ function renderTabla(data) {
   });
   const tbody = document.getElementById('tBody');
   if (!tbody) return;
+  const cellPct = (p) => '<td><span class="pct ' + pctClass(p) + '">' + fmtPct(p) + '</span></td>';
+  const catCells = (c) => cellPct(c.pctCB) + cellPct(c.pctInf) + cellPct(c.pctEst);
   tbody.innerHTML = porTienda.map(r =>
     '<tr>' +
     '<td>' + escapeHtml(r.tienda) + '</td>' +
     '<td>' + escapeHtml(r.promotor || '—') + '</td>' +
     '<td>' + escapeHtml(r.cliente || '—') + '</td>' +
     '<td>' + r.targetCB + '</td><td>' + r.realCB + '</td>' +
-    '<td><span class="pct ' + pctClass(r.pctCB) + '">' + fmtPct(r.pctCB) + '</span></td>' +
-    '<td><span class="pct ' + pctClass(r.pctInf) + '">' + fmtPct(r.pctInf) + '</span></td>' +
-    '<td><span class="pct ' + pctClass(r.pctEst) + '">' + fmtPct(r.pctEst) + '</span></td>' +
+    cellPct(r.pctCB) + cellPct(r.pctInf) + cellPct(r.pctEst) +
+    catCells(r.lavado) +
+    catCells(r.refrigeracion) +
+    catCells(r.coccion) +
     '</tr>'
   ).join('');
 }
