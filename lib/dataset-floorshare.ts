@@ -33,7 +33,7 @@ export type FloorShareDataset = {
     totalStores: number;
     unmappedCount: number;
     noPromotorCount: number;
-    unmapped: { storeNumber: string; storeName: string }[];
+    unmapped: { storeNumber: string; storeName: string; cliente: string }[];
     noPromotor: {
       storeNumber: string;
       storeName: string;
@@ -299,7 +299,7 @@ export async function buildFloorShareDataset(
   const matchedStoreKeys = new Set<string>();
   const unmatchedSamples: { storeNumber: string; storeName: string }[] = [];
   // Diagnóstico completo (sin tope) para reporte en UI
-  const unmappedStores: { storeNumber: string; storeName: string }[] = [];
+  const unmappedStores: { storeNumber: string; storeName: string; cliente: string }[] = [];
   const noPromotorStores: {
     storeNumber: string;
     storeName: string;
@@ -371,6 +371,7 @@ export async function buildFloorShareDataset(
             unmappedStores.push({
               storeNumber: r.storeNumber,
               storeName: r.storeName,
+              cliente,
             });
             if (unmatchedSamples.length < 20) {
               unmatchedSamples.push({

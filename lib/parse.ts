@@ -160,6 +160,12 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
     return headers.find((h) => h && fuzzyTest(h.toLowerCase())) ?? null;
   };
 
+  const combinedCol = findCol(
+    ["NOMBRE DE LA TIENDA", "TIENDA HMPDV", "TIENDA NRO NOMBRE", "TIENDA NUMERO Y NOMBRE"],
+    (h) => /^nombre de la tienda$/.test(h)
+        || /^tienda hmpdv$/.test(h),
+  );
+
   const numeroCol = findCol(
     ["N° TIENDA", "N TIENDA", "Nº TIENDA", "NUMERO TIENDA", "NRO TIENDA",
      "ID TIENDA", "NUMERO", "NRO", "Nº", "N°",
@@ -170,10 +176,11 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
   );
 
   const nombreCol = findCol(
-    ["TIENDA HMPDV", "NOMBRE TIENDA", "NOMBRE DE TIENDA", "TIENDA",
+    ["NOMBRE PDV", "NOMBRE TIENDA", "NOMBRE DE TIENDA", "TIENDA",
      "SUCURSAL", "PUNTO DE VENTA", "PDV", "NOMBRE"],
     (h) => /(tienda|sucursal|pdv|punto de venta|nombre)/.test(h)
-        && !/(n°|nº|nro|num|cod|código|codigo|id\b)/.test(h),
+        && !/(n°|nº|nro|num|cod|código|codigo|id\b)/.test(h)
+        && h !== (combinedCol ?? "").toLowerCase(),
   );
 
   const cadenaCol = findCol(
@@ -189,8 +196,25 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
   );
 
   for (const r of parsed.data) {
-    const numero = (numeroCol ? (r[numeroCol] ?? "") : "").toString().trim();
-    const nombre = (nombreCol ? (r[nombreCol] ?? "") : "").toString().trim();
+    let numero = "";
+    let nombre = "";
+    // Prioridad: columna combinada "NUM - NOMBRE" (ej. "877 - On City Gálvez").
+    if (combinedCol) {
+      const cell = (r[combinedCol] ?? "").toString().trim();
+      const m = cell.match(/^(\d+)\s*[-–]\s*(.+)$/) || cell.match(/^(\d+)\s+(.+)$/);
+      if (m) {
+        numero = m[1];
+        nombre = m[2].trim();
+      } else if (cell) {
+        nombre = cell;
+      }
+    }
+    if (!numero && numeroCol) {
+      numero = (r[numeroCol] ?? "").toString().trim();
+    }
+    if (!nombre && nombreCol) {
+      nombre = (r[nombreCol] ?? "").toString().trim();
+    }
     const cadena = (cadenaCol ? (r[cadenaCol] ?? "") : "").toString().trim();
     const promotor = (promotorCol ? (r[promotorCol] ?? "") : "").toString().trim();
     const supervisor = (supervisorCol ? (r[supervisorCol] ?? "") : "").toString().trim();

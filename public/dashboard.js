@@ -1159,6 +1159,16 @@ const fsBuildTiendaTable = () => fsBuildAggTable({
   excludeFn: r => !r.storeName,
 });
 
+function fsGroupByCliente(arr) {
+  const groups = new Map();
+  (arr || []).forEach(s => {
+    const cli = (s.cliente && s.cliente.trim()) || 'Sin cliente';
+    if (!groups.has(cli)) groups.set(cli, []);
+    groups.get(cli).push(s);
+  });
+  return [...groups.entries()].sort((a, b) => b[1].length - a[1].length);
+}
+
 function fsRenderDiagnosticHtml() {
   const fs = window.__PRELOADED_FLOORSHARE__;
   const d = fs && fs.diagnostic;
@@ -1171,37 +1181,57 @@ function fsRenderDiagnosticHtml() {
   const pctSinMatch = total > 0 ? (sinMatch / total) * 100 : 0;
   const summary = totalProblema + ' tiendas sin promotor de ' + total +
     ' totales (' + pctSinMatch.toFixed(1) + '% sin match)';
-  const renderList = (arr, withCli) => {
-    if (!arr || arr.length === 0) {
-      return '<div class="fs-diag-empty">Ninguna ✅</div>';
-    }
-    let h = '<ul class="fs-diag-list">';
-    arr.forEach(s => {
-      const num = s.storeNumber ? s.storeNumber + ' — ' : '';
-      let line = num + escapeHtml(s.storeName || '');
-      if (withCli) {
-        const meta = [];
-        if (s.cliente) meta.push('Cliente: ' + escapeHtml(s.cliente));
-        if (s.supervisor) meta.push('Supervisor: ' + escapeHtml(s.supervisor));
-        if (meta.length) line += ' · <span class="fs-diag-meta">' + meta.join(' · ') + '</span>';
-      }
-      h += '<li>' + line + '</li>';
+
+  const renderGroupedByCliente = (arr) => {
+    if (!arr || arr.length === 0) return '<div class="fs-diag-empty">Ninguna ✅</div>';
+    const groups = fsGroupByCliente(arr);
+    let h = '';
+    groups.forEach(([cli, items]) => {
+      h += '<div class="fs-diag-group">' +
+        '<div class="fs-diag-group-head">' + escapeHtml(cli) +
+        ' <span class="fs-diag-count">(' + items.length + ')</span></div>' +
+        '<ul class="fs-diag-list">';
+      items.forEach(s => {
+        const num = s.storeNumber ? s.storeNumber + ' — ' : '';
+        h += '<li>' + num + escapeHtml(s.storeName || '') + '</li>';
+      });
+      h += '</ul></div>';
     });
-    h += '</ul>';
     return h;
   };
+
+  const renderNoPromotor = (arr) => {
+    if (!arr || arr.length === 0) return '<div class="fs-diag-empty">Ninguna ✅</div>';
+    const groups = fsGroupByCliente(arr);
+    let h = '';
+    groups.forEach(([cli, items]) => {
+      h += '<div class="fs-diag-group">' +
+        '<div class="fs-diag-group-head">' + escapeHtml(cli) +
+        ' <span class="fs-diag-count">(' + items.length + ')</span></div>' +
+        '<ul class="fs-diag-list">';
+      items.forEach(s => {
+        const num = s.storeNumber ? s.storeNumber + ' — ' : '';
+        let line = num + escapeHtml(s.storeName || '');
+        if (s.supervisor) line += ' · <span class="fs-diag-meta">Supervisor: ' + escapeHtml(s.supervisor) + '</span>';
+        h += '<li>' + line + '</li>';
+      });
+      h += '</ul></div>';
+    });
+    return h;
+  };
+
   return '<details class="fs-diag-card">' +
     '<summary>🩺 Diagnóstico de matching — ' + escapeHtml(summary) + '</summary>' +
     '<div class="fs-diag-body">' +
       '<div class="fs-diag-section">' +
         '<h4>Tiendas no mapeadas (' + sinMatch + ')</h4>' +
-        '<p class="fs-diag-help">Aparecen en Floor Share pero no figuran en el mapeo de tiendas.</p>' +
-        renderList(d.unmapped, false) +
+        '<p class="fs-diag-help">Aparecen en Floor Share pero no figuran en el mapeo de tiendas, agrupadas por cliente.</p>' +
+        renderGroupedByCliente(d.unmapped) +
       '</div>' +
       '<div class="fs-diag-section">' +
         '<h4>Tiendas mapeadas sin promotor (' + sinProm + ')</h4>' +
         '<p class="fs-diag-help">Están en el mapeo pero el campo PROMOTOR está vacío.</p>' +
-        renderList(d.noPromotor, true) +
+        renderNoPromotor(d.noPromotor) +
       '</div>' +
     '</div>' +
   '</details>';
