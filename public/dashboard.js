@@ -351,7 +351,7 @@ function cbBuildAggTable(data, key) {
       pctEst: { curr: r.pctEst, delta: r.pctEst - CB_TARGET },
     },
   }));
-  const k = computeKpis(data);
+  const k = calcKPIs(data);
   const total = {
     pctCB:  { curr: k.pctCB,  delta: (k.pctCB  ?? 0) - CB_TARGET },
     pctInf: { curr: k.pctInf, delta: (k.pctInf ?? 0) - CB_TARGET },
