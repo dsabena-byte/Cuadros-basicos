@@ -26,6 +26,7 @@
   .kpi .value { font-size: 24px; font-weight: 700; color: #0f172a; }
   .kpi .sub-val { font-size: 11px; color: #64748b; margin-top: 2px; }
   .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .charts-cb-rank > .fs-promotor-card:only-child { grid-column: 1 / -1; }
   .chart-box { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
   .chart-box h3 { font-size: 14px; margin-bottom: 10px; color: #0f172a; }
   .chart-wrap { position: relative; height: 320px; }

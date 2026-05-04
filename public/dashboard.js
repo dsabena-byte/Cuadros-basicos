@@ -332,6 +332,83 @@ function rankBy(data, key) {
   });
 }
 
+const CB_TARGET = 80;
+const CB_METRICS = [
+  { key: 'pctCB',  label: '% CB' },
+  { key: 'pctInf', label: '% Infaltables' },
+  { key: 'pctEst', label: '% Estratégico' },
+];
+
+function cbBuildAggTable(data, key) {
+  const ranking = rankBy(data, key)
+    .filter(r => r.targetCB > 0 && r.key && r.key !== 'Sin asignar')
+    .sort((a, b) => b.pctCB - a.pctCB);
+  const rows = ranking.map(r => ({
+    name: r.key,
+    metrics: {
+      pctCB:  { curr: r.pctCB,  delta: r.pctCB  - CB_TARGET },
+      pctInf: { curr: r.pctInf, delta: r.pctInf - CB_TARGET },
+      pctEst: { curr: r.pctEst, delta: r.pctEst - CB_TARGET },
+    },
+  }));
+  const k = computeKpis(data);
+  const total = {
+    pctCB:  { curr: k.pctCB,  delta: (k.pctCB  ?? 0) - CB_TARGET },
+    pctInf: { curr: k.pctInf, delta: (k.pctInf ?? 0) - CB_TARGET },
+    pctEst: { curr: k.pctEst, delta: (k.pctEst ?? 0) - CB_TARGET },
+  };
+  return { rows, total };
+}
+
+function cbCellClass(value) {
+  if (value === null || value === undefined) return 'fs-cell-na';
+  const delta = value - CB_TARGET;
+  if (delta >= -2) return 'fs-cell-green';
+  if (delta >= -6) return 'fs-cell-yellow';
+  return 'fs-cell-red';
+}
+
+function cbRenderAggTableHtml(t, opts) {
+  const o = opts || {};
+  const title = o.title || 'Performance';
+  const nameHeader = o.nameHeader || 'Nombre';
+  const totalLabel = o.totalLabel || 'TOTAL';
+  const subtitle = 'Δ vs objetivo ' + CB_TARGET + '%';
+
+  let html = '<div class="card fs-promotor-card">' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap;">' +
+    '<h3 style="font-size:14px;">' + escapeHtml(title) + '</h3>' +
+    '<span style="font-size:11px;color:#64748b;">' + escapeHtml(subtitle) + '</span>' +
+    '</div>' +
+    '<div class="table-wrap"><table class="fs-promotor-table"><thead><tr>' +
+    '<th class="fs-pt-name">' + escapeHtml(nameHeader) + '</th>';
+  CB_METRICS.forEach(m => {
+    html += '<th class="fs-pt-cat" colspan="2">' + escapeHtml(m.label.toUpperCase()) + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  t.rows.forEach(row => {
+    html += '<tr><td class="fs-pt-name">' + escapeHtml(row.name) + '</td>';
+    CB_METRICS.forEach(m => {
+      const c = row.metrics[m.key];
+      const cls = cbCellClass(c.curr);
+      html += '<td class="' + cls + ' fs-pt-pct">' + fsFmtCellPct(c.curr) + '</td>' +
+        '<td class="fs-pt-delta">' + fsFmtDelta(c.delta) + ' ' + fsArrow(c.delta) + '</td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '<tr class="fs-pt-total"><td class="fs-pt-name">' + escapeHtml(totalLabel) + '</td>';
+  CB_METRICS.forEach(m => {
+    const c = t.total[m.key];
+    const cls = cbCellClass(c.curr);
+    html += '<td class="' + cls + ' fs-pt-pct">' + fsFmtCellPct(c.curr) + '</td>' +
+      '<td class="fs-pt-delta">' + fsFmtDelta(c.delta) + ' ' + fsArrow(c.delta) + '</td>';
+  });
+  html += '</tr></tbody></table></div></div>';
+  return html;
+}
+
 function evolucionPorSemana(data) {
   const groups = {};
   data.forEach(r => {
@@ -401,9 +478,17 @@ function render() {
   }
   html += '<div class="chart-box"><h3>📊 Cumplimiento por Categoría</h3><div class="chart-wrap"><canvas id="chCategoria"></canvas></div></div>';
 
-  html += '<div class="charts">';
-  if (showRankPromotor) html += '<div class="chart-box"><h3>🏆 Cumplimiento por Promotor</h3><div class="chart-wrap tall"><canvas id="chPromotor"></canvas></div></div>';
-  if (showRankCliente) html += '<div class="chart-box"><h3>🏪 Cumplimiento por Cliente/Cadena</h3><div class="chart-wrap tall"><canvas id="chCliente"></canvas></div></div>';
+  html += '<div class="charts charts-cb-rank">';
+  if (showRankPromotor) html += cbRenderAggTableHtml(cbBuildAggTable(data, 'promotor'), {
+    title: '🏆 Cumplimiento por Promotor',
+    nameHeader: 'Promotor',
+    totalLabel: 'TOTAL EQUIPO',
+  });
+  if (showRankCliente) html += cbRenderAggTableHtml(cbBuildAggTable(data, 'cliente'), {
+    title: '🏪 Cumplimiento por Cliente/Cadena',
+    nameHeader: 'Cliente/Cadena',
+    totalLabel: 'TOTAL CADENAS',
+  });
   if (!showRankPromotor && !showRankCliente) html += '<div class="chart-box" style="grid-column: 1 / -1;"><h3>🏬 Cumplimiento por Tienda</h3><div class="chart-wrap tall"><canvas id="chTiendas"></canvas></div></div>';
   html += '</div>';
 
@@ -420,8 +505,6 @@ function render() {
 
   if (showEvolucion) renderEvolucion(data);
   renderCategoria(data);
-  if (showRankPromotor) renderRanking(data, 'promotor', 'chPromotor');
-  if (showRankCliente) renderRanking(data, 'cliente', 'chCliente');
   if (!showRankPromotor && !showRankCliente) renderRankTiendas(data);
   renderTabla(data);
   if (f.tienda || f.cliente) renderSkuDetalle(data);
