@@ -493,25 +493,14 @@ function render() {
   html += '</div>';
 
   html += '<div class="card"><h3 style="font-size:14px; margin-bottom:10px;">📋 Detalle por Tienda</h3><div class="table-wrap"><table id="tablaDet" class="tbl-detalle">' +
-    '<thead>' +
-      '<tr>' +
-        '<th rowspan="2" data-sort="tienda">Tienda</th>' +
-        '<th rowspan="2" data-sort="promotor">Promotor</th>' +
-        '<th rowspan="2" data-sort="cliente">Cliente</th>' +
-        '<th rowspan="2" data-sort="targetCB">Tgt CB</th>' +
-        '<th rowspan="2" data-sort="realCB">Real CB</th>' +
-        '<th colspan="3" class="td-grp td-grp-total">Total</th>' +
-        '<th colspan="3" class="td-grp td-grp-lavado">Lavado</th>' +
-        '<th colspan="3" class="td-grp td-grp-refrigeracion">Refrigeración</th>' +
-        '<th colspan="3" class="td-grp td-grp-coccion">Cocción</th>' +
-      '</tr>' +
-      '<tr>' +
-        '<th data-sort="pctCB">% CB</th><th data-sort="pctInf">% Inf</th><th data-sort="pctEst">% Est</th>' +
-        '<th>% CB</th><th>% Inf</th><th>% Est</th>' +
-        '<th>% CB</th><th>% Inf</th><th>% Est</th>' +
-        '<th>% CB</th><th>% Inf</th><th>% Est</th>' +
-      '</tr>' +
-    '</thead>' +
+    '<thead><tr>' +
+      '<th data-sort="cliente">Cliente</th>' +
+      '<th data-sort="tienda">Tienda</th>' +
+      '<th data-sort="pctCB" class="td-grp-total">% CB Total</th>' +
+      '<th data-sort="pctLavado" class="td-grp-lavado">% CB Lavado</th>' +
+      '<th data-sort="pctRefri" class="td-grp-refrigeracion">% CB Refrigeración</th>' +
+      '<th data-sort="pctCoccion" class="td-grp-coccion">% CB Cocción</th>' +
+    '</tr></thead>' +
     '<tbody id="tBody"></tbody></table></div></div>';
 
   if (f.tienda || f.cliente) {
@@ -698,6 +687,9 @@ function buildDetalleTienda(data) {
   });
   return [...map.values()].map(e => {
     const totalP = pctsFromAcc(e.total);
+    const lavP = pctsFromAcc(e.cats.lavado);
+    const refP = pctsFromAcc(e.cats.refrigeracion);
+    const cocP = pctsFromAcc(e.cats.coccion);
     return {
       tienda: e.tienda,
       promotor: e.promotor,
@@ -707,9 +699,12 @@ function buildDetalleTienda(data) {
       pctCB:  totalP.pctCB,
       pctInf: totalP.pctInf,
       pctEst: totalP.pctEst,
-      lavado:        pctsFromAcc(e.cats.lavado),
-      refrigeracion: pctsFromAcc(e.cats.refrigeracion),
-      coccion:       pctsFromAcc(e.cats.coccion),
+      pctLavado:   lavP.pctCB,
+      pctRefri:    refP.pctCB,
+      pctCoccion:  cocP.pctCB,
+      lavado:        lavP,
+      refrigeracion: refP,
+      coccion:       cocP,
     };
   });
 }
@@ -723,18 +718,15 @@ function renderTabla(data) {
   });
   const tbody = document.getElementById('tBody');
   if (!tbody) return;
-  const cellPct = (p) => '<td><span class="pct ' + pctClass(p) + '">' + fmtPct(p) + '</span></td>';
-  const catCells = (c) => cellPct(c.pctCB) + cellPct(c.pctInf) + cellPct(c.pctEst);
+  const cellPct = (p, cls) => '<td' + (cls ? ' class="' + cls + '"' : '') + '><span class="pct ' + pctClass(p) + '">' + fmtPct(p) + '</span></td>';
   tbody.innerHTML = porTienda.map(r =>
     '<tr>' +
-    '<td>' + escapeHtml(r.tienda) + '</td>' +
-    '<td>' + escapeHtml(r.promotor || '—') + '</td>' +
     '<td>' + escapeHtml(r.cliente || '—') + '</td>' +
-    '<td>' + r.targetCB + '</td><td>' + r.realCB + '</td>' +
-    cellPct(r.pctCB) + cellPct(r.pctInf) + cellPct(r.pctEst) +
-    catCells(r.lavado) +
-    catCells(r.refrigeracion) +
-    catCells(r.coccion) +
+    '<td>' + escapeHtml(r.tienda) + '</td>' +
+    cellPct(r.pctCB,        'td-grp-total') +
+    cellPct(r.pctLavado,    'td-grp-lavado') +
+    cellPct(r.pctRefri,     'td-grp-refrigeracion') +
+    cellPct(r.pctCoccion,   'td-grp-coccion') +
     '</tr>'
   ).join('');
 }

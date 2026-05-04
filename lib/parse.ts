@@ -133,6 +133,54 @@ const SUPERVISOR_ALIASES: Record<string, string> = {
   "raimundo pérez": "Raimundo Perez",
 };
 
+// Unifica variantes "Nombre Apellido" vs "Apellido Nombre" del campo
+// promotor en un mapa de contactos. La forma canónica es la variante más
+// frecuente; en empate, la primera alfabéticamente.
+export function canonicalizePromotorNames(map: Map<string, ContactoRow>): void {
+  const sortedKey = (name: string) =>
+    name
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .sort()
+      .join(" ");
+
+  const groups = new Map<string, Map<string, number>>();
+  for (const v of map.values()) {
+    const name = (v.promotor || "").trim().replace(/\s+/g, " ");
+    if (!name) continue;
+    const words = name.split(/\s+/).filter(Boolean);
+    if (words.length < 2) continue; // single word: nada que unificar
+    const key = sortedKey(name);
+    if (!groups.has(key)) groups.set(key, new Map());
+    const counts = groups.get(key)!;
+    counts.set(name, (counts.get(name) || 0) + 1);
+  }
+
+  const canonical = new Map<string, string>();
+  groups.forEach((counts, key) => {
+    let best = "";
+    let bestCount = -1;
+    counts.forEach((cnt, name) => {
+      if (cnt > bestCount || (cnt === bestCount && (best === "" || name.localeCompare(best, "es") < 0))) {
+        best = name;
+        bestCount = cnt;
+      }
+    });
+    if (best) canonical.set(key, best);
+  });
+
+  for (const v of map.values()) {
+    const name = (v.promotor || "").trim().replace(/\s+/g, " ");
+    if (!name) continue;
+    const key = sortedKey(name);
+    const canon = canonical.get(key);
+    if (canon && canon !== v.promotor) v.promotor = canon;
+  }
+}
+
 export function canonicalizeSupervisor(s: string): string {
   if (!s) return s;
   const key = s
@@ -248,6 +296,7 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
     const key = numeroKey + "|" + norm(nombre);
     map.set(key, { numero: numeroKey, nombreNorm: norm(nombre), cadena, promotor, supervisor, emailPromotor });
   }
+  canonicalizePromotorNames(map);
   return map;
 }
 

@@ -6,6 +6,7 @@ import {
 } from "./parse-floorshare";
 import type { ContactoRow } from "./parse";
 import {
+  canonicalizePromotorNames,
   isContactosFilename,
   norm,
   parseContactosCsv,
@@ -289,6 +290,8 @@ export async function buildFloorShareDataset(
     }
   }
   const dataFiles = csvFiles.filter((f) => f !== localContactosFile);
+  // Re-unifica nombres de promotor sobre el mapa mergeado (global+local).
+  canonicalizePromotorNames(mergedContactos);
   const cadenasByFirstWord = buildCadenasByFirstWord(mergedContactos);
   const contactosByName = buildContactosByName(mergedContactos);
 
