@@ -113,6 +113,17 @@ function pick(record: RawRecord, ...names: string[]): string {
   return "";
 }
 
+export const CONTACTOS_NAME_PATTERNS = [
+  /tiendas?.*promotor.*supervisor/i,
+  /promotor.*supervisor/i,
+  /contactos/i,
+  /maestro.*tiend/i,
+];
+
+export function isContactosFilename(name: string): boolean {
+  return CONTACTOS_NAME_PATTERNS.some((re) => re.test(name));
+}
+
 export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
   const text = decodeCsvBuffer(buffer).replace(/^﻿/, "");
   const firstLine = text.split("\n")[0] ?? "";
