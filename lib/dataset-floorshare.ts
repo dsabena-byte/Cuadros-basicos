@@ -29,7 +29,24 @@ export type FloorShareDataset = {
     unmatchedSample: { storeNumber: string; storeName: string }[];
     matchRate: number;
   };
+  diagnostic?: {
+    totalStores: number;
+    unmappedCount: number;
+    noPromotorCount: number;
+    unmapped: { storeNumber: string; storeName: string }[];
+    noPromotor: {
+      storeNumber: string;
+      storeName: string;
+      cliente: string;
+      supervisor: string;
+    }[];
+  };
 };
+
+export const PROMOTOR_NO_MAPEO = "Tienda sin mapeo";
+export const PROMOTOR_SIN = "Sin promotor";
+export const SUPERVISOR_NO_MAPEO = "Tienda sin mapeo";
+export const SUPERVISOR_SIN = "Sin supervisor";
 
 export type FloorShareEnrichedRow = FloorShareRow & {
   cliente: string;
@@ -281,6 +298,14 @@ export async function buildFloorShareDataset(
   const seenStoreKeys = new Set<string>();
   const matchedStoreKeys = new Set<string>();
   const unmatchedSamples: { storeNumber: string; storeName: string }[] = [];
+  // Diagnóstico completo (sin tope) para reporte en UI
+  const unmappedStores: { storeNumber: string; storeName: string }[] = [];
+  const noPromotorStores: {
+    storeNumber: string;
+    storeName: string;
+    cliente: string;
+    supervisor: string;
+  }[] = [];
 
   await Promise.all(
     dataFiles.map(async (file) => {
@@ -319,24 +344,47 @@ export async function buildFloorShareDataset(
           r.storeNumber,
           r.storeName,
         );
+        const cliente = canonicalizeCliente(rawCliente);
+        const promotorRaw = (contacto?.promotor || "").trim();
+        const supervisorRaw = (contacto?.supervisor || "").trim();
+        const promotorLabel = !contacto
+          ? PROMOTOR_NO_MAPEO
+          : promotorRaw || PROMOTOR_SIN;
+        const supervisorLabel = !contacto
+          ? SUPERVISOR_NO_MAPEO
+          : supervisorRaw || SUPERVISOR_SIN;
         // Tracking de matching
         const storeKey = (r.storeNumber || "") + "|" + (r.storeName || "");
         if (!seenStoreKeys.has(storeKey)) {
           seenStoreKeys.add(storeKey);
           if (contacto) {
             matchedStoreKeys.add(storeKey);
-          } else if (unmatchedSamples.length < 20) {
-            unmatchedSamples.push({
+            if (!promotorRaw) {
+              noPromotorStores.push({
+                storeNumber: r.storeNumber,
+                storeName: r.storeName,
+                cliente,
+                supervisor: supervisorRaw,
+              });
+            }
+          } else {
+            unmappedStores.push({
               storeNumber: r.storeNumber,
               storeName: r.storeName,
             });
+            if (unmatchedSamples.length < 20) {
+              unmatchedSamples.push({
+                storeNumber: r.storeNumber,
+                storeName: r.storeName,
+              });
+            }
           }
         }
         allRows.push({
           ...r,
-          cliente: canonicalizeCliente(rawCliente),
-          promotor: contacto?.promotor || "Sin asignar",
-          supervisor: contacto?.supervisor || "Sin asignar",
+          cliente,
+          promotor: promotorLabel,
+          supervisor: supervisorLabel,
         });
       }
     }),
@@ -355,6 +403,19 @@ export async function buildFloorShareDataset(
     `[floor-share] tiendas únicas: ${totalStores}, con contacto: ${matchedStores} (${(matchRate * 100).toFixed(1)}%), sin contacto: ${totalStores - matchedStores}`,
   );
 
+  // Orden estable para el reporte de diagnóstico
+  const sortStores = <T extends { storeNumber: string; storeName: string }>(arr: T[]) =>
+    arr.sort((a, b) => {
+      const na = parseInt(a.storeNumber, 10);
+      const nb = parseInt(b.storeNumber, 10);
+      if (!Number.isNaN(na) && !Number.isNaN(nb) && na !== nb) return na - nb;
+      return (a.storeName || "").localeCompare(b.storeName || "", "es", {
+        sensitivity: "base",
+      });
+    });
+  sortStores(unmappedStores);
+  sortStores(noPromotorStores);
+
   return {
     rows: allRows,
     months,
@@ -369,6 +430,13 @@ export async function buildFloorShareDataset(
       mergedCount: mergedContactos.size,
       unmatchedSample: unmatchedSamples,
       matchRate,
+    },
+    diagnostic: {
+      totalStores,
+      unmappedCount: unmappedStores.length,
+      noPromotorCount: noPromotorStores.length,
+      unmapped: unmappedStores,
+      noPromotor: noPromotorStores,
     },
   };
 }

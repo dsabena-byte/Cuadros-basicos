@@ -51,6 +51,16 @@ export function norm(s: string | undefined | null): string {
     .replace(/\s+/g, " ");
 }
 
+// Normaliza el número de tienda para usarlo como clave de match.
+// Quita caracteres no numéricos y ceros a la izquierda, así "001", " 1 "
+// y "1.0" colapsan al mismo "1".
+export function normalizeStoreNumber(raw: string | number | null | undefined): string {
+  if (raw === null || raw === undefined) return "";
+  const digits = String(raw).trim().replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.replace(/^0+/, "") || "0";
+}
+
 export function tiendaKeyFromHMPDV(tienda: string): string {
   if (!tienda) return "";
   const m = tienda
@@ -58,7 +68,7 @@ export function tiendaKeyFromHMPDV(tienda: string): string {
     .trim()
     .match(/^(\d+)\s*[-–]\s*(.+)$/);
   if (!m) return norm(tienda);
-  return m[1] + "|" + norm(m[2]);
+  return normalizeStoreNumber(m[1]) + "|" + norm(m[2]);
 }
 
 function decodeCsvBuffer(buffer: Buffer): string {
@@ -186,8 +196,10 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
     const supervisor = (supervisorCol ? (r[supervisorCol] ?? "") : "").toString().trim();
     const emailPromotor = (emailCol ? (r[emailCol] ?? "") : "").toString().trim();
     if (!numero || !nombre) continue;
-    const key = numero + "|" + norm(nombre);
-    map.set(key, { numero, nombreNorm: norm(nombre), cadena, promotor, supervisor, emailPromotor });
+    const numeroKey = normalizeStoreNumber(numero);
+    if (!numeroKey) continue;
+    const key = numeroKey + "|" + norm(nombre);
+    map.set(key, { numero: numeroKey, nombreNorm: norm(nombre), cadena, promotor, supervisor, emailPromotor });
   }
   return map;
 }

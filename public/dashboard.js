@@ -1014,6 +1014,8 @@ function fsRender() {
     });
   }
 
+  html += fsRenderDiagnosticHtml();
+
   cont.innerHTML = html;
 
   fsRenderRanking(data);
@@ -1128,18 +1130,21 @@ function fsBuildAggTable(opts) {
   return { rows, total: totalByCat, cats, scopeLabel };
 }
 
+const FS_PROMOTOR_PLACEHOLDERS = new Set(['Sin asignar', 'Sin promotor', 'Tienda sin mapeo']);
+const FS_CLIENTE_PLACEHOLDERS = new Set(['Sin asignar', 'Tienda sin mapeo']);
+
 const fsBuildPromotorTable = () => fsBuildAggTable({
   skipFilters: ['promotor'],
   keyFn: r => r.promotor,
   displayFn: r => r.promotor,
-  excludeFn: r => !r.promotor || r.promotor === 'Sin asignar',
+  excludeFn: r => !r.promotor || FS_PROMOTOR_PLACEHOLDERS.has(r.promotor),
 });
 
 const fsBuildClienteTable = () => fsBuildAggTable({
   skipFilters: ['cliente'],
   keyFn: r => r.cliente,
   displayFn: r => r.cliente,
-  excludeFn: r => !r.cliente || r.cliente === 'Sin asignar',
+  excludeFn: r => !r.cliente || FS_CLIENTE_PLACEHOLDERS.has(r.cliente),
 });
 
 const fsBuildTiendaTable = () => fsBuildAggTable({
@@ -1153,6 +1158,54 @@ const fsBuildTiendaTable = () => fsBuildAggTable({
   },
   excludeFn: r => !r.storeName,
 });
+
+function fsRenderDiagnosticHtml() {
+  const fs = window.__PRELOADED_FLOORSHARE__;
+  const d = fs && fs.diagnostic;
+  if (!d) return '';
+  const total = d.totalStores || 0;
+  if (total === 0) return '';
+  const sinMatch = d.unmappedCount || 0;
+  const sinProm = d.noPromotorCount || 0;
+  const totalProblema = sinMatch + sinProm;
+  const pctSinMatch = total > 0 ? (sinMatch / total) * 100 : 0;
+  const summary = totalProblema + ' tiendas sin promotor de ' + total +
+    ' totales (' + pctSinMatch.toFixed(1) + '% sin match)';
+  const renderList = (arr, withCli) => {
+    if (!arr || arr.length === 0) {
+      return '<div class="fs-diag-empty">Ninguna ✅</div>';
+    }
+    let h = '<ul class="fs-diag-list">';
+    arr.forEach(s => {
+      const num = s.storeNumber ? s.storeNumber + ' — ' : '';
+      let line = num + escapeHtml(s.storeName || '');
+      if (withCli) {
+        const meta = [];
+        if (s.cliente) meta.push('Cliente: ' + escapeHtml(s.cliente));
+        if (s.supervisor) meta.push('Supervisor: ' + escapeHtml(s.supervisor));
+        if (meta.length) line += ' · <span class="fs-diag-meta">' + meta.join(' · ') + '</span>';
+      }
+      h += '<li>' + line + '</li>';
+    });
+    h += '</ul>';
+    return h;
+  };
+  return '<details class="fs-diag-card">' +
+    '<summary>🩺 Diagnóstico de matching — ' + escapeHtml(summary) + '</summary>' +
+    '<div class="fs-diag-body">' +
+      '<div class="fs-diag-section">' +
+        '<h4>Tiendas no mapeadas (' + sinMatch + ')</h4>' +
+        '<p class="fs-diag-help">Aparecen en Floor Share pero no figuran en el mapeo de tiendas.</p>' +
+        renderList(d.unmapped, false) +
+      '</div>' +
+      '<div class="fs-diag-section">' +
+        '<h4>Tiendas mapeadas sin promotor (' + sinProm + ')</h4>' +
+        '<p class="fs-diag-help">Están en el mapeo pero el campo PROMOTOR está vacío.</p>' +
+        renderList(d.noPromotor, true) +
+      '</div>' +
+    '</div>' +
+  '</details>';
+}
 
 function fsCellClass(value, target) {
   if (value === null || target === null) return 'fs-cell-na';

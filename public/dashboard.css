@@ -114,6 +114,19 @@
   .fs-arrow-down { color: #dc2626; font-weight: 700; }
   .fs-arrow-eq   { color: #64748b; font-weight: 700; }
 
+  .fs-diag-card { margin-top: 16px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #374151; }
+  .fs-diag-card > summary { cursor: pointer; font-weight: 600; color: #1f2937; list-style: none; padding: 4px 0; }
+  .fs-diag-card > summary::-webkit-details-marker { display: none; }
+  .fs-diag-card > summary::before { content: '▸ '; display: inline-block; transition: transform .15s; }
+  .fs-diag-card[open] > summary::before { content: '▾ '; }
+  .fs-diag-body { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e5e7eb; }
+  .fs-diag-section h4 { margin: 0 0 4px 0; font-size: 12px; font-weight: 700; color: #111827; }
+  .fs-diag-help { margin: 0 0 6px 0; font-size: 11px; color: #6b7280; }
+  .fs-diag-list { margin: 0; padding-left: 18px; max-height: 280px; overflow-y: auto; line-height: 1.55; }
+  .fs-diag-list li { font-size: 11.5px; color: #374151; }
+  .fs-diag-meta { color: #6b7280; font-size: 11px; }
+  .fs-diag-empty { color: #6b7280; font-style: italic; font-size: 11px; }
+
   @media (max-width: 1200px) {
     .filters { grid-template-columns: repeat(4, 1fr); }
     .filters-fs { grid-template-columns: repeat(4, 1fr); }
@@ -121,6 +134,7 @@
     .charts { grid-template-columns: 1fr; }
     .fs-charts { grid-template-columns: 1fr; }
     .fs-cliente-promotor { grid-template-columns: 1fr; }
+    .fs-diag-body { grid-template-columns: 1fr; }
   }
   @media (max-width: 768px) {
     body { padding: 10px; }

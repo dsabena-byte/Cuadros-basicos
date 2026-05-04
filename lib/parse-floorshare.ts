@@ -1,4 +1,5 @@
 import Papa from "papaparse";
+import { normalizeStoreNumber } from "./parse";
 
 export type FloorShareRow = {
   month: string;          // YYYY-MM
@@ -103,10 +104,10 @@ function splitStoreCell(cell: string): { number: string; name: string } | null {
     return null;
   }
   const m = trimmed.match(/^(\d+)\s*[-–]\s*(.+)$/);
-  if (m) return { number: m[1], name: m[2].trim() };
+  if (m) return { number: normalizeStoreNumber(m[1]), name: m[2].trim() };
   // Fallback: leading number + space + name
   const m2 = trimmed.match(/^(\d+)\s+(.+)$/);
-  if (m2) return { number: m2[1], name: m2[2].trim() };
+  if (m2) return { number: normalizeStoreNumber(m2[1]), name: m2[2].trim() };
   // No number → emit empty number, full string as name
   return { number: "", name: trimmed };
 }
