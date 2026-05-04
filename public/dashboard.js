@@ -925,6 +925,7 @@ function fsRender() {
       '<span class="fs-delta-pill ' + deltaCls + '">' + deltaTxt + '</span>' +
       '</div>';
   }
+  html += '<div class="fs-top-row">';
   html += '<div class="fs-headline">' +
     '<div class="fs-headline-label">Floor Share Drean — ' + escapeHtml(scopeLabel) + '</div>' +
     '<div class="fs-headline-value">' + fmtPctFs(drean) + '</div>' +
@@ -967,6 +968,7 @@ function fsRender() {
       html += '</div>';
     }
   }
+  html += '</div>';
 
   // Charts grid
   html += '<div class="fs-charts">';
