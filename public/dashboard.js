@@ -981,20 +981,26 @@ function fsRender() {
   }
   html += '</div>';
 
-  // Floor Share por cliente + tabla performance equipo (lado a lado)
-  const clientesEntries = fsBuildClienteShares(data);
+  // Tabla performance por cliente + por promotor (lado a lado)
+  const clienteTable = fsBuildClienteTable();
   const promotorTable = fsBuildPromotorTable();
-  const hasClientes = clientesEntries.length > 0;
+  const hasCliente = clienteTable && clienteTable.rows.length > 0;
   const hasPromotor = promotorTable && promotorTable.rows.length > 0;
-  if (hasClientes || hasPromotor) {
+  if (hasCliente || hasPromotor) {
     html += '<div class="fs-cliente-promotor">';
-    if (hasClientes) {
-      const minH = Math.max(280, clientesEntries.length * 26 + 60);
-      html += '<div class="chart-box"><h3>🏪 Floor Share Drean por cliente</h3>' +
-        '<div class="chart-wrap" style="height:' + minH + 'px"><canvas id="fsChClientes"></canvas></div></div>';
+    if (hasCliente) {
+      html += fsRenderAggTableHtml(clienteTable, {
+        title: '🏪 Performance por cliente',
+        nameHeader: 'Cliente',
+        totalLabel: 'FLOORSHARE TOTAL',
+      });
     }
     if (hasPromotor) {
-      html += fsRenderPromotorTableHtml(promotorTable);
+      html += fsRenderAggTableHtml(promotorTable, {
+        title: '👥 Performance por promotor',
+        nameHeader: 'Promotor',
+        totalLabel: 'FLOORSHARE TOTAL EQUIPO',
+      });
     }
     html += '</div>';
   }
@@ -1017,68 +1023,9 @@ function fsRender() {
 
   fsRenderRanking(data);
   if (monthsInScope.length > 1) fsRenderEvolucion();
-  if (clientesEntries.length > 0) fsRenderClientes(clientesEntries);
   fsRenderTabla(data);
   fsAttachExport(data);
   fsAttachTablaSort(data);
-}
-
-// Calcula FS Drean por cliente, ordenado descendente. Excluye "Sin asignar" si
-// hubiese para que no entre en el ranking visual.
-function fsBuildClienteShares(rows) {
-  const map = {};
-  rows.forEach(r => {
-    const cli = r.cliente || 'Sin asignar';
-    if (!map[cli]) map[cli] = { totalUnits: 0, dreanUnits: 0 };
-    if ((r.brand || '').toLowerCase() === 'total') {
-      map[cli].totalUnits += r.units || 0;
-    } else {
-      if (r.brand === FS_DREAN) map[cli].dreanUnits += r.units || 0;
-      // si no hay fila "Total", reconstruimos total sumando todas las marcas
-      if (!map[cli]._hasTotal) map[cli]._sumByBrand = (map[cli]._sumByBrand || 0) + (r.units || 0);
-    }
-    if ((r.brand || '').toLowerCase() === 'total') map[cli]._hasTotal = true;
-  });
-  const out = [];
-  Object.keys(map).forEach(cli => {
-    const m = map[cli];
-    const total = m._hasTotal ? m.totalUnits : m._sumByBrand || 0;
-    if (total <= 0) return;
-    if (cli === 'Sin asignar') return;
-    out.push({ cliente: cli, share: (m.dreanUnits / total) * 100, dreanUnits: m.dreanUnits, totalUnits: total });
-  });
-  out.sort((a, b) => b.share - a.share);
-  return out;
-}
-
-function fsRenderClientes(entries) {
-  const ctx = document.getElementById('fsChClientes');
-  if (!ctx || entries.length === 0) return;
-  const labels = entries.map(e => e.cliente);
-  const values = entries.map(e => (Math.round(e.share * 10) / 10));
-  fsCharts.push(new Chart(ctx, {
-    type: 'bar',
-    data: { labels, datasets: [{ label: 'FS Drean %', data: values, backgroundColor: FS_DREAN_COLOR }] },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      layout: { padding: { right: 50 } },
-      scales: { x: { beginAtZero: true, ticks: { callback: v => v + '%' } } },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx) => {
-              const e = entries[ctx.dataIndex];
-              const total = Math.round(e.totalUnits).toLocaleString('es-AR');
-              const drean = Math.round(e.dreanUnits).toLocaleString('es-AR');
-              return ctx.parsed.x.toFixed(1) + '% · ' + drean + ' / ' + total;
-            }
-          }
-        }
-      }
-    },
-    plugins: [valueLabelsPlugin('horizontal')]
-  }));
 }
 
 function fsRenderRanking(rows) {
@@ -1126,10 +1073,11 @@ function fsComputeFS(rows) {
   return total > 0 ? (drean / total) * 100 : null;
 }
 
-function fsBuildPromotorTable() {
-  // Respetamos todos los filtros menos promotor (queremos verlos a todos).
-  // Mes se respeta si está seteado; si no, se agrega todo el período.
-  const data = fsApplyFilters(fsData, { promotor: true });
+// Genérico: agrega FS por (groupBy, categoría) y calcula desvío vs target.
+function fsBuildAggTable(groupBy, excluded) {
+  const skip = {};
+  skip[groupBy] = true;
+  const data = fsApplyFilters(fsData, skip);
   if (data.length === 0) return null;
 
   // Categorías a mostrar: orden fijo conocido + el resto al final
@@ -1139,22 +1087,23 @@ function fsBuildPromotorTable() {
     ...catsInData.filter(c => !FS_CATEGORY_ORDER.includes(c)).sort(),
   ];
 
-  const promotores = [...new Set(
-    data.map(r => r.promotor).filter(p => p && p !== 'Sin asignar')
+  const excludeSet = new Set(excluded || []);
+  const groups = [...new Set(
+    data.map(r => r[groupBy]).filter(g => g && !excludeSet.has(g))
   )].sort();
 
-  const cellFor = (rs, promotor, cat) =>
-    fsComputeFS(rs.filter(r => r.promotor === promotor && r.category === cat));
+  const cellFor = (rs, group, cat) =>
+    fsComputeFS(rs.filter(r => r[groupBy] === group && r.category === cat));
 
-  const rows = promotores.map(p => {
+  const rows = groups.map(g => {
     const byCat = {};
     cats.forEach(cat => {
-      const curr = cellFor(data, p, cat);
+      const curr = cellFor(data, g, cat);
       const target = fsTargetFor(cat);
       const delta = (curr !== null && target !== null) ? curr - target : null;
       byCat[cat] = { curr, delta };
     });
-    return { promotor: p, byCat };
+    return { name: g, byCat };
   });
 
   const totalByCat = {};
@@ -1175,6 +1124,9 @@ function fsBuildPromotorTable() {
 
   return { rows, total: totalByCat, cats, scopeLabel };
 }
+
+const fsBuildPromotorTable = () => fsBuildAggTable('promotor', ['Sin asignar']);
+const fsBuildClienteTable = () => fsBuildAggTable('cliente', ['Sin asignar']);
 
 function fsCellClass(value, target) {
   if (value === null || target === null) return 'fs-cell-na';
@@ -1203,23 +1155,27 @@ function fsFmtDelta(d) {
   return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + ' pp';
 }
 
-function fsRenderPromotorTableHtml(t) {
+function fsRenderAggTableHtml(t, opts) {
+  const o = opts || {};
+  const title = o.title || 'Performance';
+  const nameHeader = o.nameHeader || 'Nombre';
+  const totalLabel = o.totalLabel || 'TOTAL';
   const subtitle = (t.scopeLabel ? t.scopeLabel + ' · ' : '') + 'Δ vs objetivo';
 
   let html = '<div class="card fs-promotor-card">' +
     '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:8px;flex-wrap:wrap;">' +
-    '<h3 style="font-size:14px;">👥 Performance por promotor</h3>' +
+    '<h3 style="font-size:14px;">' + escapeHtml(title) + '</h3>' +
     '<span style="font-size:11px;color:#64748b;">' + escapeHtml(subtitle) + '</span>' +
     '</div>' +
     '<div class="table-wrap"><table class="fs-promotor-table"><thead><tr>' +
-    '<th class="fs-pt-name">Promotor</th>';
+    '<th class="fs-pt-name">' + escapeHtml(nameHeader) + '</th>';
   t.cats.forEach(cat => {
     html += '<th class="fs-pt-cat" colspan="2">FS ' + escapeHtml(fsTitleCase(cat).toUpperCase()) + '</th>';
   });
   html += '</tr></thead><tbody>';
 
   t.rows.forEach(row => {
-    html += '<tr><td class="fs-pt-name">' + escapeHtml(row.promotor) + '</td>';
+    html += '<tr><td class="fs-pt-name">' + escapeHtml(row.name) + '</td>';
     t.cats.forEach(cat => {
       const c = row.byCat[cat];
       const cls = fsCellClass(c.curr, fsTargetFor(cat));
@@ -1230,7 +1186,7 @@ function fsRenderPromotorTableHtml(t) {
   });
 
   // Total row
-  html += '<tr class="fs-pt-total"><td class="fs-pt-name">FLOORSHARE TOTAL EQUIPO</td>';
+  html += '<tr class="fs-pt-total"><td class="fs-pt-name">' + escapeHtml(totalLabel) + '</td>';
   t.cats.forEach(cat => {
     const c = t.total[cat];
     const cls = fsCellClass(c.curr, fsTargetFor(cat));
