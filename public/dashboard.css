@@ -38,6 +38,12 @@
   .tbl-detalle .td-grp-lavado { background: #dbeafe; color: #1e40af; }
   .tbl-detalle .td-grp-refrigeracion { background: #cffafe; color: #155e75; }
   .tbl-detalle .td-grp-coccion { background: #fee2e2; color: #991b1b; }
+  .tbl-detalle thead tr:first-child > th.td-grp { border-left: 2px solid #94a3b8; }
+  .tbl-detalle thead tr:nth-child(2) > th:nth-child(3n+1) { border-left: 2px solid #94a3b8; }
+  .tbl-detalle tbody td:nth-child(6),
+  .tbl-detalle tbody td:nth-child(9),
+  .tbl-detalle tbody td:nth-child(12),
+  .tbl-detalle tbody td:nth-child(15) { border-left: 2px solid #94a3b8; }
   th { text-align: left; padding: 8px 10px; background: #f8fafc; font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; cursor: pointer; user-select: none; position: sticky; top: 0; }
   th:hover { background: #f1f5f9; }
   td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; }
