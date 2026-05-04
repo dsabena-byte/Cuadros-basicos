@@ -1,5 +1,6 @@
 import { downloadFile, listFolderFiles } from "./drive";
 import {
+  isContactosFilename,
   parseContactosCsv,
   parseDataCsv,
   parseSemanaFromFilename,
@@ -19,26 +20,15 @@ export type Dataset = {
   floorShare: FloorShareDataset | null;
 };
 
-const CONTACTOS_NAME_PATTERNS = [
-  /tiendas.*promotor.*supervisor/i,
-  /promotor.*supervisor/i,
-  /contactos/i,
-  /maestro.*tiend/i,
-];
-
 function isCsv(name: string): boolean {
   return /\.csv$/i.test(name);
-}
-
-function isContactos(name: string): boolean {
-  return CONTACTOS_NAME_PATTERNS.some((re) => re.test(name));
 }
 
 export async function buildDataset(folderId: string): Promise<Dataset> {
   const files = await listFolderFiles(folderId);
   const csvFiles = files.filter((f) => isCsv(f.name));
 
-  const contactosFile = csvFiles.find((f) => isContactos(f.name));
+  const contactosFile = csvFiles.find((f) => isContactosFilename(f.name));
   let contactos: Map<string, ContactoRow> = new Map();
   if (contactosFile) {
     const buf = await downloadFile(contactosFile.id);

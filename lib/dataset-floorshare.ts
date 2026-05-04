@@ -5,7 +5,12 @@ import {
   type FloorShareRow,
 } from "./parse-floorshare";
 import type { ContactoRow } from "./parse";
-import { norm, tiendaKeyFromHMPDV } from "./parse";
+import {
+  isContactosFilename,
+  norm,
+  parseContactosCsv,
+  tiendaKeyFromHMPDV,
+} from "./parse";
 
 const SUBFOLDER_NAME = "floor-share";
 
@@ -219,13 +224,33 @@ export async function buildFloorShareDataset(
     return null;
   }
   const csvFiles = files.filter((f) => isCsv(f.name));
-  const cadenasByFirstWord = buildCadenasByFirstWord(contactos);
+
+  // Si hay un CSV de contactos en la subcarpeta floor-share/, lo parseamos y
+  // mergeamos con el mapa global. Las entradas locales sobrescriben a las
+  // globales (mismo key = numero+nombre).
+  const localContactosFile = csvFiles.find((f) => isContactosFilename(f.name));
+  let mergedContactos = contactos;
+  if (localContactosFile) {
+    try {
+      const buf = await downloadFile(localContactosFile.id);
+      const localContactos = parseContactosCsv(buf);
+      mergedContactos = new Map(contactos);
+      for (const [k, v] of localContactos) mergedContactos.set(k, v);
+    } catch (err) {
+      console.error(
+        `[floor-share] no pude leer contactos local ${localContactosFile.name}:`,
+        err,
+      );
+    }
+  }
+  const dataFiles = csvFiles.filter((f) => f !== localContactosFile);
+  const cadenasByFirstWord = buildCadenasByFirstWord(mergedContactos);
 
   const allRows: FloorShareEnrichedRow[] = [];
   let parsedCount = 0;
 
   await Promise.all(
-    csvFiles.map(async (file) => {
+    dataFiles.map(async (file) => {
       const meta = parseFloorShareFilename(file.name);
       if (!meta) {
         console.warn(`[floor-share] nombre no reconocido: ${file.name}`);
@@ -255,7 +280,11 @@ export async function buildFloorShareDataset(
         const rawCliente =
           overridden || inferClienteFromName(r.storeName, cadenasByFirstWord);
         // Promotor / supervisor sí los tomamos de contactos cuando hay match.
-        const contacto = lookupContacto(contactos, r.storeNumber, r.storeName);
+        const contacto = lookupContacto(
+          mergedContactos,
+          r.storeNumber,
+          r.storeName,
+        );
         allRows.push({
           ...r,
           cliente: canonicalizeCliente(rawCliente),
