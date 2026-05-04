@@ -762,7 +762,6 @@ function fsTargetFor(cat) {
 
 let fsData = [];
 let fsCharts = [];
-let fsSortKey = 'fsDrean', fsSortDir = 'desc';
 
 function fsMonthLabel(code) {
   if (!code) return '';
@@ -1005,27 +1004,20 @@ function fsRender() {
     html += '</div>';
   }
 
-  // Tabla detallada por tienda
-  html += '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-    '<h3 style="font-size:14px;">📋 Detalle por tienda</h3>' +
-    '<button class="upload-btn" id="fsBtnExport" style="background:#10b981;">📥 Exportar CSV</button>' +
-    '</div><div class="table-wrap"><table id="fsTablaDet"><thead><tr>' +
-    '<th data-sort="cliente">Cliente</th>' +
-    '<th data-sort="storeName">Tienda</th>' +
-    '<th data-sort="totalExh">Total piso</th>' +
-    '<th data-sort="dreanExh">Drean</th>' +
-    '<th data-sort="fsDrean">FS Drean</th>' +
-    '<th data-sort="target">Objetivo</th>' +
-    '<th data-sort="desvio">Desvío</th>' +
-    '</tr></thead><tbody id="fsTBody"></tbody></table></div></div>';
+  // Performance por tienda
+  const tiendaTable = fsBuildTiendaTable();
+  if (tiendaTable && tiendaTable.rows.length > 0) {
+    html += fsRenderAggTableHtml(tiendaTable, {
+      title: '📋 Performance por tienda',
+      nameHeader: 'Tienda',
+      totalLabel: 'FLOORSHARE TOTAL TIENDAS',
+    });
+  }
 
   cont.innerHTML = html;
 
   fsRenderRanking(data);
   if (monthsInScope.length > 1) fsRenderEvolucion();
-  fsRenderTabla(data);
-  fsAttachExport(data);
-  fsAttachTablaSort(data);
 }
 
 function fsRenderRanking(rows) {
@@ -1074,9 +1066,12 @@ function fsComputeFS(rows) {
 }
 
 // Genérico: agrega FS por (groupBy, categoría) y calcula desvío vs target.
-function fsBuildAggTable(groupBy, excluded) {
+// Genérico: agrega FS por (grupo, categoría) y calcula desvío vs target.
+// opts: { skipFilters: ['promotor'], keyFn: r => key, displayFn: r => label,
+//         excludeFn: r => bool }
+function fsBuildAggTable(opts) {
   const skip = {};
-  skip[groupBy] = true;
+  (opts.skipFilters || []).forEach(k => { skip[k] = true; });
   const data = fsApplyFilters(fsData, skip);
   if (data.length === 0) return null;
 
@@ -1087,23 +1082,31 @@ function fsBuildAggTable(groupBy, excluded) {
     ...catsInData.filter(c => !FS_CATEGORY_ORDER.includes(c)).sort(),
   ];
 
-  const excludeSet = new Set(excluded || []);
-  const groups = [...new Set(
-    data.map(r => r[groupBy]).filter(g => g && !excludeSet.has(g))
-  )].sort();
+  // Construye mapa key → display (primer match gana)
+  const display = new Map();
+  data.forEach(r => {
+    if (opts.excludeFn && opts.excludeFn(r)) return;
+    const k = opts.keyFn(r);
+    if (!k) return;
+    if (!display.has(k)) display.set(k, opts.displayFn ? opts.displayFn(r) : k);
+  });
 
-  const cellFor = (rs, group, cat) =>
-    fsComputeFS(rs.filter(r => r[groupBy] === group && r.category === cat));
+  const groupKeys = [...display.keys()].sort((a, b) =>
+    display.get(a).localeCompare(display.get(b), 'es', { sensitivity: 'base' })
+  );
 
-  const rows = groups.map(g => {
+  const cellFor = (group, cat) =>
+    fsComputeFS(data.filter(r => opts.keyFn(r) === group && r.category === cat));
+
+  const rows = groupKeys.map(g => {
     const byCat = {};
     cats.forEach(cat => {
-      const curr = cellFor(data, g, cat);
+      const curr = cellFor(g, cat);
       const target = fsTargetFor(cat);
       const delta = (curr !== null && target !== null) ? curr - target : null;
       byCat[cat] = { curr, delta };
     });
-    return { name: g, byCat };
+    return { name: display.get(g), byCat };
   });
 
   const totalByCat = {};
@@ -1125,8 +1128,31 @@ function fsBuildAggTable(groupBy, excluded) {
   return { rows, total: totalByCat, cats, scopeLabel };
 }
 
-const fsBuildPromotorTable = () => fsBuildAggTable('promotor', ['Sin asignar']);
-const fsBuildClienteTable = () => fsBuildAggTable('cliente', ['Sin asignar']);
+const fsBuildPromotorTable = () => fsBuildAggTable({
+  skipFilters: ['promotor'],
+  keyFn: r => r.promotor,
+  displayFn: r => r.promotor,
+  excludeFn: r => !r.promotor || r.promotor === 'Sin asignar',
+});
+
+const fsBuildClienteTable = () => fsBuildAggTable({
+  skipFilters: ['cliente'],
+  keyFn: r => r.cliente,
+  displayFn: r => r.cliente,
+  excludeFn: r => !r.cliente || r.cliente === 'Sin asignar',
+});
+
+const fsBuildTiendaTable = () => fsBuildAggTable({
+  skipFilters: ['tienda'],
+  keyFn: r => (r.storeNumber || '') + '|' + (r.storeName || ''),
+  displayFn: r => {
+    const parts = [];
+    if (r.cliente && r.cliente !== 'Sin asignar') parts.push(r.cliente);
+    parts.push((r.storeNumber ? r.storeNumber + ' - ' : '') + r.storeName);
+    return parts.join(' — ');
+  },
+  excludeFn: r => !r.storeName,
+});
 
 function fsCellClass(value, target) {
   if (value === null || target === null) return 'fs-cell-na';
@@ -1276,129 +1302,6 @@ function fsRenderEvolucion() {
       interaction: { mode: 'nearest', axis: 'x', intersect: false }
     }
   }));
-}
-
-function fsBuildTablaRows(rows) {
-  const map = {};
-  rows.forEach(r => {
-    const key = r.storeNumber + '||' + r.storeName;
-    if (!map[key]) {
-      map[key] = {
-        storeNumber: r.storeNumber, storeName: r.storeName,
-        cliente: r.cliente, supervisor: r.supervisor, promotor: r.promotor,
-        totalExh: 0, dreanExh: 0, brandExh: {},
-        catTotalRow: {}, catBrandSum: {},
-      };
-    }
-    const row = map[key];
-    if (r.brand.toLowerCase() === 'total') {
-      row.totalExh += r.units || 0;
-      row.catTotalRow[r.category] = (row.catTotalRow[r.category] || 0) + (r.units || 0);
-    } else {
-      row.brandExh[r.brand] = (row.brandExh[r.brand] || 0) + (r.units || 0);
-      if (r.brand === FS_DREAN) row.dreanExh += r.units || 0;
-      row.catBrandSum[r.category] = (row.catBrandSum[r.category] || 0) + (r.units || 0);
-    }
-  });
-  return Object.values(map).map(row => {
-    if (row.totalExh === 0) {
-      row.totalExh = Object.values(row.brandExh).reduce((a, b) => a + b, 0);
-    }
-    row.fsDrean = row.totalExh > 0 ? (row.dreanExh / row.totalExh) * 100 : 0;
-    // Target ponderado por unidades: sum(target[cat] * units[cat]) / sum(units[cat])
-    // sólo sobre categorías con target definido.
-    const cats = new Set([...Object.keys(row.catTotalRow), ...Object.keys(row.catBrandSum)]);
-    let weightedNum = 0, weightedDen = 0;
-    cats.forEach(cat => {
-      const t = fsTargetFor(cat);
-      if (t === null) return;
-      const u = row.catTotalRow[cat] || row.catBrandSum[cat] || 0;
-      if (u <= 0) return;
-      weightedNum += t * u;
-      weightedDen += u;
-    });
-    row.target = weightedDen > 0 ? weightedNum / weightedDen : null;
-    row.desvio = (row.target !== null) ? (row.fsDrean - row.target) : null;
-    return row;
-  });
-}
-
-function fsRenderTabla(rows) {
-  const tbody = document.getElementById('fsTBody');
-  if (!tbody) return;
-  const tabla = fsBuildTablaRows(rows);
-  tabla.sort((a, b) => {
-    const va = a[fsSortKey], vb = b[fsSortKey];
-    if (typeof va === 'string') return fsSortDir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
-    return fsSortDir === 'asc' ? (va || 0) - (vb || 0) : (vb || 0) - (va || 0);
-  });
-  if (tabla.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px;">Sin datos</td></tr>';
-    return;
-  }
-  tbody.innerHTML = tabla.map(r => {
-    const targetTxt = r.target !== null ? (Math.round(r.target * 10) / 10).toFixed(1) + '%' : '—';
-    let desvioHtml = '<span style="color:#94a3b8">—</span>';
-    if (r.desvio !== null) {
-      const cls = r.desvio >= 0 ? 'fs-delta-pos' : 'fs-delta-neg';
-      const txt = (r.desvio >= 0 ? '+' : '') + (Math.round(r.desvio * 10) / 10).toFixed(1) + ' pp';
-      desvioHtml = '<span class="fs-delta-pill ' + cls + '">' + txt + '</span>';
-    }
-    return '<tr>' +
-      '<td>' + escapeHtml(r.cliente || '—') + '</td>' +
-      '<td>' + escapeHtml(r.storeNumber ? (r.storeNumber + ' - ' + r.storeName) : r.storeName) + '</td>' +
-      '<td>' + Math.round(r.totalExh).toLocaleString('es-AR') + '</td>' +
-      '<td>' + Math.round(r.dreanExh).toLocaleString('es-AR') + '</td>' +
-      '<td><span class="pct ' + pctClass(r.fsDrean) + '">' + fmtPctFs(r.fsDrean) + '</span></td>' +
-      '<td>' + targetTxt + '</td>' +
-      '<td>' + desvioHtml + '</td>' +
-      '</tr>';
-  }).join('');
-}
-
-function fsAttachTablaSort(rows) {
-  document.querySelectorAll('#fsTablaDet th').forEach(th => {
-    th.addEventListener('click', () => {
-      const k = th.dataset.sort;
-      if (fsSortKey === k) fsSortDir = fsSortDir === 'asc' ? 'desc' : 'asc';
-      else { fsSortKey = k; fsSortDir = 'desc'; }
-      fsRenderTabla(rows);
-    });
-  });
-}
-
-function fsAttachExport(rows) {
-  const btn = document.getElementById('fsBtnExport');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    const tabla = fsBuildTablaRows(rows);
-    const headers = ['Cliente', 'Numero', 'Tienda', 'Supervisor', 'Promotor', 'Total piso', 'Drean exhibido', 'FS Drean %', 'Objetivo %', 'Desvío pp'];
-    const lines = [headers.join(';')];
-    const fmtNum = v => (Math.round(v * 10) / 10).toFixed(1).replace('.', ',');
-    tabla.forEach(r => {
-      lines.push([
-        '"' + (r.cliente || '').replace(/"/g, '""') + '"',
-        r.storeNumber,
-        '"' + (r.storeName || '').replace(/"/g, '""') + '"',
-        '"' + (r.supervisor || '').replace(/"/g, '""') + '"',
-        '"' + (r.promotor || '').replace(/"/g, '""') + '"',
-        Math.round(r.totalExh),
-        Math.round(r.dreanExh),
-        fmtNum(r.fsDrean),
-        r.target !== null ? fmtNum(r.target) : '',
-        r.desvio !== null ? fmtNum(r.desvio) : '',
-      ].join(';'));
-    });
-    const csv = '﻿' + lines.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'floor-share-detalle-' + new Date().toISOString().slice(0, 10) + '.csv';
-    document.body.appendChild(a); a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  });
 }
 
 // ============= INIT FLOOR SHARE (listeners + render inicial) =============
