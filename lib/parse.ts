@@ -123,6 +123,27 @@ function pick(record: RawRecord, ...names: string[]): string {
   return "";
 }
 
+// Unifica variantes cortas del nombre del supervisor a su forma canónica.
+// La key se compara lowercased + sin acentos + trim.
+const SUPERVISOR_ALIASES: Record<string, string> = {
+  "mauricio": "Mauricio Biasizzo",
+  "mauricio biasizzo": "Mauricio Biasizzo",
+  "raimundo": "Raimundo Perez",
+  "raimundo perez": "Raimundo Perez",
+  "raimundo pérez": "Raimundo Perez",
+};
+
+export function canonicalizeSupervisor(s: string): string {
+  if (!s) return s;
+  const key = s
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+  return SUPERVISOR_ALIASES[key] || s.trim();
+}
+
 export const CONTACTOS_NAME_PATTERNS = [
   /tiendas?.*promotor.*supervisor/i,
   /promotor.*supervisor/i,
@@ -217,7 +238,9 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
     }
     const cadena = (cadenaCol ? (r[cadenaCol] ?? "") : "").toString().trim();
     const promotor = (promotorCol ? (r[promotorCol] ?? "") : "").toString().trim();
-    const supervisor = (supervisorCol ? (r[supervisorCol] ?? "") : "").toString().trim();
+    const supervisor = canonicalizeSupervisor(
+      (supervisorCol ? (r[supervisorCol] ?? "") : "").toString(),
+    );
     const emailPromotor = (emailCol ? (r[emailCol] ?? "") : "").toString().trim();
     if (!numero || !nombre) continue;
     const numeroKey = normalizeStoreNumber(numero);
