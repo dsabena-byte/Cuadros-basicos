@@ -21,6 +21,14 @@ export type FloorShareDataset = {
   brands: string[];          // sorted unique brand names (excluding Total)
   generatedAt: string;
   fileCount: number;
+  contactosDebug?: {
+    localFile: string | null;
+    localCount: number;
+    globalCount: number;
+    mergedCount: number;
+    unmatchedSample: { storeNumber: string; storeName: string }[];
+    matchRate: number;
+  };
 };
 
 export type FloorShareEnrichedRow = FloorShareRow & {
@@ -182,6 +190,7 @@ function buildCadenasByFirstWord(
 
 function lookupContacto(
   contactos: Map<string, ContactoRow>,
+  byName: Map<string, ContactoRow>,
   storeNumber: string,
   storeName: string,
 ): ContactoRow | undefined {
@@ -199,8 +208,22 @@ function lookupContacto(
     const fallbackKey = tiendaKeyFromHMPDV(storeName);
     const fb = contactos.get(fallbackKey);
     if (fb) return fb;
+    // Fallback: por nombre normalizado solo (ignorando número)
+    const normName = norm(storeName);
+    const byNameHit = byName.get(normName);
+    if (byNameHit) return byNameHit;
   }
   return undefined;
+}
+
+function buildContactosByName(
+  contactos: Map<string, ContactoRow>,
+): Map<string, ContactoRow> {
+  const out = new Map<string, ContactoRow>();
+  for (const c of contactos.values()) {
+    if (c.nombreNorm && !out.has(c.nombreNorm)) out.set(c.nombreNorm, c);
+  }
+  return out;
 }
 
 export async function buildFloorShareDataset(
@@ -230,12 +253,17 @@ export async function buildFloorShareDataset(
   // globales (mismo key = numero+nombre).
   const localContactosFile = csvFiles.find((f) => isContactosFilename(f.name));
   let mergedContactos = contactos;
+  let localCount = 0;
   if (localContactosFile) {
     try {
       const buf = await downloadFile(localContactosFile.id);
       const localContactos = parseContactosCsv(buf);
+      localCount = localContactos.size;
       mergedContactos = new Map(contactos);
       for (const [k, v] of localContactos) mergedContactos.set(k, v);
+      console.log(
+        `[floor-share] contactos locales: ${localContactosFile.name} → ${localCount} filas (global: ${contactos.size}, merged: ${mergedContactos.size})`,
+      );
     } catch (err) {
       console.error(
         `[floor-share] no pude leer contactos local ${localContactosFile.name}:`,
@@ -245,9 +273,14 @@ export async function buildFloorShareDataset(
   }
   const dataFiles = csvFiles.filter((f) => f !== localContactosFile);
   const cadenasByFirstWord = buildCadenasByFirstWord(mergedContactos);
+  const contactosByName = buildContactosByName(mergedContactos);
 
   const allRows: FloorShareEnrichedRow[] = [];
   let parsedCount = 0;
+  // Tracking de matching contactos
+  const seenStoreKeys = new Set<string>();
+  const matchedStoreKeys = new Set<string>();
+  const unmatchedSamples: { storeNumber: string; storeName: string }[] = [];
 
   await Promise.all(
     dataFiles.map(async (file) => {
@@ -282,9 +315,23 @@ export async function buildFloorShareDataset(
         // Promotor / supervisor sí los tomamos de contactos cuando hay match.
         const contacto = lookupContacto(
           mergedContactos,
+          contactosByName,
           r.storeNumber,
           r.storeName,
         );
+        // Tracking de matching
+        const storeKey = (r.storeNumber || "") + "|" + (r.storeName || "");
+        if (!seenStoreKeys.has(storeKey)) {
+          seenStoreKeys.add(storeKey);
+          if (contacto) {
+            matchedStoreKeys.add(storeKey);
+          } else if (unmatchedSamples.length < 20) {
+            unmatchedSamples.push({
+              storeNumber: r.storeNumber,
+              storeName: r.storeName,
+            });
+          }
+        }
         allRows.push({
           ...r,
           cliente: canonicalizeCliente(rawCliente),
@@ -301,6 +348,13 @@ export async function buildFloorShareDataset(
     ...new Set(allRows.map((r) => r.brand).filter((b) => b && b.toLowerCase() !== "total")),
   ].sort();
 
+  const totalStores = seenStoreKeys.size;
+  const matchedStores = matchedStoreKeys.size;
+  const matchRate = totalStores > 0 ? matchedStores / totalStores : 0;
+  console.log(
+    `[floor-share] tiendas únicas: ${totalStores}, con contacto: ${matchedStores} (${(matchRate * 100).toFixed(1)}%), sin contacto: ${totalStores - matchedStores}`,
+  );
+
   return {
     rows: allRows,
     months,
@@ -308,5 +362,13 @@ export async function buildFloorShareDataset(
     brands,
     generatedAt: new Date().toISOString(),
     fileCount: parsedCount,
+    contactosDebug: {
+      localFile: localContactosFile?.name ?? null,
+      localCount,
+      globalCount: contactos.size,
+      mergedCount: mergedContactos.size,
+      unmatchedSample: unmatchedSamples,
+      matchRate,
+    },
   };
 }
