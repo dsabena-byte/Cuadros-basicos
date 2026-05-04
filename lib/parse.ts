@@ -135,13 +135,56 @@ export function parseContactosCsv(buffer: Buffer): Map<string, ContactoRow> {
     transformHeader: (h) => h.trim(),
   });
   const map = new Map<string, ContactoRow>();
+  // Detección tolerante: además de los nombres conocidos, hacemos fuzzy
+  // match si ninguno aparece literal.
+  const headers = parsed.meta?.fields ?? [];
+  const findCol = (
+    preferred: string[],
+    fuzzyTest: (h: string) => boolean,
+  ): string | null => {
+    for (const p of preferred) {
+      const lp = p.toLowerCase();
+      const hit = headers.find((h) => h && h.trim().toLowerCase() === lp);
+      if (hit) return hit;
+    }
+    return headers.find((h) => h && fuzzyTest(h.toLowerCase())) ?? null;
+  };
+
+  const numeroCol = findCol(
+    ["N° TIENDA", "N TIENDA", "Nº TIENDA", "NUMERO TIENDA", "NRO TIENDA",
+     "ID TIENDA", "NUMERO", "NRO", "Nº", "N°",
+     "CODIGO TIENDA", "CÓDIGO TIENDA", "COD TIENDA", "CÓD TIENDA",
+     "CODIGO", "CÓDIGO", "STORE", "STORE ID"],
+    (h) => /(^|\s|\b)(n°|nº|n |nro|num|numero|cod|codigo|código|id)/.test(h)
+        && /(tien|tda|store)/.test(h),
+  );
+
+  const nombreCol = findCol(
+    ["TIENDA HMPDV", "NOMBRE TIENDA", "NOMBRE DE TIENDA", "TIENDA",
+     "SUCURSAL", "PUNTO DE VENTA", "PDV", "NOMBRE"],
+    (h) => /(tienda|sucursal|pdv|punto de venta|nombre)/.test(h)
+        && !/(n°|nº|nro|num|cod|código|codigo|id\b)/.test(h),
+  );
+
+  const cadenaCol = findCol(
+    ["CADENA", "CLIENTE/CADENA", "CLIENTE"],
+    (h) => /(cadena|cliente)/.test(h),
+  );
+
+  const promotorCol = findCol(["PROMOTOR"], (h) => /promotor/.test(h));
+  const supervisorCol = findCol(["SUPERVISOR"], (h) => /supervisor/.test(h));
+  const emailCol = findCol(
+    ["EMAIL_PROMOTOR", "EMAIL PROMOTOR", "EMAIL"],
+    (h) => /(email|mail|correo)/.test(h),
+  );
+
   for (const r of parsed.data) {
-    const numero = pick(r, "N° TIENDA", "N TIENDA", "Nº TIENDA", "NUMERO", "NRO TIENDA", "ID TIENDA").trim();
-    const nombre = pick(r, "TIENDA", "TIENDA HMPDV", "NOMBRE TIENDA").trim();
-    const cadena = pick(r, "CADENA", "CLIENTE", "CLIENTE/CADENA").trim();
-    const promotor = pick(r, "PROMOTOR").trim();
-    const supervisor = pick(r, "SUPERVISOR").trim();
-    const emailPromotor = pick(r, "EMAIL_PROMOTOR", "EMAIL PROMOTOR", "EMAIL").trim();
+    const numero = (numeroCol ? (r[numeroCol] ?? "") : "").toString().trim();
+    const nombre = (nombreCol ? (r[nombreCol] ?? "") : "").toString().trim();
+    const cadena = (cadenaCol ? (r[cadenaCol] ?? "") : "").toString().trim();
+    const promotor = (promotorCol ? (r[promotorCol] ?? "") : "").toString().trim();
+    const supervisor = (supervisorCol ? (r[supervisorCol] ?? "") : "").toString().trim();
+    const emailPromotor = (emailCol ? (r[emailCol] ?? "") : "").toString().trim();
     if (!numero || !nombre) continue;
     const key = numero + "|" + norm(nombre);
     map.set(key, { numero, nombreNorm: norm(nombre), cadena, promotor, supervisor, emailPromotor });
