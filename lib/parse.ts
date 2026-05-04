@@ -133,10 +133,53 @@ const SUPERVISOR_ALIASES: Record<string, string> = {
   "raimundo pérez": "Raimundo Perez",
 };
 
+// Aliases manuales para promotores cuyas variantes no se pueden detectar
+// por sorted-words (typos, ñ↔n, palabras extra o faltantes). Key = nombre
+// lowercased + sin acentos + espacios colapsados; value = forma canónica.
+const PROMOTOR_ALIASES_RAW: Record<string, string> = {
+  "joel nicolas anazco": "Añazco Joel",
+  "anazco joel nicolas": "Añazco Joel",
+  "joel nicolas añazco": "Añazco Joel",
+  "añazco joel nicolas": "Añazco Joel",
+  "anazco joel": "Añazco Joel",
+  "añazco joel": "Añazco Joel",
+  "joel anazco": "Añazco Joel",
+  "joel añazco": "Añazco Joel",
+  "lucia carolina soria": "Soria Carolina",
+  "soria lucia carolina": "Soria Carolina",
+  "carolina soria": "Soria Carolina",
+  "soria carolina": "Soria Carolina",
+  "axel rozehnal": "Rozhenal Axel",
+  "rozehnal axel": "Rozhenal Axel",
+  "axel rozhenal": "Rozhenal Axel",
+  "rozhenal axel": "Rozhenal Axel",
+  "margarita vallejos": "Vallejo Margarita",
+  "vallejos margarita": "Vallejo Margarita",
+  "margarita vallejo": "Vallejo Margarita",
+  "vallejo margarita": "Vallejo Margarita",
+};
+
+function promotorAliasKey(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // Unifica variantes "Nombre Apellido" vs "Apellido Nombre" del campo
 // promotor en un mapa de contactos. La forma canónica es la variante más
 // frecuente; en empate, la primera alfabéticamente.
 export function canonicalizePromotorNames(map: Map<string, ContactoRow>): void {
+  // Paso 1: aplicar aliases manuales (typos, ñ↔n, palabras extra/faltantes).
+  for (const v of map.values()) {
+    const raw = (v.promotor || "").trim();
+    if (!raw) continue;
+    const alias = PROMOTOR_ALIASES_RAW[promotorAliasKey(raw)];
+    if (alias) v.promotor = alias;
+  }
+
   const sortedKey = (name: string) =>
     name
       .normalize("NFD")
