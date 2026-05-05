@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { buildDataset } from "@/lib/dataset";
+import { getDataset } from "@/lib/dataset";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 export async function GET() {
   const folderId = process.env.DRIVE_FOLDER_ID;
@@ -11,7 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: "DRIVE_FOLDER_ID no está definido" }, { status: 500 });
   }
   try {
-    const dataset = await buildDataset(folderId);
+    const dataset = await getDataset(folderId);
     return NextResponse.json(dataset, {
       headers: {
         "Cache-Control": "s-maxage=60, stale-while-revalidate=300",

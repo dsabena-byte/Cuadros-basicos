@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { invalidateDatasetCache } from "@/lib/dataset";
 
 export const runtime = "nodejs";
 
@@ -18,8 +19,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // La home es dinámica y consume /api/data desde el cliente,
-  // así que sólo revalidamos el endpoint de datos.
+  invalidateDatasetCache();
   revalidatePath("/api/data");
 
   return NextResponse.json({ ok: true, refreshedAt: new Date().toISOString() });
