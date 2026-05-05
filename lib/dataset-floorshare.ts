@@ -9,6 +9,7 @@ import {
   canonicalizePromotorNames,
   isContactosFilename,
   norm,
+  normalizeStoreNumber,
   parseContactosCsv,
   tiendaKeyFromHMPDV,
 } from "./parse";
@@ -57,6 +58,58 @@ export type FloorShareEnrichedRow = FloorShareRow & {
 
 function isCsv(name: string): boolean {
   return /\.csv$/i.test(name);
+}
+
+// Asignaciones manuales para tiendas que no figuraban en el mapeo del CSV
+// de contactos. Se mergean después del merge de global+local. El supervisor
+// se infiere del primer contacto existente con ese mismo promotor.
+const MANUAL_CONTACTOS: Array<{
+  numero: string;
+  nombre: string;
+  cadena: string;
+  promotor: string;
+}> = [
+  { numero: "182", nombre: "Hiper Libertad",                       cadena: "Hiper Libertad",    promotor: "Pagano Antonella" },
+  { numero: "183", nombre: "Hiper Libertad",                       cadena: "Hiper Libertad",    promotor: "Cavalie Gaston" },
+  { numero: "185", nombre: "Hiper Libertad Córdoba Av. Sabattini", cadena: "Hiper Libertad",    promotor: "Cavalie Gaston" },
+  { numero: "231", nombre: "Hiper Libertad",                       cadena: "Hiper Libertad",    promotor: "Soria Carolina" },
+  { numero: "232", nombre: "Hiper Libertad",                       cadena: "Hiper Libertad",    promotor: "Soria Carolina" },
+  { numero: "806", nombre: "On City Casilda",                      cadena: "On City",           promotor: "Scoppa Victor" },
+  { numero: "866", nombre: "On City Río Cuarto Shopping",          cadena: "On City",           promotor: "Amaya Heliana" },
+  { numero: "879", nombre: "On City Villa Cabrera",                cadena: "On City",           promotor: "Pagano Antonella" },
+  { numero: "883", nombre: "On City Liniers",                      cadena: "On City",           promotor: "Rozhenal Axel" },
+  { numero: "884", nombre: "On City Dot Baires",                   cadena: "On City",           promotor: "Paez Esteban" },
+  { numero: "70",  nombre: "Giudice La Plata Centro",              cadena: "Giudice",           promotor: "Perez Martina" },
+  { numero: "152", nombre: "Vea Tucumán Terminal",                 cadena: "Vea",               promotor: "Soria Carolina" },
+  { numero: "251", nombre: "Tevelin Yerba Buena",                  cadena: "Tevelín",           promotor: "Soria Carolina" },
+  { numero: "323", nombre: "Aloise Abasto",                        cadena: "Aloise Y Cia Sa",   promotor: "Paez Esteban" },
+  { numero: "377", nombre: "Jumbo Palermo",                        cadena: "Jumbo",             promotor: "Paez Esteban" },
+  { numero: "465", nombre: "Casa Del Audio Ramos Mejía",           cadena: "La Casa Del Audio", promotor: "Rodriguez Diana" },
+  { numero: "528", nombre: "Casa Dricco",                          cadena: "Casa Maitess",      promotor: "Scoppa Victor" },
+  { numero: "552", nombre: "Italhogar",                            cadena: "Italhogar",         promotor: "Scoppa Victor" },
+];
+
+function applyManualContactos(map: Map<string, ContactoRow>): void {
+  const promotorToSupervisor = new Map<string, string>();
+  for (const v of map.values()) {
+    const p = (v.promotor || "").trim();
+    const s = (v.supervisor || "").trim();
+    if (p && s && !promotorToSupervisor.has(p)) promotorToSupervisor.set(p, s);
+  }
+  for (const m of MANUAL_CONTACTOS) {
+    const numeroKey = normalizeStoreNumber(m.numero);
+    if (!numeroKey) continue;
+    const key = numeroKey + "|" + norm(m.nombre);
+    if (map.has(key)) continue; // ya estaba mapeada, no pisar
+    map.set(key, {
+      numero: numeroKey,
+      nombreNorm: norm(m.nombre),
+      cadena: m.cadena,
+      promotor: m.promotor,
+      supervisor: promotorToSupervisor.get(m.promotor) || "",
+      emailPromotor: "",
+    });
+  }
 }
 
 // Unifica variantes de nombre de cliente al canónico. La key se compara
@@ -292,6 +345,8 @@ export async function buildFloorShareDataset(
   const dataFiles = csvFiles.filter((f) => f !== localContactosFile);
   // Re-unifica nombres de promotor sobre el mapa mergeado (global+local).
   canonicalizePromotorNames(mergedContactos);
+  // Suma asignaciones manuales para tiendas que no estaban en el CSV.
+  applyManualContactos(mergedContactos);
   const cadenasByFirstWord = buildCadenasByFirstWord(mergedContactos);
   const contactosByName = buildContactosByName(mergedContactos);
 
