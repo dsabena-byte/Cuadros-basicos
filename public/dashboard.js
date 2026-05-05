@@ -496,9 +496,8 @@ function render() {
     '<thead><tr>' +
       '<th data-sort="cliente">Cliente</th>' +
       '<th data-sort="tienda">Tienda</th>' +
-      '<th data-sort="pctCB" class="td-grp-total">% CB Total</th>' +
       '<th data-sort="pctLavado" class="td-grp-lavado">% CB Lavado</th>' +
-      '<th data-sort="pctRefri" class="td-grp-refrigeracion">% CB Refrigeración</th>' +
+      '<th data-sort="pctRefri" class="td-grp-refrigeracion">% CB Refri</th>' +
       '<th data-sort="pctCoccion" class="td-grp-coccion">% CB Cocción</th>' +
     '</tr></thead>' +
     '<tbody id="tBody"></tbody></table></div></div>';
@@ -723,7 +722,6 @@ function renderTabla(data) {
     '<tr>' +
     '<td>' + escapeHtml(r.cliente || '—') + '</td>' +
     '<td>' + escapeHtml(r.tienda) + '</td>' +
-    cellPct(r.pctCB,        'td-grp-total') +
     cellPct(r.pctLavado,    'td-grp-lavado') +
     cellPct(r.pctRefri,     'td-grp-refrigeracion') +
     cellPct(r.pctCoccion,   'td-grp-coccion') +
@@ -925,6 +923,12 @@ function fsMonthLabel(code) {
 function fsTitleCase(s) {
   if (!s) return '';
   return s.toString().replace(/\b\p{L}/gu, c => c.toUpperCase());
+}
+
+function fsCatLabelShort(cat) {
+  const n = (cat || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  if (/refrigerac/.test(n)) return 'Refri';
+  return fsTitleCase(cat);
 }
 
 function fsDestroyCharts() {
@@ -1406,15 +1410,15 @@ function fsArrow(delta) {
 }
 
 function fsFmtCellPct(v) {
-  if (v === null) return '—';
-  return (Math.round(v * 100) / 100).toFixed(2).replace('.', ',') + ' %';
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  return Math.round(v) + '%';
 }
 
 function fsFmtDelta(d) {
-  if (d === null) return '';
-  const v = Math.round(d * 100) / 100;
-  if (Math.abs(v) < 0.005) return '0,00 pp';
-  return (v >= 0 ? '+' : '') + v.toFixed(2).replace('.', ',') + ' pp';
+  if (d === null || d === undefined || isNaN(d)) return '';
+  const v = Math.round(d);
+  if (v === 0) return '0 pp';
+  return (v > 0 ? '+' : '') + v + ' pp';
 }
 
 function fsRenderAggTableHtml(t, opts) {
@@ -1432,7 +1436,7 @@ function fsRenderAggTableHtml(t, opts) {
     '<div class="table-wrap"><table class="fs-promotor-table"><thead><tr>' +
     '<th class="fs-pt-name">' + escapeHtml(nameHeader) + '</th>';
   t.cats.forEach(cat => {
-    html += '<th class="fs-pt-cat" colspan="2">FS ' + escapeHtml(fsTitleCase(cat).toUpperCase()) + '</th>';
+    html += '<th class="fs-pt-cat" colspan="2">FS ' + escapeHtml(fsCatLabelShort(cat).toUpperCase()) + '</th>';
   });
   html += '</tr></thead><tbody>';
 

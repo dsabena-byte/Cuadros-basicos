@@ -44,9 +44,7 @@
   .tbl-detalle thead th:nth-child(4),
   .tbl-detalle tbody td:nth-child(4),
   .tbl-detalle thead th:nth-child(5),
-  .tbl-detalle tbody td:nth-child(5),
-  .tbl-detalle thead th:nth-child(6),
-  .tbl-detalle tbody td:nth-child(6) { border-left: 1px solid #cbd5e1; }
+  .tbl-detalle tbody td:nth-child(5) { border-left: 1px solid #cbd5e1; }
   th { text-align: left; padding: 8px 10px; background: #f8fafc; font-weight: 600; color: #475569; border-bottom: 2px solid #e2e8f0; cursor: pointer; user-select: none; position: sticky; top: 0; }
   th:hover { background: #f1f5f9; }
   td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; }
