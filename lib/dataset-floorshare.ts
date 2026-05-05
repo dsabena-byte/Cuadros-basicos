@@ -90,12 +90,33 @@ const MANUAL_CONTACTOS: Array<{
 ];
 
 function applyManualContactos(map: Map<string, ContactoRow>): void {
-  const promotorToSupervisor = new Map<string, string>();
+  const sortedKey = (name: string) =>
+    name
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .sort()
+      .join(" ");
+
+  // Mapa sortedKey(promotor) → { nombre canónico, supervisor }.
+  // Tolera que el CSV tenga el nombre en orden distinto al de MANUAL_CONTACTOS.
+  const promotorInfo = new Map<string, { canonical: string; supervisor: string }>();
   for (const v of map.values()) {
     const p = (v.promotor || "").trim();
-    const s = (v.supervisor || "").trim();
-    if (p && s && !promotorToSupervisor.has(p)) promotorToSupervisor.set(p, s);
+    if (!p) continue;
+    const k = sortedKey(p);
+    if (!k) continue;
+    const sup = (v.supervisor || "").trim();
+    const existing = promotorInfo.get(k);
+    if (!existing) {
+      promotorInfo.set(k, { canonical: p, supervisor: sup });
+    } else if (!existing.supervisor && sup) {
+      existing.supervisor = sup;
+    }
   }
+
   let added = 0;
   let skipped = 0;
   for (const m of MANUAL_CONTACTOS) {
@@ -106,12 +127,15 @@ function applyManualContactos(map: Map<string, ContactoRow>): void {
       skipped++;
       continue;
     }
+    const info = promotorInfo.get(sortedKey(m.promotor));
+    const promotor = info?.canonical || m.promotor;
+    const supervisor = info?.supervisor || "";
     map.set(key, {
       numero: numeroKey,
       nombreNorm: norm(m.nombre),
       cadena: m.cadena,
-      promotor: m.promotor,
-      supervisor: promotorToSupervisor.get(m.promotor) || "",
+      promotor,
+      supervisor,
       emailPromotor: "",
     });
     added++;
