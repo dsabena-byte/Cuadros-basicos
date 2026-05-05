@@ -96,11 +96,16 @@ function applyManualContactos(map: Map<string, ContactoRow>): void {
     const s = (v.supervisor || "").trim();
     if (p && s && !promotorToSupervisor.has(p)) promotorToSupervisor.set(p, s);
   }
+  let added = 0;
+  let skipped = 0;
   for (const m of MANUAL_CONTACTOS) {
     const numeroKey = normalizeStoreNumber(m.numero);
     if (!numeroKey) continue;
     const key = numeroKey + "|" + norm(m.nombre);
-    if (map.has(key)) continue; // ya estaba mapeada, no pisar
+    if (map.has(key)) {
+      skipped++;
+      continue;
+    }
     map.set(key, {
       numero: numeroKey,
       nombreNorm: norm(m.nombre),
@@ -109,7 +114,11 @@ function applyManualContactos(map: Map<string, ContactoRow>): void {
       supervisor: promotorToSupervisor.get(m.promotor) || "",
       emailPromotor: "",
     });
+    added++;
   }
+  console.log(
+    `[floor-share] applyManualContactos: ${added} agregadas, ${skipped} ya existían (de ${MANUAL_CONTACTOS.length} totales)`,
+  );
 }
 
 // Unifica variantes de nombre de cliente al canónico. La key se compara
