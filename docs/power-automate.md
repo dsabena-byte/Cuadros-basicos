@@ -30,7 +30,7 @@ en el detalle vienen sumadas de todos los pedidos.
 POST https://<tu-app>.vercel.app/api/ventas
 Headers:
   Content-Type: application/json
-  x-refresh-secret: <REFRESH_SECRET>     ← variable de entorno en Vercel
+  x-refresh-secret: <REFRESH_SECRET1>     ← variable de entorno en Vercel
 ```
 
 ### Body
@@ -133,14 +133,14 @@ Notas:
 
 | Variable                  | Para qué                                         |
 |---------------------------|--------------------------------------------------|
-| `REFRESH_SECRET`          | Secret compartido con Power Automate             |
+| `REFRESH_SECRET1`         | Secret compartido con Power Automate (header `x-refresh-secret`). El "1" es porque `REFRESH_SECRET` ya estaba ocupado en este proyecto Vercel. |
 | `BLOB_READ_WRITE_TOKEN`   | Token de Vercel Blob (lo crea Vercel automáticamente cuando agregás un Blob store al proyecto) |
 
 ## Probar localmente
 
 ```bash
 # server
-REFRESH_SECRET=dev-secret npm run dev
+REFRESH_SECRET1=dev-secret npm run dev
 
 # en otra terminal
 curl -X POST http://localhost:3000/api/ventas \

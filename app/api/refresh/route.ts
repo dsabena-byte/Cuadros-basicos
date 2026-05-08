@@ -13,7 +13,7 @@ function unauthorized() {
 }
 
 function checkSecret(request: Request): boolean {
-  const expected = process.env.REFRESH_SECRET;
+  const expected = process.env.REFRESH_SECRET1;
   if (!expected) return false;
   const url = new URL(request.url);
   const provided =

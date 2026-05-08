@@ -101,7 +101,7 @@ node scripts/import-csv.mjs
 node scripts/generate-dummy-ventas.mjs
 
 # probar el endpoint de Power Automate con un payload de ejemplo
-REFRESH_SECRET=dev-secret npm run dev
+REFRESH_SECRET1=dev-secret npm run dev
 curl -X POST http://localhost:3000/api/ventas \
   -H "Content-Type: application/json" \
   -H "x-refresh-secret: dev-secret" \

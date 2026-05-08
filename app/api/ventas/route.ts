@@ -15,14 +15,14 @@ export const dynamic = "force-dynamic";
 // POST → recibe el payload del flow con las dos solapas (FC + BO),
 //        las flatten en VentaRow[] y persiste el archivo.
 //
-// Auth: header `x-refresh-secret` que matchee REFRESH_SECRET.
+// Auth: header `x-refresh-secret` que matchee REFRESH_SECRET1.
 
 function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 }
 
 function checkSecret(request: Request): boolean {
-  const expected = process.env.REFRESH_SECRET;
+  const expected = process.env.REFRESH_SECRET1;
   if (!expected) return false;
   const url = new URL(request.url);
   const provided =
