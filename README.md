@@ -1,178 +1,99 @@
-# Dashboard Cumplimiento Cuadros Básicos
+# Dashboard Cumplimiento Cuadros Básicos · Drean Argentina
 
-Dashboard que se actualiza automáticamente cuando se suben CSVs nuevos a una
-carpeta de Google Drive. Calcula los KPIs de cumplimiento de **Cuadro Básico**,
-**Infaltables** y **Estratégicos** por cliente, tienda, supervisor y promotor.
+Dashboard React + Next.js que muestra el cumplimiento mensual de los
+**Cuadros Básicos** de Drean: porcentajes de **CB total**, **Infaltables** y
+**Estratégico** por gerente, vendedor, cliente y categoría, con objetivo
+80%.
 
-```
-Drive (carpeta "Tablero CB")
-        │
-        ├─ 15.csv, 16.csv, 17.csv, …       (datos semanales — se acumulan)
-        └─ Tiendas-promotor-supervisor.csv (mapeo de tiendas)
-                    │
-                    │   onChange (Apps Script)
-                    ▼
-        POST /api/refresh   →   Vercel revalida /api/data
-                    │
-                    ▼
-                Next.js page (lee Drive, arma dataset, sirve dashboard)
-```
+## Fuentes de datos
+
+| Tipo                        | Origen                                                 | Archivo en `/public/data/`     |
+|-----------------------------|--------------------------------------------------------|--------------------------------|
+| Cuadro básico (estático)    | Google Drive · `Cuadros-basicos-Abril-2026.csv`        | `cuadro-basico.json`           |
+| Clasificación de clientes   | Google Drive · `Clasificacion-clientes-Abril-2026.csv` | `clasificacion-clientes.json`  |
+| Ventas FC + BO (dinámico)   | SharePoint · `FC + BO 2026 - Hanna.xlsx` (Power Automate) | `ventas.json`               |
+
+> Carpeta de Drive: <https://drive.google.com/drive/folders/1qWyyWFcAe9EvfXr0ayDIVeIG1M6y3233>
+>
+> Sitio SharePoint: `mabe.sharepoint.com/sites/CO-ARCOMERCIAL` →
+> `General > 7. Analistas de Ventas > 1 - TABLEROS > Tablero - archivos para actualizar`
+
+Hoy los tres archivos JSON son **dummy** (ver `scripts/generate-dummy-data.mjs`).
+Cuando estén los CSVs reales y el flow de Power Automate, los reemplazamos por
+los datos de producción sin tocar el dashboard.
 
 ## Estructura
 
 ```
 app/
-  layout.tsx                   Shell HTML
-  page.tsx                     Shell HTML, fetch del dataset desde el cliente
-  api/data/route.ts            JSON crudo del dataset (debug / consumo externo)
-  api/refresh/route.ts         Webhook con secret → revalida la home
+  layout.tsx           Shell HTML + Tailwind
+  page.tsx             Server component, lee los 3 JSON y se los pasa al Dashboard
+  globals.css          Tailwind base
+
+components/
+  Dashboard.tsx        Componente cliente con todos los gráficos, tablas y filtros
 
 lib/
-  drive.ts                     Cliente Drive (service account)
-  parse.ts                     Parser CSV + normalización + clasificación SKU
-  dataset.ts                   Junta CSVs de la carpeta y arma el dataset
+  types.ts             Tipos compartidos (CuadroBasicoItem, ClasificacionCliente, VentaRow…)
+  data.ts              Lectura de los JSON estáticos desde /public/data/
 
-public/
-  dashboard.js                 JS del dashboard (Chart.js + render)
-  dashboard.css                Estilos
+public/data/
+  cuadro-basico.json
+  clasificacion-clientes.json
+  ventas.json
 
-apps-script/
-  code.gs                      Trigger que avisa a Vercel cuando hay cambios
+scripts/
+  generate-dummy-data.mjs   Genera los 3 JSON dummy (datos del mock original)
 ```
 
-## KPIs
+## Lógica de cumplimiento
+
+Un SKU está **cumplido** para un cliente si tiene al menos 1 unidad en FC o BO.
 
 ```
-Cumplimiento CB         = Σ realCB / Σ targetCB
-Cumplimiento Infaltable = Σ realInf / Σ targetInf
-Cumplimiento Estratégico= Σ (realCB - realInf) / Σ (targetCB - targetInf)
+% CB           = SKUs cumplidos / SKUs totales
+% Infaltables  = idem solo sobre tipo INFALTABLE
+% Estratégico  = idem solo sobre tipo ESTRATEGICO
 ```
 
-Clasificación por fila `(sku, tienda)`:
+Objetivo 80%; el delta vs objetivo se muestra en pp con flechas ↑↓.
 
-```
-targetCB - targetInf == 0  →  Infaltable
-targetCB - targetInf  > 0  →  Estratégico
-```
+## Filtros (en orden)
 
-## Setup
+`MES · CATEGORÍA · GERENTE · VENDEDOR · TIPOLOGÍA · CLIENTE · [Limpiar]`
 
-### 1. Service account de Google Cloud
+Cascadas: gerente filtra vendedor; tipología filtra cliente.
 
-1. Entrá a [console.cloud.google.com](https://console.cloud.google.com/) y creá
-   un proyecto nuevo (o usá uno existente).
-2. **APIs & Services → Library** → habilitá **Google Drive API**.
-3. **APIs & Services → Credentials → Create credentials → Service account**:
-   - Nombre: `cb-dashboard-reader`
-   - Rol: ninguno (lectura via share)
-4. Una vez creada, abrí la service account → pestaña **Keys → Add key →
-   Create new key → JSON**. Descargá el archivo `.json`.
-5. Copiá el `client_email` que aparece en el JSON (algo como
-   `cb-dashboard-reader@tu-proyecto.iam.gserviceaccount.com`) y compartí la
-   carpeta de Drive **"Tablero CB"** con ese email, permiso de **Viewer**.
+## Layout
 
-### 2. Vercel
-
-1. Importá el repo en Vercel (`vercel.com/new`).
-2. En **Settings → Environment Variables** agregá:
-
-   | Variable | Valor |
-   |---|---|
-   | `GOOGLE_SERVICE_ACCOUNT_JSON` | Pegá el JSON entero de la service account, en una sola línea |
-   | `DRIVE_FOLDER_ID` | `1J7NORR3iwnjbKrIAbjB79N7h5klGFYR3` |
-   | `REFRESH_SECRET` | Cualquier string aleatorio largo (lo vas a reusar en Apps Script) |
-
-3. Deploy.
-
-### 3. Apps Script (trigger de Drive → Vercel)
-
-1. Abrí [script.google.com](https://script.google.com) → **New project**.
-2. Pegá el contenido de `apps-script/code.gs` en `Code.gs`.
-3. **Project Settings → Script properties → Add script property** (tres
-   propiedades):
-
-   | Property | Value |
-   |---|---|
-   | `VERCEL_REFRESH_URL` | `https://<tu-app>.vercel.app/api/refresh` |
-   | `REFRESH_SECRET` | Mismo valor que en Vercel |
-   | `DRIVE_FOLDER_ID` | `1J7NORR3iwnjbKrIAbjB79N7h5klGFYR3` |
-
-4. En el editor, ejecutá **`installTrigger`** una vez. Te va a pedir
-   autorización — autorizá con tu cuenta `dsabena@gmail.com`.
-5. A partir de ahí, cada 5 minutos el script chequea si la carpeta cambió y, si
-   hay novedad, llama al webhook `/api/refresh`. El dashboard queda actualizado.
-
-> Si querés probar manualmente, ejecutá `refreshNow` desde el editor de Apps
-> Script — fuerza un refresh inmediato.
-
-## Formato de los archivos
-
-### CSVs semanales
-
-Nombre: cualquier cosa que contenga el número de semana (`15.csv`, `Sem15.csv`,
-`semana-15.csv`, etc.). Encoding: UTF-8 o Windows-1252 (se autodetecta).
-Separador: `;`, `\t` o `,` (autodetecta).
-
-Columnas requeridas:
-
-```
-DIVISION; CATEGORIA; SKU MABE; CLIENTE/CADENA; TIENDA HMPDV;
-targetCB; realCB; %cumpCB; targetInf; realInf; %cumpInf
-```
-
-Las filas con `TIENDA HMPDV = "Total"` o `SKU MABE = "Total"` se ignoran. Las
-filas con `targetCB = targetInf = 0` se ignoran.
-
-### Archivo de contactos
-
-Nombre: cualquier archivo cuyo nombre matchee `tiendas-promotor-supervisor`,
-`promotor-supervisor`, `contactos` o `maestro-tiendas`. Columnas:
-
-```
-CANAL; CADENA; FORMATO; N TIENDA; TIENDA; PROMOTOR; SUPERVISOR;
-TIPO DE TIENDA; EMAIL_PROMOTOR
-```
-
-El join con los CSVs de datos se hace por **número de tienda** (el prefijo
-numérico de `TIENDA HMPDV`).
-
-### CSVs de Floor Share
-
-Van en la subcarpeta `floor-share/` dentro de "Tablero CB". Convención de
-nombre: **`YYYY-MM_CATEGORIA.csv`** (ej: `2026-01_COCCION.csv`,
-`2026-04_LAVADO.csv`, `2026-03_REFRIGERACION.csv`).
-
-El parser es tolerante: acepta espacios extras alrededor del separador o
-antes de `.csv`, y normaliza la categoría a minúsculas (se muestra
-capitalizada en el dashboard). Si el nombre no matchea el patrón, el
-archivo se ignora con un warning en los logs del server.
-
-Formato del CSV (pivot con doble header, exportado de la planilla):
-
-```
-Subcategoría Participación Anaquel ; Marca1 ;     ; Marca2 ;     ; …
-                                   ; Unid.  ; %Part; Unid.  ; %Part; …
-124 - Frávega Once Ciudad         ; 12     ; 5,2 ; 8      ; 3,5 ; …
-…
-```
-
-El join con contactos se hace por número de tienda (igual que CB). El %
-de Floor Share se recalcula desde unidades — el `%Part` del archivo se
-ignora para el cálculo.
+1. Header con timestamp de última sincronización (`ventas.json#generatedAt`)
+2. FilterBar sticky
+3. KPI cards: % CB · % Infaltables · % Estratégico · Clientes · En riesgo (<50%)
+4. **Evolución mensual** — LineChart, cálculo acumulativo
+5. **Cumplimiento por Categoría** — BarChart agrupado
+6. **Cumplimiento por Vendedor** + **Cumplimiento por Cliente / Cadena** (tablas lado a lado)
+7. Detalle de SKUs del cliente seleccionado (al hacer click en una fila)
 
 ## Desarrollo local
 
 ```bash
 npm install
-cp .env.example .env.local
-# editar .env.local con las credenciales
-npm run dev
+npm run dev          # http://localhost:3000
+
+# regenerar datos dummy
+node scripts/generate-dummy-data.mjs
+
+# typecheck
+npm run typecheck
 ```
 
-Abrí <http://localhost:3000>.
+## Paleta
 
-## Endpoints
+| Métrica         | Color     |
+|-----------------|-----------|
+| % CB            | `#2542C2` |
+| % Infaltables   | `#A855F7` |
+| % Estratégico   | `#EC4899` |
+| Header tablas   | `#1e3a8a` |
 
-- `GET /` — dashboard HTML.
-- `GET /api/data` — dataset JSON crudo (útil para debug).
-- `POST /api/refresh` — fuerza revalidación. Header `x-refresh-secret: <REFRESH_SECRET>`.
+Coloreado de celdas: ≥80% verde · 70-79% amarillo · <70% rojo.

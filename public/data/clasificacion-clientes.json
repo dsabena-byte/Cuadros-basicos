@@ -1,0 +1,170 @@
+[
+  {
+    "cliente": "ELECTRONICA MEGATONE SRL",
+    "tipologia": "TOP 10",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "FRAVEGA S A C I E I",
+    "tipologia": "TOP 10",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "CETROGAR SA",
+    "tipologia": "TOP 10",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "NALDO LOMBARDI S A",
+    "tipologia": "TOP 10",
+    "vendedor": "DALMATIA SA",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "CASTILLO SACIFIA",
+    "tipologia": "TOP 10",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+    "tipologia": "TOP 10",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "BOSAN SA",
+    "tipologia": "TOP 10",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "MARANSI S A",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "GARCIA HUGO ANIBAL",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "GERENCIA SUR"
+  },
+  {
+    "cliente": "SERVISTAN TV S R L",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "GERENCIA SUR"
+  },
+  {
+    "cliente": "CASA MARTIN DE C Y A",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "GERENCIA SUR"
+  },
+  {
+    "cliente": "ESMASA S.R.L.",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "ELECTRO MISIONES S.A.",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "GAITAN ROGELIO RUBEN",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "RENNA MARIA ESTHER",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "DALMATIA SA",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "CIGNACCHI CLAUDIO LUIS",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "BRANT BERNARDO Y ABRAHAM",
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "CENCOSUD S.A. (JUMBO)",
+    "tipologia": "HIPERMERCADOS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "INC S.A. (CARREFOUR)",
+    "tipologia": "HIPERMERCADOS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "WALMART ARGENTINA SRL",
+    "tipologia": "HIPERMERCADOS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "GERENCIA SUR"
+  },
+  {
+    "cliente": "HOGAMAR SA",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "GERENCIA SUR"
+  },
+  {
+    "cliente": "MARCOS S.A.",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "GERENCIA SUR"
+  },
+  {
+    "cliente": "TODO HOGAR S R L",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "D Y D SRL",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "HOGAR CONFORT SA",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "MUSSI LUIS PABLO",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "GERENCIA NORTE"
+  },
+  {
+    "cliente": "COLDAROLI HOGAR S.R.L.",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "GERENCIA CENTRO"
+  },
+  {
+    "cliente": "HOTZ JUAN E HIJOS SA",
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "GERENCIA CENTRO"
+  }
+]

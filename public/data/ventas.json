@@ -1,0 +1,2220 @@
+{
+  "generatedAt": "2026-05-08T21:10:17.454Z",
+  "source": "dummy",
+  "rows": [
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 19,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 9,
+      "fecha": "2026-05-08",
+      "mes": 5,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 43,
+      "fecha": "2026-02-08",
+      "mes": 2,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-04-19",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 8,
+      "fecha": "2026-04-30",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 19,
+      "fecha": "2026-04-10",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "CD5602AN0",
+      "tipo": "FC",
+      "unidades": 10,
+      "fecha": "2026-03-20",
+      "mes": 3,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "LFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 48,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "LFDR0710SB0",
+      "tipo": "BO",
+      "unidades": 4,
+      "fecha": "2026-04-14",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "DSP480LKRSS0",
+      "tipo": "FC",
+      "unidades": 4,
+      "fecha": "2026-03-27",
+      "mes": 3,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 43,
+      "fecha": "2026-02-23",
+      "mes": 2,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "LCFDR0608LB0",
+      "tipo": "BO",
+      "unidades": 8,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 36,
+      "fecha": "2026-03-07",
+      "mes": 3,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "LCFDR0814SB0",
+      "tipo": "BO",
+      "unidades": 20,
+      "fecha": "2026-04-17",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 4,
+      "fecha": "2026-05-06",
+      "mes": 5,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "HDR400F41N",
+      "tipo": "BO",
+      "unidades": 16,
+      "fecha": "2026-05-05",
+      "mes": 5,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 20,
+      "fecha": "2026-02-25",
+      "mes": 2,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 6,
+      "fecha": "2026-05-02",
+      "mes": 5,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "LFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 10,
+      "fecha": "2026-02-11",
+      "mes": 2,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "DSP480LKRSS0",
+      "tipo": "FC",
+      "unidades": 17,
+      "fecha": "2026-03-17",
+      "mes": 3,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 47,
+      "fecha": "2026-04-29",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 36,
+      "fecha": "2026-03-31",
+      "mes": 3,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 13,
+      "fecha": "2026-04-28",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 14,
+      "fecha": "2026-04-20",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-05-02",
+      "mes": 5,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "CD5602AN0",
+      "tipo": "FC",
+      "unidades": 41,
+      "fecha": "2026-02-18",
+      "mes": 2,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "CD5602AN0",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "LFDR0710SB0",
+      "tipo": "BO",
+      "unidades": 3,
+      "fecha": "2026-05-04",
+      "mes": 5,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "DSP480LKRSS0",
+      "tipo": "FC",
+      "unidades": 50,
+      "fecha": "2026-03-11",
+      "mes": 3,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "DSP480LKRSS0",
+      "tipo": "BO",
+      "unidades": 15,
+      "fecha": "2026-04-26",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "CETROGAR SA",
+      "sku": "CD5617AI0",
+      "tipo": "BO",
+      "unidades": 2,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "NALDO LOMBARDI S A",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 40,
+      "fecha": "2026-02-09",
+      "mes": 2,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "NALDO LOMBARDI S A",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 19,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "NALDO LOMBARDI S A",
+      "sku": "CD5602AN0",
+      "tipo": "FC",
+      "unidades": 21,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "NALDO LOMBARDI S A",
+      "sku": "CD5602AN0",
+      "tipo": "BO",
+      "unidades": 13,
+      "fecha": "2026-05-08",
+      "mes": 5,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "NALDO LOMBARDI S A",
+      "sku": "DSP480LKRSS0",
+      "tipo": "BO",
+      "unidades": 12,
+      "fecha": "2026-05-01",
+      "mes": 5,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "NALDO LOMBARDI S A",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 31,
+      "fecha": "2026-03-20",
+      "mes": 3,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-04-10",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "HDR400F41N",
+      "tipo": "FC",
+      "unidades": 29,
+      "fecha": "2026-02-12",
+      "mes": 2,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 13,
+      "fecha": "2026-05-06",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 48,
+      "fecha": "2026-03-24",
+      "mes": 3,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 15,
+      "fecha": "2026-04-09",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 29,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "CD5602AN0",
+      "tipo": "FC",
+      "unidades": 17,
+      "fecha": "2026-05-04",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "CD5602AN0",
+      "tipo": "BO",
+      "unidades": 16,
+      "fecha": "2026-04-25",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "LFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 29,
+      "fecha": "2026-05-05",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 24,
+      "fecha": "2026-03-09",
+      "mes": 3,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CASTILLO SACIFIA",
+      "sku": "CD5617AI0",
+      "tipo": "BO",
+      "unidades": 15,
+      "fecha": "2026-05-01",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 43,
+      "fecha": "2026-05-05",
+      "mes": 5,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "LCFDR0608LB0",
+      "tipo": "BO",
+      "unidades": 19,
+      "fecha": "2026-04-17",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 50,
+      "fecha": "2026-03-21",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 40,
+      "fecha": "2026-03-14",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 13,
+      "fecha": "2026-03-14",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 1,
+      "fecha": "2026-04-16",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 18,
+      "fecha": "2026-03-29",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 2,
+      "fecha": "2026-03-18",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 12,
+      "fecha": "2026-04-26",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BOSAN SA",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 49,
+      "fecha": "2026-03-31",
+      "mes": 3,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "BOSAN SA",
+      "sku": "LCFDR0814SB0",
+      "tipo": "BO",
+      "unidades": 12,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "BOSAN SA",
+      "sku": "HDR400F41N",
+      "tipo": "FC",
+      "unidades": 46,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "BOSAN SA",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 33,
+      "fecha": "2026-03-20",
+      "mes": 3,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "BOSAN SA",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 14,
+      "fecha": "2026-03-16",
+      "mes": 3,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "BOSAN SA",
+      "sku": "CD5617AI0",
+      "tipo": "BO",
+      "unidades": 13,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 35,
+      "fecha": "2026-04-12",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "LCFDR0814SB0",
+      "tipo": "BO",
+      "unidades": 15,
+      "fecha": "2026-04-28",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 35,
+      "fecha": "2026-03-02",
+      "mes": 3,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-04-30",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 45,
+      "fecha": "2026-02-26",
+      "mes": 2,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 35,
+      "fecha": "2026-03-23",
+      "mes": 3,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 9,
+      "fecha": "2026-05-08",
+      "mes": 5,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 20,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "MARANSI S A",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 31,
+      "fecha": "2026-03-09",
+      "mes": 3,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "GARCIA HUGO ANIBAL",
+      "sku": "LCFDR0608LB0",
+      "tipo": "BO",
+      "unidades": 19,
+      "fecha": "2026-04-21",
+      "mes": 4,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "GARCIA HUGO ANIBAL",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 39,
+      "fecha": "2026-02-10",
+      "mes": 2,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "GARCIA HUGO ANIBAL",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 44,
+      "fecha": "2026-02-19",
+      "mes": 2,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "GARCIA HUGO ANIBAL",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 34,
+      "fecha": "2026-04-30",
+      "mes": 4,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "GARCIA HUGO ANIBAL",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 29,
+      "fecha": "2026-03-14",
+      "mes": 3,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "GARCIA HUGO ANIBAL",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 38,
+      "fecha": "2026-03-01",
+      "mes": 3,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "LCFDR0608LB0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "LCFDR0814SB0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-04-21",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 16,
+      "fecha": "2026-05-04",
+      "mes": 5,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "HDR400F41E",
+      "tipo": "FC",
+      "unidades": 12,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "HDR400F41E",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-05-06",
+      "mes": 5,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 22,
+      "fecha": "2026-04-03",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 23,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 37,
+      "fecha": "2026-04-06",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "SERVISTAN TV S R L",
+      "sku": "CD5617AI0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-04-30",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 3,
+      "fecha": "2026-03-01",
+      "mes": 3,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 16,
+      "fecha": "2026-04-22",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 24,
+      "fecha": "2026-02-25",
+      "mes": 2,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 45,
+      "fecha": "2026-03-30",
+      "mes": 3,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 37,
+      "fecha": "2026-04-30",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "CD5602AB0",
+      "tipo": "BO",
+      "unidades": 6,
+      "fecha": "2026-04-30",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 4,
+      "fecha": "2026-03-07",
+      "mes": 3,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "CASA MARTIN DE C Y A",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 12,
+      "fecha": "2026-04-22",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 20,
+      "fecha": "2026-04-23",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 23,
+      "fecha": "2026-03-01",
+      "mes": 3,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 10,
+      "fecha": "2026-03-05",
+      "mes": 3,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 11,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 12,
+      "fecha": "2026-02-08",
+      "mes": 2,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-04-27",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "HDR400F41E",
+      "tipo": "FC",
+      "unidades": 47,
+      "fecha": "2026-04-14",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "HDR400F41E",
+      "tipo": "BO",
+      "unidades": 14,
+      "fecha": "2026-04-10",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 18,
+      "fecha": "2026-02-08",
+      "mes": 2,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 16,
+      "fecha": "2026-05-02",
+      "mes": 5,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 4,
+      "fecha": "2026-04-30",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-04-17",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 23,
+      "fecha": "2026-02-28",
+      "mes": 2,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ESMASA S.R.L.",
+      "sku": "CD5602AB0",
+      "tipo": "BO",
+      "unidades": 3,
+      "fecha": "2026-04-16",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 12,
+      "fecha": "2026-04-14",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "LCFDR0608LB0",
+      "tipo": "BO",
+      "unidades": 1,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 24,
+      "fecha": "2026-04-07",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 8,
+      "fecha": "2026-04-14",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 14,
+      "fecha": "2026-02-19",
+      "mes": 2,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 4,
+      "fecha": "2026-04-21",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "HDR400F41E",
+      "tipo": "FC",
+      "unidades": 24,
+      "fecha": "2026-04-20",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "HDR400F41E",
+      "tipo": "BO",
+      "unidades": 20,
+      "fecha": "2026-05-01",
+      "mes": 5,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 20,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 15,
+      "fecha": "2026-02-23",
+      "mes": 2,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-04-27",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 28,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "ELECTRO MISIONES S.A.",
+      "sku": "CD5602AB0",
+      "tipo": "BO",
+      "unidades": 20,
+      "fecha": "2026-04-29",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 50,
+      "fecha": "2026-02-26",
+      "mes": 2,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 9,
+      "fecha": "2026-03-10",
+      "mes": 3,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "LCFDR0814SB0",
+      "tipo": "BO",
+      "unidades": 9,
+      "fecha": "2026-04-14",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 35,
+      "fecha": "2026-02-21",
+      "mes": 2,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 8,
+      "fecha": "2026-04-25",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 15,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 33,
+      "fecha": "2026-03-27",
+      "mes": 3,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 3,
+      "fecha": "2026-04-28",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 43,
+      "fecha": "2026-03-04",
+      "mes": 3,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "GAITAN ROGELIO RUBEN",
+      "sku": "CD5617AI0",
+      "tipo": "BO",
+      "unidades": 8,
+      "fecha": "2026-04-28",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 40,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 16,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "HDR400F41E",
+      "tipo": "FC",
+      "unidades": 15,
+      "fecha": "2026-02-27",
+      "mes": 2,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 4,
+      "fecha": "2026-04-05",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 46,
+      "fecha": "2026-03-28",
+      "mes": 3,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-04-27",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "LCFDR1012SB0",
+      "tipo": "BO",
+      "unidades": 4,
+      "fecha": "2026-04-24",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "RENNA MARIA ESTHER",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 50,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 4,
+      "fecha": "2026-04-29",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "LCFDR0814SB0",
+      "tipo": "BO",
+      "unidades": 3,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 33,
+      "fecha": "2026-03-04",
+      "mes": 3,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 2,
+      "fecha": "2026-05-01",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 9,
+      "fecha": "2026-03-31",
+      "mes": 3,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 18,
+      "fecha": "2026-03-18",
+      "mes": 3,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "CD5602AB0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "CIGNACCHI CLAUDIO LUIS",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 45,
+      "fecha": "2026-03-05",
+      "mes": 3,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 29,
+      "fecha": "2026-04-16",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 35,
+      "fecha": "2026-03-12",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-04-25",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 46,
+      "fecha": "2026-03-17",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 7,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 17,
+      "fecha": "2026-03-16",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 18,
+      "fecha": "2026-03-02",
+      "mes": 3,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "BRANT BERNARDO Y ABRAHAM",
+      "sku": "LCFDR1012SB0",
+      "tipo": "BO",
+      "unidades": 8,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "CENCOSUD S.A. (JUMBO)",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 18,
+      "fecha": "2026-03-25",
+      "mes": 3,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "CENCOSUD S.A. (JUMBO)",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 19,
+      "fecha": "2026-02-11",
+      "mes": 2,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "CENCOSUD S.A. (JUMBO)",
+      "sku": "LCFDR1012SB0",
+      "tipo": "BO",
+      "unidades": 6,
+      "fecha": "2026-04-23",
+      "mes": 4,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "CENCOSUD S.A. (JUMBO)",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 26,
+      "fecha": "2026-04-03",
+      "mes": 4,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "CENCOSUD S.A. (JUMBO)",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-05-04",
+      "mes": 5,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "CENCOSUD S.A. (JUMBO)",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 9,
+      "fecha": "2026-02-08",
+      "mes": 2,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "CENCOSUD S.A. (JUMBO)",
+      "sku": "CD5617AI0",
+      "tipo": "BO",
+      "unidades": 18,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "FERREIRO CRISTIAN"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "LCFDR0814SB0",
+      "tipo": "FC",
+      "unidades": 31,
+      "fecha": "2026-04-02",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "LCFDR0814SB0",
+      "tipo": "BO",
+      "unidades": 16,
+      "fecha": "2026-04-26",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 30,
+      "fecha": "2026-04-17",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "LSDR0680TB0",
+      "tipo": "BO",
+      "unidades": 1,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 37,
+      "fecha": "2026-04-28",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 14,
+      "fecha": "2026-05-05",
+      "mes": 5,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 43,
+      "fecha": "2026-04-16",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 7,
+      "fecha": "2026-04-18",
+      "mes": 4,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "INC S.A. (CARREFOUR)",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 23,
+      "fecha": "2026-03-28",
+      "mes": 3,
+      "vendedor": "POMBO MARCELO"
+    },
+    {
+      "cliente": "WALMART ARGENTINA SRL",
+      "sku": "LSDR0680TB0",
+      "tipo": "FC",
+      "unidades": 17,
+      "fecha": "2026-04-27",
+      "mes": 4,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "WALMART ARGENTINA SRL",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 50,
+      "fecha": "2026-02-15",
+      "mes": 2,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "WALMART ARGENTINA SRL",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 31,
+      "fecha": "2026-03-20",
+      "mes": 3,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "WALMART ARGENTINA SRL",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 21,
+      "fecha": "2026-02-10",
+      "mes": 2,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "WALMART ARGENTINA SRL",
+      "sku": "CD5617AI0",
+      "tipo": "FC",
+      "unidades": 23,
+      "fecha": "2026-04-29",
+      "mes": 4,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "WALMART ARGENTINA SRL",
+      "sku": "CD5617AI0",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-05-01",
+      "mes": 5,
+      "vendedor": "OVEID JORGE Y NICOLAS"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "700200380",
+      "tipo": "FC",
+      "unidades": 5,
+      "fecha": "2026-03-02",
+      "mes": 3,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 25,
+      "fecha": "2026-02-22",
+      "mes": 2,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 10,
+      "fecha": "2026-04-14",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "HDR370F61E",
+      "tipo": "FC",
+      "unidades": 12,
+      "fecha": "2026-03-20",
+      "mes": 3,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "HDR370F61E",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 37,
+      "fecha": "2026-03-02",
+      "mes": 3,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 19,
+      "fecha": "2026-03-25",
+      "mes": 3,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "LCFDR1012SB0",
+      "tipo": "BO",
+      "unidades": 6,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 14,
+      "fecha": "2026-04-24",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "CD5602AI0",
+      "tipo": "FC",
+      "unidades": 27,
+      "fecha": "2026-03-22",
+      "mes": 3,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "HOGAMAR SA",
+      "sku": "CD5602AI0",
+      "tipo": "BO",
+      "unidades": 3,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "IGNACIO PAGADIZABAL"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "HDR280F50B",
+      "tipo": "BO",
+      "unidades": 11,
+      "fecha": "2026-04-21",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "HDR370F61E",
+      "tipo": "FC",
+      "unidades": 27,
+      "fecha": "2026-03-26",
+      "mes": 3,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "CD5602AB0",
+      "tipo": "BO",
+      "unidades": 15,
+      "fecha": "2026-04-27",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 18,
+      "fecha": "2026-03-29",
+      "mes": 3,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "LCFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 45,
+      "fecha": "2026-03-31",
+      "mes": 3,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "LCFDR0710SB0",
+      "tipo": "BO",
+      "unidades": 13,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 9,
+      "fecha": "2026-05-06",
+      "mes": 5,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "MARCOS S.A.",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 6,
+      "fecha": "2026-04-16",
+      "mes": 4,
+      "vendedor": "PUELLES LUIS"
+    },
+    {
+      "cliente": "TODO HOGAR S R L",
+      "sku": "HDR370F61E",
+      "tipo": "BO",
+      "unidades": 4,
+      "fecha": "2026-04-29",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "TODO HOGAR S R L",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 16,
+      "fecha": "2026-03-24",
+      "mes": 3,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "TODO HOGAR S R L",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 30,
+      "fecha": "2026-02-14",
+      "mes": 2,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "TODO HOGAR S R L",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 43,
+      "fecha": "2026-03-29",
+      "mes": 3,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "TODO HOGAR S R L",
+      "sku": "LCFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 32,
+      "fecha": "2026-02-10",
+      "mes": 2,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "TODO HOGAR S R L",
+      "sku": "CD5602AI0",
+      "tipo": "FC",
+      "unidades": 26,
+      "fecha": "2026-04-10",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "TODO HOGAR S R L",
+      "sku": "CD5602AI0",
+      "tipo": "BO",
+      "unidades": 11,
+      "fecha": "2026-04-27",
+      "mes": 4,
+      "vendedor": "BARILLEAU RAUL"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 23,
+      "fecha": "2026-04-10",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "HDR370F61E",
+      "tipo": "FC",
+      "unidades": 32,
+      "fecha": "2026-04-16",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 11,
+      "fecha": "2026-04-09",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "CD5602AB0",
+      "tipo": "BO",
+      "unidades": 19,
+      "fecha": "2026-04-22",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 36,
+      "fecha": "2026-02-11",
+      "mes": 2,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "LCFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 15,
+      "fecha": "2026-04-24",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "LCFDR0710SB0",
+      "tipo": "BO",
+      "unidades": 19,
+      "fecha": "2026-04-15",
+      "mes": 4,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 46,
+      "fecha": "2026-03-24",
+      "mes": 3,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "D Y D SRL",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-05-03",
+      "mes": 5,
+      "vendedor": "PRESTA MARTIN"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "LCFDR0608LB0",
+      "tipo": "FC",
+      "unidades": 30,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "700200380",
+      "tipo": "BO",
+      "unidades": 8,
+      "fecha": "2026-04-17",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 50,
+      "fecha": "2026-03-22",
+      "mes": 3,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "LCFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 40,
+      "fecha": "2026-04-24",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "LCFDR0710SB0",
+      "tipo": "BO",
+      "unidades": 17,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 45,
+      "fecha": "2026-04-23",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "RZN320PCARX0",
+      "tipo": "BO",
+      "unidades": 13,
+      "fecha": "2026-04-11",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "CD5602AI0",
+      "tipo": "FC",
+      "unidades": 15,
+      "fecha": "2026-03-29",
+      "mes": 3,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "HOGAR CONFORT SA",
+      "sku": "CD5602AI0",
+      "tipo": "BO",
+      "unidades": 20,
+      "fecha": "2026-04-28",
+      "mes": 4,
+      "vendedor": "PEÑALVA JORGE"
+    },
+    {
+      "cliente": "MUSSI LUIS PABLO",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 37,
+      "fecha": "2026-04-26",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "MUSSI LUIS PABLO",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 31,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "MUSSI LUIS PABLO",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 38,
+      "fecha": "2026-05-07",
+      "mes": 5,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "MUSSI LUIS PABLO",
+      "sku": "LCFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 21,
+      "fecha": "2026-02-28",
+      "mes": 2,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "MUSSI LUIS PABLO",
+      "sku": "LCFDR0710SB0",
+      "tipo": "BO",
+      "unidades": 3,
+      "fecha": "2026-04-16",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "MUSSI LUIS PABLO",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 23,
+      "fecha": "2026-04-17",
+      "mes": 4,
+      "vendedor": "DALMATIA SA"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "700200380",
+      "tipo": "FC",
+      "unidades": 12,
+      "fecha": "2026-04-25",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "HDR280F50B",
+      "tipo": "FC",
+      "unidades": 35,
+      "fecha": "2026-02-22",
+      "mes": 2,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "HDR370F61E",
+      "tipo": "FC",
+      "unidades": 13,
+      "fecha": "2026-03-10",
+      "mes": 3,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "CD5602AB0",
+      "tipo": "FC",
+      "unidades": 49,
+      "fecha": "2026-04-20",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 5,
+      "fecha": "2026-05-05",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "LCFDR1012SB0",
+      "tipo": "FC",
+      "unidades": 18,
+      "fecha": "2026-02-12",
+      "mes": 2,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "LCFDR0710SB0",
+      "tipo": "BO",
+      "unidades": 20,
+      "fecha": "2026-05-08",
+      "mes": 5,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "RZN320PCARX0",
+      "tipo": "FC",
+      "unidades": 20,
+      "fecha": "2026-02-09",
+      "mes": 2,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "COLDAROLI HOGAR S.R.L.",
+      "sku": "CD5602AI0",
+      "tipo": "FC",
+      "unidades": 15,
+      "fecha": "2026-04-04",
+      "mes": 4,
+      "vendedor": "PIATTI MARCELO"
+    },
+    {
+      "cliente": "HOTZ JUAN E HIJOS SA",
+      "sku": "HDR370F61E",
+      "tipo": "FC",
+      "unidades": 26,
+      "fecha": "2026-04-26",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "HOTZ JUAN E HIJOS SA",
+      "sku": "HDR370F61E",
+      "tipo": "BO",
+      "unidades": 14,
+      "fecha": "2026-04-21",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "HOTZ JUAN E HIJOS SA",
+      "sku": "CD5603AI0",
+      "tipo": "FC",
+      "unidades": 30,
+      "fecha": "2026-04-26",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "HOTZ JUAN E HIJOS SA",
+      "sku": "CD5603AI0",
+      "tipo": "BO",
+      "unidades": 14,
+      "fecha": "2026-04-13",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "HOTZ JUAN E HIJOS SA",
+      "sku": "LCFDR0710SB0",
+      "tipo": "FC",
+      "unidades": 36,
+      "fecha": "2026-05-04",
+      "mes": 5,
+      "vendedor": "BERTINI DAMIAN"
+    },
+    {
+      "cliente": "HOTZ JUAN E HIJOS SA",
+      "sku": "CD5602AI0",
+      "tipo": "FC",
+      "unidades": 6,
+      "fecha": "2026-04-12",
+      "mes": 4,
+      "vendedor": "BERTINI DAMIAN"
+    }
+  ]
+}
