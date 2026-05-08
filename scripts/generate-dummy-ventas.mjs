@@ -1,4 +1,4 @@
-// Genera public/data/ventas.json con ventas simuladas a partir del CB y la
+// Genera data/ventas.json con ventas simuladas a partir del CB y la
 // clasificación reales. Cada cliente arma 1-3 pedidos; cada (pedido, sku)
 // del CB cae en uno de tres estados (FC 100% / BO 100% / split FC+BO),
 // asegurando que los porcentajes de cumplimiento sean realistas (~70-85%).
@@ -10,7 +10,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const outDir = resolve(here, "..", "public", "data");
+const outDir = resolve(here, "..", "data");
 mkdirSync(outDir, { recursive: true });
 
 const cuadroBasico = JSON.parse(readFileSync(resolve(outDir, "cuadro-basico.json"), "utf8"));

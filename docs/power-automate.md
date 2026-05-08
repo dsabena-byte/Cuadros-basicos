@@ -1,7 +1,7 @@
 # Conexión SharePoint → dashboard (Power Automate)
 
 El dashboard lee `ventas.json` desde Vercel Blob (en prod) o desde
-`/public/data/ventas.json` (en dev). El flow de Power Automate se encarga de
+`/data/ventas.json` (en dev). El flow de Power Automate se encarga de
 leer el Excel del SharePoint, armar el payload y postearlo al endpoint
 `POST /api/ventas` con un secret compartido.
 
@@ -150,4 +150,4 @@ curl -X POST http://localhost:3000/api/ventas \
 ```
 
 Sin `BLOB_READ_WRITE_TOKEN`, `writeVentas` escribe directo a
-`public/data/ventas.json` y refrescás la home.
+`data/ventas.json` y refrescás la home.

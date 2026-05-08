@@ -7,7 +7,7 @@ Dashboard React + Next.js que muestra el cumplimiento mensual de los
 
 ## Fuentes de datos
 
-| Tipo                        | Origen                                                 | Archivo en `/public/data/`     |
+| Tipo                        | Origen                                                 | Archivo en `/data/`            |
 |-----------------------------|--------------------------------------------------------|--------------------------------|
 | Cuadro básico (estático)    | Google Drive · `Cuadros-basicos-Abril-2026.csv`        | `cuadro-basico.json`           |
 | Clasificación de clientes   | Google Drive · `Clasificacion-clientes-Abril-2026.csv` | `clasificacion-clientes.json`  |
@@ -38,20 +38,20 @@ components/
 
 lib/
   types.ts                   Tipos compartidos
-  data.ts                    Carga de los JSON desde public/data/ + storage
+  data.ts                    Carga de los JSON (import) + storage de ventas
   storage.ts                 Vercel Blob (prod) o filesystem (dev) para ventas.json
 
-public/data/
+data/                        Bundleado en la función serverless (no expuesto por HTTP)
   cuadro-basico.json         Generado por scripts/import-csv.mjs
   clasificacion-clientes.json  Generado por scripts/import-csv.mjs
-  ventas.json                Lo escribe POST /api/ventas (en dev: scripts/generate-dummy-ventas.mjs)
+  ventas.json                Fallback dummy. En prod lo escribe POST /api/ventas al Vercel Blob
 
 raw-data/                    CSVs originales del Drive (input del importador)
   Cuadros-basicos-Abril-2026.csv
   Clasificacion-clientes-Abril-2026.csv
 
 scripts/
-  import-csv.mjs             Convierte raw-data/*.csv → public/data/*.json
+  import-csv.mjs             Convierte raw-data/*.csv → data/*.json
   generate-dummy-ventas.mjs  Genera ventas.json simuladas a partir del CB real
 
 docs/

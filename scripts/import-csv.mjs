@@ -1,8 +1,8 @@
 // Convierte los CSVs reales de Drive (carpeta Tablero CB / cuadro-basico-ventas)
 // a los JSON estáticos que consume el dashboard.
 //
-//   raw-data/Cuadros-basicos-Abril-2026.csv      → public/data/cuadro-basico.json
-//   raw-data/Clasificacion-clientes-Abril-2026.csv → public/data/clasificacion-clientes.json
+//   raw-data/Cuadros-basicos-Abril-2026.csv        → data/cuadro-basico.json
+//   raw-data/Clasificacion-clientes-Abril-2026.csv → data/clasificacion-clientes.json
 //
 // Encoding de los CSV: ISO-8859-1 (Windows-1252). Hay que decodificar con
 // TextDecoder("latin1") para que `PE�ALVA` salga como `PEÑALVA`.
@@ -14,7 +14,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..");
 const rawDir = resolve(repoRoot, "raw-data");
-const outDir = resolve(repoRoot, "public", "data");
+const outDir = resolve(repoRoot, "data");
 mkdirSync(outDir, { recursive: true });
 
 const decoder = new TextDecoder("latin1");
