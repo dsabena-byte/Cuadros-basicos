@@ -4,7 +4,7 @@ export type Tipologia =
   | "HIPERMERCADOS"
   | "SMALL RETAILERS";
 
-export type Categoria = "LAVADO Y SECADO" | "REFRIGERACION" | "COCCION";
+export type Categoria = "LAVADO" | "REFRIGERACION" | "COCCION";
 
 export type TipoCB = "INFALTABLE" | "ESTRATEGICO";
 
@@ -17,10 +17,12 @@ export type CuadroBasicoItem = {
 };
 
 export type ClasificacionCliente = {
+  id: string;            // ID interno del cliente (col ID del CSV)
   cliente: string;
+  pesoFacturacion: number; // 0..1
   tipologia: Tipologia;
   vendedor: string;
-  gerente: string;
+  gerente: string;       // "Cuentas Clave" | "Interior" | "Buenos Aires"
 };
 
 export type VentaTipo = "FC" | "BO";

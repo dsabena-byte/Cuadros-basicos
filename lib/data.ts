@@ -5,6 +5,7 @@ import type {
   ClasificacionCliente,
   VentasFile,
 } from "./types";
+import { readVentas } from "./storage";
 
 const DATA_DIR = path.join(process.cwd(), "public", "data");
 
@@ -22,5 +23,5 @@ export async function loadClasificacion(): Promise<ClasificacionCliente[]> {
 }
 
 export async function loadVentas(): Promise<VentasFile> {
-  return readJson<VentasFile>("ventas.json");
+  return readVentas();
 }

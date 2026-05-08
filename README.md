@@ -26,24 +26,37 @@ los datos de producción sin tocar el dashboard.
 
 ```
 app/
-  layout.tsx           Shell HTML + Tailwind
-  page.tsx             Server component, lee los 3 JSON y se los pasa al Dashboard
-  globals.css          Tailwind base
+  layout.tsx                 Shell HTML + Tailwind
+  page.tsx                   Server component, lee los 3 JSON y se los pasa al Dashboard
+  globals.css                Tailwind base
+  api/
+    ventas/route.ts          POST: recibe el payload de Power Automate (FC + BO)
+    refresh/route.ts         POST: revalida la home sin reescribir ventas
 
 components/
-  Dashboard.tsx        Componente cliente con todos los gráficos, tablas y filtros
+  Dashboard.tsx              Componente cliente con gráficos, tablas y filtros
 
 lib/
-  types.ts             Tipos compartidos (CuadroBasicoItem, ClasificacionCliente, VentaRow…)
-  data.ts              Lectura de los JSON estáticos desde /public/data/
+  types.ts                   Tipos compartidos
+  data.ts                    Carga de los JSON desde public/data/ + storage
+  storage.ts                 Vercel Blob (prod) o filesystem (dev) para ventas.json
 
 public/data/
-  cuadro-basico.json
-  clasificacion-clientes.json
-  ventas.json
+  cuadro-basico.json         Generado por scripts/import-csv.mjs
+  clasificacion-clientes.json  Generado por scripts/import-csv.mjs
+  ventas.json                Lo escribe POST /api/ventas (en dev: scripts/generate-dummy-ventas.mjs)
+
+raw-data/                    CSVs originales del Drive (input del importador)
+  Cuadros-basicos-Abril-2026.csv
+  Clasificacion-clientes-Abril-2026.csv
 
 scripts/
-  generate-dummy-data.mjs   Genera los 3 JSON dummy (datos del mock original)
+  import-csv.mjs             Convierte raw-data/*.csv → public/data/*.json
+  generate-dummy-ventas.mjs  Genera ventas.json simuladas a partir del CB real
+
+docs/
+  power-automate.md          Cómo configurar el flow + shape del payload
+  sample-payload.json        Body de ejemplo para probar /api/ventas con curl
 ```
 
 ## Lógica de cumplimiento
@@ -80,12 +93,33 @@ Cascadas: gerente filtra vendedor; tipología filtra cliente.
 npm install
 npm run dev          # http://localhost:3000
 
-# regenerar datos dummy
-node scripts/generate-dummy-data.mjs
+# regenerar JSONs desde los CSV reales del Drive
+node scripts/import-csv.mjs
 
-# typecheck
+# regenerar ventas dummy a partir del CB real (para tener algo en el dashboard
+# sin Power Automate)
+node scripts/generate-dummy-ventas.mjs
+
+# probar el endpoint de Power Automate con un payload de ejemplo
+REFRESH_SECRET=dev-secret npm run dev
+curl -X POST http://localhost:3000/api/ventas \
+  -H "Content-Type: application/json" \
+  -H "x-refresh-secret: dev-secret" \
+  -d @docs/sample-payload.json
+
 npm run typecheck
 ```
+
+## Conexión SharePoint → Power Automate
+
+El detalle del flow (trigger sobre `FC + BO 2026 - Hanna.xlsx`, mapeo de
+columnas, payload esperado, errores) está en
+[`docs/power-automate.md`](docs/power-automate.md).
+
+Punto clave: las solapas **BO** y **FC** se conectan por **Documento de
+Ventas**. Un mismo pedido puede estar 100% en BO, 100% en FC, o partido
+entre las dos solapas; el dashboard considera un SKU cumplido para un
+cliente si tiene al menos 1 unidad en cualquiera de las dos.
 
 ## Paleta
 

@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-05-08T13:42:00Z",
+  "fc": [
+    {
+      "documentoVentas": "80012345",
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "LCFDR0608LB0",
+      "unidades": 12,
+      "fecha": "2026-05-02",
+      "vendedor": "CUENTAS CLAVE RETAIL"
+    },
+    {
+      "documentoVentas": "80012346",
+      "cliente": "FRAVEGA S A C I E I",
+      "sku": "HDR280F50B",
+      "unidades": 8,
+      "fecha": "2026-05-04",
+      "vendedor": "CUENTAS CLAVE RETAIL"
+    }
+  ],
+  "bo": [
+    {
+      "documentoVentas": "80012345",
+      "cliente": "ELECTRONICA MEGATONE SRL",
+      "sku": "LCFDR0608LB0",
+      "unidades": 4,
+      "fecha": "2026-05-02",
+      "vendedor": "CUENTAS CLAVE RETAIL"
+    }
+  ]
+}

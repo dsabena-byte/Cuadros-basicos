@@ -1,170 +1,2218 @@
 [
   {
+    "id": "20006679",
     "cliente": "ELECTRONICA MEGATONE SRL",
+    "pesoFacturacion": 0.10189999999999999,
     "tipologia": "TOP 10",
-    "vendedor": "BARILLEAU RAUL",
-    "gerente": "GERENCIA NORTE"
+    "vendedor": "CUENTAS CLAVE RETAIL",
+    "gerente": "Cuentas Clave"
   },
   {
+    "id": "20006708",
     "cliente": "FRAVEGA S A C I E I",
+    "pesoFacturacion": 0.09210000000000002,
     "tipologia": "TOP 10",
-    "vendedor": "PRESTA MARTIN",
-    "gerente": "GERENCIA NORTE"
+    "vendedor": "CUENTAS CLAVE RETAIL",
+    "gerente": "Cuentas Clave"
   },
   {
+    "id": "20006560",
     "cliente": "CETROGAR SA",
+    "pesoFacturacion": 0.0764,
     "tipologia": "TOP 10",
-    "vendedor": "PEÑALVA JORGE",
-    "gerente": "GERENCIA NORTE"
+    "vendedor": "VENTAS INTERIOR",
+    "gerente": "Interior"
   },
   {
-    "cliente": "NALDO LOMBARDI S A",
-    "tipologia": "TOP 10",
-    "vendedor": "DALMATIA SA",
-    "gerente": "GERENCIA NORTE"
-  },
-  {
-    "cliente": "CASTILLO SACIFIA",
-    "tipologia": "TOP 10",
-    "vendedor": "PIATTI MARCELO",
-    "gerente": "GERENCIA CENTRO"
-  },
-  {
+    "id": "20006901",
     "cliente": "BLAS OSCAR MARTINUCCI E HIJOS S A",
+    "pesoFacturacion": 0.0415,
+    "tipologia": "TOP 10",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006848",
+    "cliente": "NALDO LOMBARDI S A",
+    "pesoFacturacion": 0.038,
+    "tipologia": "TOP 10",
+    "vendedor": "VENTAS BS AS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006542",
+    "cliente": "CASTILLO SACIFIA",
+    "pesoFacturacion": 0.0378,
     "tipologia": "TOP 10",
     "vendedor": "BERTINI DAMIAN",
-    "gerente": "GERENCIA CENTRO"
+    "gerente": "Interior"
   },
   {
-    "cliente": "BOSAN SA",
-    "tipologia": "TOP 10",
-    "vendedor": "FERREIRO CRISTIAN",
-    "gerente": "GERENCIA CENTRO"
-  },
-  {
+    "id": "20007460",
     "cliente": "MARANSI S A",
-    "tipologia": "GRANDES CUENTAS RESTO",
-    "vendedor": "POMBO MARCELO",
-    "gerente": "GERENCIA CENTRO"
+    "pesoFacturacion": 0.0377,
+    "tipologia": "TOP 10",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
   },
   {
-    "cliente": "GARCIA HUGO ANIBAL",
-    "tipologia": "GRANDES CUENTAS RESTO",
+    "id": "20006983",
+    "cliente": "PETENATTI HNOS SA",
+    "pesoFacturacion": 0.0292,
+    "tipologia": "TOP 10",
     "vendedor": "OVEID JORGE Y NICOLAS",
-    "gerente": "GERENCIA SUR"
+    "gerente": "Interior"
   },
   {
-    "cliente": "SERVISTAN TV S R L",
+    "id": "20007456",
+    "cliente": "MANCI SRL",
+    "pesoFacturacion": 0.0286,
+    "tipologia": "TOP 10",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006517",
+    "cliente": "BOSAN SA",
+    "pesoFacturacion": 0.0194,
+    "tipologia": "TOP 10",
+    "vendedor": "CUENTAS CLAVE RETAIL",
+    "gerente": "Cuentas Clave"
+  },
+  {
+    "id": "20006498",
+    "cliente": "BAZAR AVENIDA SA",
+    "pesoFacturacion": 0.016200000000000003,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "VENTAS INTERIOR",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006573",
+    "cliente": "COOPERATIVA OBRERA LIMITADA DE",
+    "pesoFacturacion": 0.0159,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007116",
+    "cliente": "CASIMIRO FELIX TOYOS E HIJOS SA",
+    "pesoFacturacion": 0.0132,
     "tipologia": "GRANDES CUENTAS RESTO",
     "vendedor": "IGNACIO PAGADIZABAL",
-    "gerente": "GERENCIA SUR"
+    "gerente": "Buenos Aires"
   },
   {
-    "cliente": "CASA MARTIN DE C Y A",
+    "id": "20007348",
+    "cliente": "COPPEL SA",
+    "pesoFacturacion": 0.0126,
     "tipologia": "GRANDES CUENTAS RESTO",
-    "vendedor": "PUELLES LUIS",
-    "gerente": "GERENCIA SUR"
+    "vendedor": "VENTA HIPERMERCADOS",
+    "gerente": "Cuentas Clave"
   },
   {
-    "cliente": "ESMASA S.R.L.",
+    "id": "20009874",
+    "cliente": "HIMPA SRL",
+    "pesoFacturacion": 0.0125,
     "tipologia": "GRANDES CUENTAS RESTO",
-    "vendedor": "BARILLEAU RAUL",
-    "gerente": "GERENCIA NORTE"
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
   },
   {
+    "id": "20006586",
+    "cliente": "CARSA SA",
+    "pesoFacturacion": 0.011000000000000001,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "VENTAS INTERIOR",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006502",
+    "cliente": "OSCAR BARBIERI S A",
+    "pesoFacturacion": 0.0103,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011051",
+    "cliente": "REAL COLOR SRL",
+    "pesoFacturacion": 0.0095,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "VENTAS BS AS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007324",
+    "cliente": "HOGAR TOTAL S A",
+    "pesoFacturacion": 0.0089,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006702",
+    "cliente": "FAVA HNOS SACIF",
+    "pesoFacturacion": 0.008,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012129",
     "cliente": "ELECTRO MISIONES S.A.",
+    "pesoFacturacion": 0.0074,
     "tipologia": "GRANDES CUENTAS RESTO",
-    "vendedor": "PRESTA MARTIN",
-    "gerente": "GERENCIA NORTE"
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
   },
   {
-    "cliente": "GAITAN ROGELIO RUBEN",
+    "id": "20006837",
+    "cliente": "JOSE MARIA LAMI HERNANDEZ Y CIA SRL",
+    "pesoFacturacion": 0.0072,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006775",
+    "cliente": "HENDEL HOGAR SA",
+    "pesoFacturacion": 0.0072,
     "tipologia": "GRANDES CUENTAS RESTO",
     "vendedor": "PEÑALVA JORGE",
-    "gerente": "GERENCIA NORTE"
+    "gerente": "Buenos Aires"
   },
   {
-    "cliente": "RENNA MARIA ESTHER",
+    "id": "20006566",
+    "cliente": "CASA LUIS CHEMES S.A.",
+    "pesoFacturacion": 0.0070999999999999995,
     "tipologia": "GRANDES CUENTAS RESTO",
-    "vendedor": "DALMATIA SA",
-    "gerente": "GERENCIA NORTE"
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
   },
   {
-    "cliente": "CIGNACCHI CLAUDIO LUIS",
+    "id": "20007658",
+    "cliente": "MUÑOZ Y CIA SRL",
+    "pesoFacturacion": 0.0070999999999999995,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007363",
+    "cliente": "ENKEM SA",
+    "pesoFacturacion": 0.0069,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006954",
+    "cliente": "NUEVAS MUEBLERIAS AV SA",
+    "pesoFacturacion": 0.0069,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007031",
+    "cliente": "RADIO SAPIENZA S A",
+    "pesoFacturacion": 0.0069,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007103",
+    "cliente": "SORBA S R L",
+    "pesoFacturacion": 0.006500000000000001,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006866",
+    "cliente": "MYM NET S. A",
+    "pesoFacturacion": 0.0060999999999999995,
     "tipologia": "GRANDES CUENTAS RESTO",
     "vendedor": "PIATTI MARCELO",
-    "gerente": "GERENCIA CENTRO"
+    "gerente": "Interior"
   },
   {
-    "cliente": "BRANT BERNARDO Y ABRAHAM",
+    "id": "20012619",
+    "cliente": "DON GASTON S.A.",
+    "pesoFacturacion": 0.005600000000000001,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007637",
+    "cliente": "GRUPO OSCAR A ALOISE CONSORCIO DE",
+    "pesoFacturacion": 0.0055000000000000005,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "VENTAS BS AS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006652",
+    "cliente": "DILCAR SA",
+    "pesoFacturacion": 0.0054,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006984",
+    "cliente": "PEROZZI DOMINGO Y PEROZZI OSVALDO",
+    "pesoFacturacion": 0.0054,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006469",
+    "cliente": "ACCION MERCANTIL SA",
+    "pesoFacturacion": 0.0054,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013134",
+    "cliente": "ELECTRO GV S.R.L.",
+    "pesoFacturacion": 0.005,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006600",
+    "cliente": "CASA SILVIA SA",
+    "pesoFacturacion": 0.004699999999999999,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007367",
+    "cliente": "CONFORT ANVE SA",
+    "pesoFacturacion": 0.0046,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006749",
+    "cliente": "GENESIO SA",
+    "pesoFacturacion": 0.0043,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007127",
+    "cliente": "TIO MUSA SA",
+    "pesoFacturacion": 0.0042,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007381",
+    "cliente": "GRAFALE HOGAR SRL",
+    "pesoFacturacion": 0.0037,
     "tipologia": "GRANDES CUENTAS RESTO",
     "vendedor": "BERTINI DAMIAN",
-    "gerente": "GERENCIA CENTRO"
+    "gerente": "Interior"
   },
   {
-    "cliente": "CENCOSUD S.A. (JUMBO)",
-    "tipologia": "HIPERMERCADOS",
-    "vendedor": "FERREIRO CRISTIAN",
-    "gerente": "GERENCIA CENTRO"
+    "id": "20006684",
+    "cliente": "ELVIRA JORGE DANIEL",
+    "pesoFacturacion": 0.0037,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
   },
   {
-    "cliente": "INC S.A. (CARREFOUR)",
-    "tipologia": "HIPERMERCADOS",
+    "id": "20007137",
+    "cliente": "UOLE S A",
+    "pesoFacturacion": 0.0036,
+    "tipologia": "GRANDES CUENTAS RESTO",
     "vendedor": "POMBO MARCELO",
-    "gerente": "GERENCIA CENTRO"
+    "gerente": "Buenos Aires"
   },
   {
-    "cliente": "WALMART ARGENTINA SRL",
-    "tipologia": "HIPERMERCADOS",
+    "id": "20008506",
+    "cliente": "AL TECNO SA",
+    "pesoFacturacion": 0.0036,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "VENTAS BS AS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006793",
+    "cliente": "SUCESORES DE YEIZEL KATZ SH",
+    "pesoFacturacion": 0.0034999999999999996,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006550",
+    "cliente": "NEXON SA",
+    "pesoFacturacion": 0.0034000000000000002,
+    "tipologia": "GRANDES CUENTAS RESTO",
     "vendedor": "OVEID JORGE Y NICOLAS",
-    "gerente": "GERENCIA SUR"
+    "gerente": "Interior"
   },
   {
-    "cliente": "HOGAMAR SA",
-    "tipologia": "SMALL RETAILERS",
-    "vendedor": "IGNACIO PAGADIZABAL",
-    "gerente": "GERENCIA SUR"
+    "id": "20006994",
+    "cliente": "PARDO S A",
+    "pesoFacturacion": 0.0033,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "VENTAS BS AS",
+    "gerente": "Buenos Aires"
   },
   {
-    "cliente": "MARCOS S.A.",
-    "tipologia": "SMALL RETAILERS",
+    "id": "20011884",
+    "cliente": "CELULARES & ETCETERA S.R.L.",
+    "pesoFacturacion": 0.0032,
+    "tipologia": "GRANDES CUENTAS RESTO",
     "vendedor": "PUELLES LUIS",
-    "gerente": "GERENCIA SUR"
+    "gerente": "Buenos Aires"
   },
   {
-    "cliente": "TODO HOGAR S R L",
+    "id": "20006445",
+    "cliente": "SATURNO HOGAR SA",
+    "pesoFacturacion": 0.0029,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007074",
+    "cliente": "SERVITEC 9 DE JULIO S A",
+    "pesoFacturacion": 0.0029,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012344",
+    "cliente": "DIPROMAS S.R.L.",
+    "pesoFacturacion": 0.0024,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20010336",
+    "cliente": "GONZALEZ LORENA",
+    "pesoFacturacion": 0.0023,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006676",
+    "cliente": "DIAMANT HOGAR SRL",
+    "pesoFacturacion": 0.002,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006545",
+    "cliente": "CASA REIG SA",
+    "pesoFacturacion": 0.002,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20010465",
+    "cliente": "LA FAVORITA SRL",
+    "pesoFacturacion": 0.002,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20012520",
+    "cliente": "GADEA NICOLAS JAVIER",
+    "pesoFacturacion": 0.0019,
+    "tipologia": "GRANDES CUENTAS RESTO",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006829",
+    "cliente": "LA AGRICOLA REG COOP LTDA",
+    "pesoFacturacion": 0.0019,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006832",
+    "cliente": "LUCIANA HOGAR SA",
+    "pesoFacturacion": 0.0019,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006818",
+    "cliente": "LAROZ VICTOR JAIME E HIJOS SH",
+    "pesoFacturacion": 0.0019,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007128",
+    "cliente": "PEYRAN JUAN RICARDO",
+    "pesoFacturacion": 0.0019,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006881",
+    "cliente": "MAXI HOGAR SRL",
+    "pesoFacturacion": 0.0018,
     "tipologia": "SMALL RETAILERS",
     "vendedor": "BARILLEAU RAUL",
-    "gerente": "GERENCIA NORTE"
+    "gerente": "Interior"
   },
   {
-    "cliente": "D Y D SRL",
-    "tipologia": "SMALL RETAILERS",
-    "vendedor": "PRESTA MARTIN",
-    "gerente": "GERENCIA NORTE"
-  },
-  {
-    "cliente": "HOGAR CONFORT SA",
-    "tipologia": "SMALL RETAILERS",
-    "vendedor": "PEÑALVA JORGE",
-    "gerente": "GERENCIA NORTE"
-  },
-  {
-    "cliente": "MUSSI LUIS PABLO",
+    "id": "20006877",
+    "cliente": "MUEBLERIA TORCA SA",
+    "pesoFacturacion": 0.0017000000000000001,
     "tipologia": "SMALL RETAILERS",
     "vendedor": "DALMATIA SA",
-    "gerente": "GERENCIA NORTE"
+    "gerente": "Interior"
   },
   {
-    "cliente": "COLDAROLI HOGAR S.R.L.",
+    "id": "20007338",
+    "cliente": "MACER S A",
+    "pesoFacturacion": 0.0017000000000000001,
     "tipologia": "SMALL RETAILERS",
-    "vendedor": "PIATTI MARCELO",
-    "gerente": "GERENCIA CENTRO"
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
   },
   {
-    "cliente": "HOTZ JUAN E HIJOS SA",
+    "id": "20007062",
+    "cliente": "REFRIGERACION DATSCHKE SA",
+    "pesoFacturacion": 0.0017000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006902",
+    "cliente": "MERLINO PLAN SA",
+    "pesoFacturacion": 0.0016,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011977",
+    "cliente": "MARCOS S.A.",
+    "pesoFacturacion": 0.0016,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006874",
+    "cliente": "MONTES HNOS SA",
+    "pesoFacturacion": 0.0015,
     "tipologia": "SMALL RETAILERS",
     "vendedor": "BERTINI DAMIAN",
-    "gerente": "GERENCIA CENTRO"
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007064",
+    "cliente": "RIVERA HOGAR S A",
+    "pesoFacturacion": 0.0015,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007377",
+    "cliente": "ELECTRODOMESTICOS LH SA",
+    "pesoFacturacion": 0.0014000000000000002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007424",
+    "cliente": "ALBERTO J. OLIVERO E HIJOS SA",
+    "pesoFacturacion": 0.0014000000000000002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011147",
+    "cliente": "LUIS MARIA CAPDEVIELLE SA",
+    "pesoFacturacion": 0.0014000000000000002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20009335",
+    "cliente": "YUHMAK S A",
+    "pesoFacturacion": 0.0013,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20012117",
+    "cliente": "UNOP S.R.L.",
+    "pesoFacturacion": 0.0013,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006556",
+    "cliente": "CRAVERO HERMANOS 5H SOCIEDAD CAP I",
+    "pesoFacturacion": 0.0012,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006713",
+    "cliente": "FERNANDEZ SERGIO JAVIER",
+    "pesoFacturacion": 0.0012,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20010480",
+    "cliente": "ALBANESSI COMPUTERS SRL",
+    "pesoFacturacion": 0.0012,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011890",
+    "cliente": "VALOR CARLOS ALBERTO",
+    "pesoFacturacion": 0.0012,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011590",
+    "cliente": "PESSINO ELIZARI VADINHO JULIAN",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011923",
+    "cliente": "SUNEX S.R.L.",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007756",
+    "cliente": "MARCEL SA",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007573",
+    "cliente": "EL CRISTORANTE S A",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006948",
+    "cliente": "MUSICALISIMO SA",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007630",
+    "cliente": "M & A REPRESENTACIONES SRL",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006823",
+    "cliente": "BELGRANO HOGAR Y MUEBLES SRL",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011957",
+    "cliente": "CONFORT HOGAR SGO S.R.L.",
+    "pesoFacturacion": 0.0011,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011415",
+    "cliente": "MANDRILE OSCAR JOSE SEFERINO",
+    "pesoFacturacion": 0.001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011739",
+    "cliente": "BRANT BERNARDO Y BRANT ABRAHAM",
+    "pesoFacturacion": 0.001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006993",
+    "cliente": "PERELLI RAMON",
+    "pesoFacturacion": 0.001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006696",
+    "cliente": "EGEVOR SA",
+    "pesoFacturacion": 0.001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011440",
+    "cliente": "MULTIHOGAR S.A.",
+    "pesoFacturacion": 0.001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20012121",
+    "cliente": "RONGA GONZALO NICOLAS",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007650",
+    "cliente": "RAM SRL",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011425",
+    "cliente": "MARTIN EDUARDO SERGIO",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007067",
+    "cliente": "MUEBLERIA CARLITOS DE STERZ CYN SH",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007569",
+    "cliente": "BOIX FERNANDO",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006883",
+    "cliente": "MAITESS SA",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013488",
+    "cliente": "LOUREIRO ELIAS JOAQUIN",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007059",
+    "cliente": "SIMONCINI ROMAN G Y DANTE D SH",
+    "pesoFacturacion": 0.0009,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007301",
+    "cliente": "GRUPO LORENZO SA",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006788",
+    "cliente": "INSOLITO SRL",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006554",
+    "cliente": "COOP ELEC SANTA ROSA LTDA",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20010595",
+    "cliente": "TEJADA HERMANOS SRL",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013157",
+    "cliente": "PRACTICARGA S.R.L.",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007617",
+    "cliente": "SAN FRANCISCO HOGAR SRL",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007038",
+    "cliente": "RIZZI HOGAR SA",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007299",
+    "cliente": "PREVISORA DEL PARANA S R L",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006945",
+    "cliente": "MUEBLERIA LA CONFIANZA SA",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007437",
+    "cliente": "VELOVAR S A",
+    "pesoFacturacion": 0.0008,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007033",
+    "cliente": "RUIZ MORENO RICARDO M",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20012045",
+    "cliente": "TECNO SISTEMA LUJAN S.R.L.",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007718",
+    "cliente": "HOGAR HERMANOS SRL",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011903",
+    "cliente": "ROMERO SONIA",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006574",
+    "cliente": "CASA DOGIL S A",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007335",
+    "cliente": "RED PORTEÑA SA",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007136",
+    "cliente": "T A G A M SRL",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006804",
+    "cliente": "JURY Y ASOCIADOS SA",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20009081",
+    "cliente": "ALZUGARAY HOGAR SRL",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006947",
+    "cliente": "MUEBLERIA SPIAZZI SRL",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007211",
+    "cliente": "VICTOR HOGAR S A",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010302",
+    "cliente": "NAXTER ELECTRONIC SRL",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011422",
+    "cliente": "ROSAFRON S.A.",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007374",
+    "cliente": "S Y L EQUIPAMIENTOS SA",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006441",
+    "cliente": "ALAYIAN HNOS CIA SACIFIA",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010572",
+    "cliente": "OZAN AIDA ROSANA",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007219",
+    "cliente": "TEVELIN S A",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013780",
+    "cliente": "VOLPATO CENTRO S.A",
+    "pesoFacturacion": 0.0007000000000000001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20008389",
+    "cliente": "VIDELA EUGENIO GREGORIO",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011741",
+    "cliente": "ROSSO GERMAN FABIO",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006539",
+    "cliente": "CARLONI HNOS SRL",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20008562",
+    "cliente": "CEVEN SA",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007379",
+    "cliente": "CASARETO MARIA DE LOS ANGELES",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "OVEID JORGE Y NICOLAS",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20008177",
+    "cliente": "AMBIENTES MERCEDINOS SRL",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012022",
+    "cliente": "GRUPO LA CUENCA S.R.L.",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006781",
+    "cliente": "HOGAMAR SA",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20010822",
+    "cliente": "BEVILACQUA LEILA CELESTE",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010705",
+    "cliente": "BENITEZ LUIS",
+    "pesoFacturacion": 0.0006,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006607",
+    "cliente": "COOPERATIVA LIMITADA DE PROVISION",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011174",
+    "cliente": "HAEDO AGRUPACION DE COLABORACION",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006728",
+    "cliente": "GROUP MERLINO SA",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006592",
+    "cliente": "CIGNACCHI CLAUDIO LUIS",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006665",
+    "cliente": "DE CARIA SERGIO MARIANO",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006790",
+    "cliente": "IGUAZU HOGAR SA",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006779",
+    "cliente": "H Y M TORINO SA",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010007",
+    "cliente": "CASA DIEZ SRL EN FORMACION",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007565",
+    "cliente": "CEFAC-LUCEMA SRL",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007545",
+    "cliente": "ALBANESE HECTOR RUBEN",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011941",
+    "cliente": "VALOR CARLOS GABRIEL",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007343",
+    "cliente": "V R P SRL",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006774",
+    "cliente": "HERRERO R E HIJO SRL",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006920",
+    "cliente": "MONTERO SRL",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006744",
+    "cliente": "SOC HECHO CARLOS FRANCSCO GROPPA Y",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006786",
+    "cliente": "ISUANI JULIO LUCIANO",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013326",
+    "cliente": "NET BOX S.A.S",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007455",
+    "cliente": "COOP DE TRABAJO OLMOS HOGAR LTDA",
+    "pesoFacturacion": 0.0005,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006980",
+    "cliente": "OBREGON WALTER EDUARDO",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20013216",
+    "cliente": "NEBRASKA SAS",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20012064",
+    "cliente": "ELECTROYHOGAR.COM S.R.L.",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006565",
+    "cliente": "COSTI  V J SRL",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20008829",
+    "cliente": "GRUPO TIRI SA",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012136",
+    "cliente": "LA BENDICION S.R.L.",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011537",
+    "cliente": "MORENO SILVINA ELIZABETH",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006703",
+    "cliente": "FEPAL SRL",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007012",
+    "cliente": "PONCE DOMINGO GUIDO",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007029",
+    "cliente": "RADIO PEYBO T V S A C I F I",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007380",
+    "cliente": "TT HOGAR SA",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011988",
+    "cliente": "DAVID OSCAR RUBEN",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011991",
+    "cliente": "CARLOS CASSAB S.A.",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007079",
+    "cliente": "SANCHEZ HOGAR SA",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011433",
+    "cliente": "MARSIGLIA S.R.L.",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011438",
+    "cliente": "SANCHEZ GABRIEL EDUARDO",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011507",
+    "cliente": "CENTRO NORTE CONFORT S.A.C.I.F.",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007778",
+    "cliente": "EL TREBOL SRL",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20010904",
+    "cliente": "BORTEL MARIO HECTOR",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011825",
+    "cliente": "TORNERO HORACIO FABIAN",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011500",
+    "cliente": "JUAREZ ANA MARIA DEL CARMEN",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006503",
+    "cliente": "BARBAGELATTA E HIJOS SA",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006767",
+    "cliente": "GIUDICE CARLOS SA",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006688",
+    "cliente": "EL CIPRES HOGAR SRL",
+    "pesoFacturacion": 0.0004,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011232",
+    "cliente": "SZLOSBERG CLAUDIO SEBASTIAN",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20009285",
+    "cliente": "LILUS SOCIEDAD ANONIMA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "VENTAS BS AS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011446",
+    "cliente": "MIMARCA S.R.L.",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006534",
+    "cliente": "SUCESION DE BRANTIZ RAUL HECTOR ADM",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007547",
+    "cliente": "LLANOS ACERO SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20008164",
+    "cliente": "FLEMING S R L",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20009265",
+    "cliente": "BETANCOR ROBERTO ARIEL",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006827",
+    "cliente": "LOVERA ELIGIO",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006564",
+    "cliente": "CALCINA SRL",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20009302",
+    "cliente": "GRAN BAZAR ROLANDO SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006833",
+    "cliente": "MASTRONARDI E HIJOS SH",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007486",
+    "cliente": "GARCIA ANGEL ANTONIO",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006645",
+    "cliente": "DEMELF SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006616",
+    "cliente": "CHIARAMONTE OSCAR VICENTE",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "FERREIRO CRISTIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007125",
+    "cliente": "TELECO HOGAR S A C I F I",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007322",
+    "cliente": "LA PAMPA HOGAR S H  DE CASTAGNO",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20009922",
+    "cliente": "D ELIA FELIX NATALIO",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012068",
+    "cliente": "SILES RAUL HERNAN",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007325",
+    "cliente": "MUEBLES ALMAFUERTE S A",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013297",
+    "cliente": "CABRERA RICARDO MARTIN",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011230",
+    "cliente": "TUCUMAN TECNOLOGIAS AMBIENTALES SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013550",
+    "cliente": "RAL-KAR EQUIPAMIENTOS S.R.L.",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006511",
+    "cliente": "MERLINO ANGEL O Y RAUL A S COL",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011759",
+    "cliente": "ANTONIO PREVEDELLO Y CIA. S.R.L.",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20008936",
+    "cliente": "AFINIUM SRL",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006599",
+    "cliente": "CABEDA NESTOR JUAN",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006748",
+    "cliente": "GALO JORGE",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BERTINI DAMIAN",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011841",
+    "cliente": "MUEBLERIA SAN MARTIN S.R.L.",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006915",
+    "cliente": "MARTINEZ MARIO Y CIA SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006760",
+    "cliente": "GONZALEZ PUNTA ALTA HOGAR SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007493",
+    "cliente": "MARULICH NORMA GLADYS",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006838",
+    "cliente": "LORUSSO CONSTRUCTORA SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006666",
+    "cliente": "DON JOSE HOGAR SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007220",
+    "cliente": "MENDEZ ALBERTO E HIJOS S A",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006742",
+    "cliente": "SUCESION DE GUTIERREZ RUBEN",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007248",
+    "cliente": "CASA LORENZO S A",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010716",
+    "cliente": "EQUIPAMIENTOS EQUIMAX SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007288",
+    "cliente": "JD DIGITACION S A",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006683",
+    "cliente": "EUREKA SA",
+    "pesoFacturacion": 0.0003,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "BARILLEAU RAUL",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007580",
+    "cliente": "HOTUBOWSKI JONATAN DANIEL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011625",
+    "cliente": "DELFINO E.DELFINO G.DELFINO J. RODR",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006780",
+    "cliente": "HOGAR CONFORT SA",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012279",
+    "cliente": "TAMARAL NET SRL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007427",
+    "cliente": "SAAVEDRA CARLOS ALBERTO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007327",
+    "cliente": "SANTORO DOMINGO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007576",
+    "cliente": "RECARD S A",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006977",
+    "cliente": "MARVIC DE OLIVARI JUAN MARTIN Y",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010312",
+    "cliente": "CORDERO ALEJANDRO ROMAN",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007197",
+    "cliente": "PEREZ ORBANICH ALEJANDRO MARIO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006691",
+    "cliente": "EPOKA SA",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006617",
+    "cliente": "CASA LADY ELECTROHOGAR SRL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011479",
+    "cliente": "ALBE-ARMI S.R.L.",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20008885",
+    "cliente": "POSITIVO HOGAR SOCIEDAD ANONIMA",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007223",
+    "cliente": "ALARCIA ROMAN SPATARO DOM Y DEB SH",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012260",
+    "cliente": "MIAHOME SRL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006594",
+    "cliente": "CASA MENDOZA SA",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011814",
+    "cliente": "SCIOCCO S.R.L.",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006862",
+    "cliente": "LARUMBE JOSE EMILIO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20013449",
+    "cliente": "CUELLAR EMMA AIDEE",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "POMBO MARCELO",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011573",
+    "cliente": "GONZALEZ RICARDO FABIAN",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20008282",
+    "cliente": "FENOGLIO HEBER EDUARDO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20012596",
+    "cliente": "ARNOSIO MAYCO GUSTAVO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007216",
+    "cliente": "MAFFERETTI S A",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007026",
+    "cliente": "QUIÑONEZ HOYOS Y CIA S R L",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006750",
+    "cliente": "GARCIA HUGO ANIBAL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011471",
+    "cliente": "CAHUE FERNANDO JORGE",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20013865",
+    "cliente": "MARTIN AYEELEN",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20006752",
+    "cliente": "GENACIO STELLA MARIS",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007769",
+    "cliente": "IRAZU JULIO CESAR",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20008825",
+    "cliente": "MASSENZIO DOMINGO RAUL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007311",
+    "cliente": "CONFORT DACAR SRL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007317",
+    "cliente": "LA ITALIANA SH DE PILENZA L",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006628",
+    "cliente": "CASA MELAS S H",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20009197",
+    "cliente": "DORMILINDO S A",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006646",
+    "cliente": "DICK ENRIQUE R Y CIA SRL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PIATTI MARCELO",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20010583",
+    "cliente": "PLANETA HOGAR SRL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011380",
+    "cliente": "SANCHEZ EDUARDO FRANCISCO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007453",
+    "cliente": "DAPUETO SILVANA BEATRIZ",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PRESTA MARTIN",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20008507",
+    "cliente": "CASA AL SA",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20013875",
+    "cliente": "VAZQUEZ ALEJANDRO MANUEL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012135",
+    "cliente": "GRUPO RODO PADRE E HIJOS S.R.L.",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011386",
+    "cliente": "GONZALEZ ELISABEL AGNES",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013995",
+    "cliente": "RUSSO LUIS ALBERTO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20008958",
+    "cliente": "TRIPLEB SRL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PUELLES LUIS",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20012357",
+    "cliente": "MONTECARLO HOGAR S.A.",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010704",
+    "cliente": "BATAN GONZALEZ MANUEL",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006820",
+    "cliente": "LISCHINSKY MARCELO",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "PEÑALVA JORGE",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006778",
+    "cliente": "HOTZ JUAN E HIJOS SA",
+    "pesoFacturacion": 0.0002,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20011400",
+    "cliente": "BIANCHET JUAN",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011632",
+    "cliente": "CORRALON FERNANDES SA",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20007477",
+    "cliente": "PALACIOS GIMENEZ PEDRO ALEJANDRO",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011596",
+    "cliente": "PICIN ARTURO LUIS",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20013846",
+    "cliente": "PHILOS GRUPO DOXA SAS",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "DALMATIA SA",
+    "gerente": "Interior"
+  },
+  {
+    "id": "20011928",
+    "cliente": "ESMASA ARTICULOS DEL HOGAR S.R.L.",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007077",
+    "cliente": "STEIN JAIME RENE",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20010550",
+    "cliente": "PROYECTOROMIX SAS",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007242",
+    "cliente": "PACCHIALAT M XIMENA Y PAULA A SH",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20007156",
+    "cliente": "VELOQUI ROBERTO LUIS",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
+  },
+  {
+    "id": "20006461",
+    "cliente": "ATAURI ORLANDO DANIEL",
+    "pesoFacturacion": 0.0001,
+    "tipologia": "SMALL RETAILERS",
+    "vendedor": "IGNACIO PAGADIZABAL",
+    "gerente": "Buenos Aires"
   }
 ]

@@ -170,8 +170,8 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
   }, [cbFiltrado, comprasFiltradas]);
 
   const cumplPorCategoria = useMemo(() => {
-    const cats: ("LAVADO Y SECADO" | "REFRIGERACION" | "COCCION")[] = [
-      "LAVADO Y SECADO", "REFRIGERACION", "COCCION",
+    const cats: Array<"LAVADO" | "REFRIGERACION" | "COCCION"> = [
+      "LAVADO", "REFRIGERACION", "COCCION",
     ];
     return cats.map((cat) => {
       const items = cbFiltrado.filter((c) => c.categoria === cat);
@@ -248,7 +248,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
           <div className="flex flex-wrap gap-2 items-end">
             <FilterDropdown label="MES" value={filters.mes} onChange={(v) => updateFilter("mes", v)} options={[{ v: "TODOS", l: "Todos" }, ...MESES.map((m) => ({ v: String(m.num), l: m.label }))]} />
             <FilterDropdown label="CATEGORÍA" value={filters.categoria} onChange={(v) => updateFilter("categoria", v)} options={[
-              { v: "TODAS", l: "Todas" }, { v: "LAVADO Y SECADO", l: "Lavado y Secado" },
+              { v: "TODAS", l: "Todas" }, { v: "LAVADO", l: "Lavado" },
               { v: "REFRIGERACION", l: "Refrigeración" }, { v: "COCCION", l: "Cocción" },
             ]} />
             <FilterDropdown label="GERENTE" value={filters.gerente} onChange={(v) => updateFilter("gerente", v)} options={[{ v: "TODOS", l: "Todos" }, ...GERENTES.map((g) => ({ v: g, l: g }))]} />
