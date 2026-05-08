@@ -1,6 +1,13 @@
 // Generates the static JSON data files in /public/data/.
-// Replace these later with output from the real Drive CSVs +
-// the SharePoint workbook (FC + BO 2026 - Hanna.xlsx).
+//
+// Replace these later with:
+//   - /public/data/cuadro-basico.json         ← Cuadros-basicos-Abril-2026.csv (Drive)
+//   - /public/data/clasificacion-clientes.json ← Clasificacion-clientes-Abril-2026.csv (Drive)
+//   - /public/data/ventas.json                 ← lo escribe POST /api/ventas (Power Automate)
+//
+// Para ventas modelamos pedidos identificados por `documentoVentas`. Un
+// pedido puede tener varias líneas (cliente + SKU). Cada línea puede estar
+// 100% facturada (sólo FC), 100% pendiente (sólo BO) o split (FC + BO).
 import { writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -134,10 +141,17 @@ writeFileSync(
   JSON.stringify(clasificacion, null, 2),
 );
 
-// ---------- Ventas dummy (FC + BO) ----------
+// ---------- Ventas dummy (FC + BO con Documento de Ventas) ----------
+//
+// Modelo: cada cliente arma N pedidos (3-6). Cada pedido tiene un
+// `documentoVentas` único y entre 2 y 5 líneas (SKU). Cada línea cae en uno
+// de tres estados:
+//   - 100% FC  (60%)   → fila sólo en FC
+//   - 100% BO  (25%)   → fila sólo en BO
+//   - SPLIT    (15%)   → una fila en FC y otra en BO con el mismo
+//                        documentoVentas + sku, sumando el total del pedido
 const hoy = new Date("2026-05-08");
 const seed = (n) => {
-  // deterministic LCG so the dummy file is stable between runs
   let s = n >>> 0;
   return () => {
     s = (s * 1664525 + 1013904223) >>> 0;
@@ -145,36 +159,67 @@ const seed = (n) => {
   };
 };
 const rand = seed(42);
+const between = (a, b) => Math.floor(rand() * (b - a + 1)) + a;
+const pickWeighted = () => {
+  const r = rand();
+  if (r < 0.6) return "FC";
+  if (r < 0.85) return "BO";
+  return "SPLIT";
+};
 
 const ventas = [];
-for (const item of cuadroBasico) {
-  const r = rand();
-  const vendedor = clasificacion.find((c) => c.cliente === item.cliente).vendedor;
-  if (r > 0.5) {
-    const fecha = new Date(hoy);
-    fecha.setDate(fecha.getDate() - Math.floor(rand() * 90));
-    ventas.push({
-      cliente: item.cliente,
-      sku: item.sku,
-      tipo: "FC",
-      unidades: Math.floor(rand() * 50) + 1,
-      fecha: fecha.toISOString().slice(0, 10),
-      mes: fecha.getMonth() + 1,
-      vendedor,
-    });
-  }
-  if (r > 0.4 && r <= 0.7) {
-    const fecha = new Date(hoy);
-    fecha.setDate(fecha.getDate() - Math.floor(rand() * 30));
-    ventas.push({
-      cliente: item.cliente,
-      sku: item.sku,
-      tipo: "BO",
-      unidades: Math.floor(rand() * 20) + 1,
-      fecha: fecha.toISOString().slice(0, 10),
-      mes: fecha.getMonth() + 1,
-      vendedor,
-    });
+let docCounter = 80000000;
+
+for (const cliente of clientesUnicos) {
+  const skusCliente = cuadroBasico.filter((c) => c.cliente === cliente).map((c) => c.sku);
+  if (skusCliente.length === 0) continue;
+  const vendedor = clasificacion.find((c) => c.cliente === cliente).vendedor;
+  const numPedidos = between(3, 6);
+
+  for (let p = 0; p < numPedidos; p++) {
+    docCounter += 1;
+    const documentoVentas = String(docCounter);
+    const fechaPedido = new Date(hoy);
+    fechaPedido.setDate(fechaPedido.getDate() - between(0, 110));
+    const fechaPedidoStr = fechaPedido.toISOString().slice(0, 10);
+
+    const skusPedido = [...new Set(
+      Array.from({ length: between(2, 5) }, () => skusCliente[between(0, skusCliente.length - 1)]),
+    )];
+
+    for (const sku of skusPedido) {
+      const total = between(2, 60);
+      const estado = pickWeighted();
+
+      if (estado === "FC") {
+        ventas.push({
+          documentoVentas, cliente, sku, tipo: "FC",
+          unidades: total, fecha: fechaPedidoStr,
+          mes: fechaPedido.getMonth() + 1, vendedor,
+        });
+      } else if (estado === "BO") {
+        ventas.push({
+          documentoVentas, cliente, sku, tipo: "BO",
+          unidades: total, fecha: fechaPedidoStr,
+          mes: fechaPedido.getMonth() + 1, vendedor,
+        });
+      } else {
+        const fcUnits = Math.max(1, Math.floor(total * (0.3 + rand() * 0.5)));
+        const boUnits = total - fcUnits;
+        ventas.push({
+          documentoVentas, cliente, sku, tipo: "FC",
+          unidades: fcUnits, fecha: fechaPedidoStr,
+          mes: fechaPedido.getMonth() + 1, vendedor,
+        });
+        if (boUnits > 0) {
+          ventas.push({
+            documentoVentas, cliente, sku, tipo: "BO",
+            unidades: boUnits, fecha: fechaPedidoStr,
+            mes: fechaPedido.getMonth() + 1, vendedor,
+          });
+        }
+      }
+    }
   }
 }
 
@@ -186,6 +231,9 @@ const ventasFile = {
 
 writeFileSync(resolve(outDir, "ventas.json"), JSON.stringify(ventasFile, null, 2));
 
+const docs = new Set(ventas.map((v) => v.documentoVentas));
+const fc = ventas.filter((v) => v.tipo === "FC").length;
+const bo = ventas.filter((v) => v.tipo === "BO").length;
 console.log(
-  `cuadro-basico.json: ${cuadroBasico.length} rows · clasificacion: ${clasificacion.length} clientes · ventas: ${ventas.length} rows`,
+  `cuadro-basico: ${cuadroBasico.length} · clasificacion: ${clasificacion.length} clientes · ventas: ${ventas.length} filas (${fc} FC + ${bo} BO) en ${docs.size} pedidos`,
 );
