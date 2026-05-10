@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { writeVentas, readVentas } from "@/lib/storage";
+import { loadCuadroBasico } from "@/lib/data";
 import type {
   VentasPayload,
   VentasPayloadRow,
@@ -103,14 +104,26 @@ export async function POST(request: Request) {
     );
   }
 
+  // Set de pares "cliente|sku" del Cuadro Básico. Cualquier fila del Excel
+  // que no matchee se descarta antes de validar — el dashboard sólo usa
+  // esos pares, así que persistir el resto sólo infla el blob.
+  const cb = await loadCuadroBasico();
+  const cbKeys = new Set(cb.map((c) => `${c.cliente}|${c.sku}`));
+  const inCB = (p: VentasPayloadRow) =>
+    cbKeys.has(`${p.cliente}|${p.sku}`);
+
+  const fcCB = payload.fc.filter(inCB);
+  const boCB = payload.bo.filter(inCB);
+  const skipped = (payload.fc.length - fcCB.length) + (payload.bo.length - boCB.length);
+
   const errors: string[] = [];
   const rows: VentaRow[] = [];
-  payload.fc.forEach((p, i) => {
+  fcCB.forEach((p, i) => {
     try { rows.push(toRow(p, "FC")); } catch (e) {
       errors.push(`fc[${i}]: ${e instanceof Error ? e.message : "error"}`);
     }
   });
-  payload.bo.forEach((p, i) => {
+  boCB.forEach((p, i) => {
     try { rows.push(toRow(p, "BO")); } catch (e) {
       errors.push(`bo[${i}]: ${e instanceof Error ? e.message : "error"}`);
     }
@@ -132,9 +145,11 @@ export async function POST(request: Request) {
     ok: true,
     generatedAt: file.generatedAt,
     rows: rows.length,
-    fc: payload.fc.length,
-    bo: payload.bo.length,
+    fc: fcCB.length,
+    bo: boCB.length,
     pedidos: new Set(rows.map((r) => r.documentoVentas)).size,
+    received: { fc: payload.fc.length, bo: payload.bo.length },
+    skippedNoCB: skipped,
     blobUrl: url,
   });
 }
