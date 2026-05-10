@@ -424,7 +424,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
             )}
 
             <Panel title="Detalle por SKU del Cuadro Básico" icon={<FileText className="w-4 h-4 text-slate-600" />}>
-              <TablaSKUs rows={skusDetalle} />
+              <TablaSKUs rows={skusDetalle} mostrarClientes={filters.cliente === "TODOS"} />
             </Panel>
           </>
         )}
@@ -682,24 +682,30 @@ function MultiSelectDropdown({
   );
 }
 
-function TablaSKUs({ rows }: { rows: Array<{
-  sku: string;
-  categoria: string;
-  tipo: "INFALTABLE" | "ESTRATEGICO";
-  clientesEnCB: number;
-  clientesCumplidos: number;
-  fcUnits: number;
-  boUnits: number;
-  pct: number;
-}> }) {
+function TablaSKUs({ rows, mostrarClientes }: {
+  rows: Array<{
+    sku: string;
+    categoria: string;
+    tipo: "INFALTABLE" | "ESTRATEGICO";
+    clientesEnCB: number;
+    clientesCumplidos: number;
+    fcUnits: number;
+    boUnits: number;
+    pct: number;
+  }>;
+  mostrarClientes: boolean;
+}) {
   const totalPorTipo = (tipo: "INFALTABLE" | "ESTRATEGICO") => {
     const r = rows.filter((x) => x.tipo === tipo);
     const en = r.reduce((a, x) => a + x.clientesEnCB, 0);
     const cu = r.reduce((a, x) => a + x.clientesCumplidos, 0);
+    const fc = r.reduce((a, x) => a + x.fcUnits, 0);
+    const bo = r.reduce((a, x) => a + x.boUnits, 0);
     return {
-      sku: `TOTAL ${tipo === "INFALTABLE" ? "INFALTABLES" : "ESTRATÉGICO"}`,
-      fcUnits: r.reduce((a, x) => a + x.fcUnits, 0),
-      boUnits: r.reduce((a, x) => a + x.boUnits, 0),
+      label: `TOTAL ${tipo === "INFALTABLE" ? "INFALTABLES" : "ESTRATÉGICO"}`,
+      fcUnits: fc,
+      boUnits: bo,
+      total: fc + bo,
       clientesEnCB: en,
       clientesCumplidos: cu,
       pct: en > 0 ? Math.round((cu / en) * 100) : 0,
@@ -710,84 +716,94 @@ function TablaSKUs({ rows }: { rows: Array<{
   const enTot = totInf.clientesEnCB + totEst.clientesEnCB;
   const cuTot = totInf.clientesCumplidos + totEst.clientesCumplidos;
   const totGen = {
-    sku: "TOTAL GENERAL",
+    label: "TOTAL GENERAL",
     fcUnits: totInf.fcUnits + totEst.fcUnits,
     boUnits: totInf.boUnits + totEst.boUnits,
+    total: totInf.fcUnits + totInf.boUnits + totEst.fcUnits + totEst.boUnits,
+    clientesEnCB: enTot,
+    clientesCumplidos: cuTot,
     pct: enTot > 0 ? Math.round((cuTot / enTot) * 100) : 0,
   };
 
   const infRows = rows.filter((r) => r.tipo === "INFALTABLE");
   const estRows = rows.filter((r) => r.tipo === "ESTRATEGICO");
+  const totalCols = mostrarClientes ? 6 : 5;
+  // Spans para la celda "TOTAL XXX" en filas resumen: cubre las cols de
+  // texto antes de los números (Categoría + SKU + Clientes? = 3 o 2).
+  const labelSpan = mostrarClientes ? 3 : 2;
 
   return (
     <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
       <table className="w-full text-sm">
         <thead className="sticky top-0 bg-slate-50 border-b border-slate-200 z-[1]">
           <tr>
-            <th className="text-left p-3 font-semibold text-slate-700">SKU</th>
             <th className="text-left p-3 font-semibold text-slate-700">Categoría</th>
-            <th className="text-left p-3 font-semibold text-slate-700">Tipo</th>
-            <th className="text-right p-3 font-semibold text-slate-700">Clientes</th>
+            <th className="text-left p-3 font-semibold text-slate-700">SKU</th>
+            {mostrarClientes && <th className="text-right p-3 font-semibold text-slate-700">Clientes</th>}
             <th className="text-right p-3 font-semibold text-slate-700">Facturado</th>
             <th className="text-right p-3 font-semibold text-slate-700">Back Order</th>
+            <th className="text-right p-3 font-semibold text-slate-700">Total</th>
             <th className="text-right p-3 font-semibold text-slate-700">% Cumpl.</th>
           </tr>
         </thead>
         <tbody>
           {infRows.length > 0 && (
             <tr className="bg-violet-50">
-              <td colSpan={7} className="px-3 py-1.5 text-xs font-bold text-violet-800 uppercase tracking-wider">Infaltables</td>
+              <td colSpan={totalCols} className="px-3 py-1.5 text-xs font-bold text-violet-800 uppercase tracking-wider">Infaltables</td>
             </tr>
           )}
-          {infRows.map((r) => <FilaSKU key={`inf-${r.sku}`} r={r} />)}
-          {infRows.length > 0 && <FilaTotal r={totInf} accent="violet" />}
+          {infRows.map((r) => <FilaSKU key={`inf-${r.sku}`} r={r} mostrarClientes={mostrarClientes} />)}
+          {infRows.length > 0 && <FilaTotal r={totInf} accent="violet" labelSpan={labelSpan} />}
 
           {estRows.length > 0 && (
             <tr className="bg-pink-50">
-              <td colSpan={7} className="px-3 py-1.5 text-xs font-bold text-pink-800 uppercase tracking-wider">Estratégico</td>
+              <td colSpan={totalCols} className="px-3 py-1.5 text-xs font-bold text-pink-800 uppercase tracking-wider">Estratégico</td>
             </tr>
           )}
-          {estRows.map((r) => <FilaSKU key={`est-${r.sku}`} r={r} />)}
-          {estRows.length > 0 && <FilaTotal r={totEst} accent="pink" />}
+          {estRows.map((r) => <FilaSKU key={`est-${r.sku}`} r={r} mostrarClientes={mostrarClientes} />)}
+          {estRows.length > 0 && <FilaTotal r={totEst} accent="pink" labelSpan={labelSpan} />}
 
-          {(infRows.length > 0 || estRows.length > 0) && <FilaTotal r={totGen} accent="slate" grand />}
+          {(infRows.length > 0 || estRows.length > 0) && <FilaTotal r={totGen} accent="slate" labelSpan={labelSpan} grand />}
         </tbody>
       </table>
     </div>
   );
 }
 
-function FilaSKU({ r }: { r: {
-  sku: string;
-  categoria: string;
-  tipo: "INFALTABLE" | "ESTRATEGICO";
-  clientesEnCB: number;
-  clientesCumplidos: number;
-  fcUnits: number;
-  boUnits: number;
-  pct: number;
-} }) {
+function FilaSKU({ r, mostrarClientes }: {
+  r: {
+    sku: string;
+    categoria: string;
+    tipo: "INFALTABLE" | "ESTRATEGICO";
+    clientesEnCB: number;
+    clientesCumplidos: number;
+    fcUnits: number;
+    boUnits: number;
+    pct: number;
+  };
+  mostrarClientes: boolean;
+}) {
   const pctBg = r.pct >= 80 ? "bg-green-100 text-green-800" : r.pct >= 70 ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800";
+  const total = r.fcUnits + r.boUnits;
   return (
     <tr className="border-b border-slate-100 hover:bg-slate-50">
-      <td className="p-3 font-mono text-slate-900">{r.sku}</td>
       <td className="p-3 text-slate-600">{r.categoria}</td>
-      <td className="p-3">
-        <span className={`text-xs px-2 py-0.5 rounded font-medium ${r.tipo === "INFALTABLE" ? "bg-violet-50 text-violet-700" : "bg-pink-50 text-pink-700"}`}>
-          {r.tipo}
-        </span>
-      </td>
-      <td className="p-3 text-right text-slate-600 font-mono text-xs">{r.clientesCumplidos}/{r.clientesEnCB}</td>
+      <td className="p-3 font-mono text-slate-900">{r.sku}</td>
+      {mostrarClientes && (
+        <td className="p-3 text-right text-slate-600 font-mono text-xs">{r.clientesCumplidos}/{r.clientesEnCB}</td>
+      )}
       <td className="p-3 text-right text-green-700 font-medium">{r.fcUnits > 0 ? `${r.fcUnits.toLocaleString("es-AR")}u` : "—"}</td>
       <td className="p-3 text-right text-amber-700 font-medium">{r.boUnits > 0 ? `${r.boUnits.toLocaleString("es-AR")}u` : "—"}</td>
+      <td className="p-3 text-right text-slate-900 font-semibold">{total > 0 ? `${total.toLocaleString("es-AR")}u` : "—"}</td>
       <td className={`p-3 text-right font-bold ${pctBg}`}>{r.pct}%</td>
     </tr>
   );
 }
 
-function FilaTotal({ r, accent, grand }: {
-  r: { sku: string; fcUnits: number; boUnits: number; pct: number };
+function FilaTotal({ r, accent, labelSpan, grand }: {
+  r: { label: string; fcUnits: number; boUnits: number; total: number; pct: number };
   accent: "violet" | "pink" | "slate";
+  labelSpan: number;
   grand?: boolean;
 }) {
   const bg = accent === "violet" ? "bg-violet-100" : accent === "pink" ? "bg-pink-100" : "bg-slate-200";
@@ -795,9 +811,10 @@ function FilaTotal({ r, accent, grand }: {
   const pctBg = r.pct >= 80 ? "bg-green-200 text-green-900" : r.pct >= 70 ? "bg-yellow-200 text-yellow-900" : "bg-red-200 text-red-900";
   return (
     <tr className={`${bg} ${grand ? "border-t-2 border-slate-400" : "border-b border-slate-200"}`}>
-      <td className={`p-3 font-bold text-xs uppercase tracking-wider ${txt}`} colSpan={4}>{r.sku}</td>
+      <td className={`p-3 font-bold text-xs uppercase tracking-wider ${txt}`} colSpan={labelSpan}>{r.label}</td>
       <td className={`p-3 text-right font-bold ${txt}`}>{r.fcUnits > 0 ? `${r.fcUnits.toLocaleString("es-AR")}u` : "—"}</td>
       <td className={`p-3 text-right font-bold ${txt}`}>{r.boUnits > 0 ? `${r.boUnits.toLocaleString("es-AR")}u` : "—"}</td>
+      <td className={`p-3 text-right font-bold ${txt}`}>{r.total > 0 ? `${r.total.toLocaleString("es-AR")}u` : "—"}</td>
       <td className={`p-3 text-right font-bold ${pctBg}`}>{r.pct}%</td>
     </tr>
   );
