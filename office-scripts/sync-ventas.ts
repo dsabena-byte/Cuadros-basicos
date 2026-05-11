@@ -1,0 +1,207 @@
+/**
+ * sync-ventas.ts — Office Script para Excel Online
+ *
+ * Corre dentro del workbook "FC + BO 2026 - Hanna.xlsx" y empuja la data
+ * al dashboard Vercel. Reemplaza al flow de Power Automate porque éste
+ * tiene un cap duro de 5000 filas en el connector de Excel; los Office
+ * Scripts corren dentro de Excel y leen las 35K+ filas sin restricción.
+ *
+ * Flujo:
+ *   1. GET /api/cb-pairs → lista de "CLIENTE|SKU" del Cuadro Básico.
+ *   2. Leer tabla FC del workbook, mapear columnas a schema, filtrar por
+ *      los pares del CB.
+ *   3. Idem tabla BO.
+ *   4. POST /api/ventas con {fc: [...], bo: [...]}.
+ *
+ * Cómo instalarlo:
+ *   1. Abrir el Excel en Excel Online (en navegador, no en escritorio).
+ *   2. Cinta superior → Automate → New Script.
+ *   3. Pegar TODO este archivo en el editor (sobrescribir el `function main`
+ *      placeholder).
+ *   4. Editar las constantes de CONFIG abajo (URL y secret).
+ *   5. Verificar los nombres de tabla y columnas en COLUMN_MAPPING — tienen
+ *      que matchear los headers exactos del Excel de Hanna.
+ *   6. Save → nombrar "Sync Dashboard Ventas".
+ *   7. Para correrlo: cinta Automate → click en el script → Run.
+ *      O agregar un botón en la hoja: Insert → Shape → click derecho →
+ *      Assign Script → "Sync Dashboard Ventas".
+ *
+ * Sin licencia Premium. Sin App Registration. Sin IT.
+ */
+
+// =========================================================================
+// CONFIG — editar antes del primer uso
+// =========================================================================
+
+const CONFIG = {
+  // URL base del dashboard. Sin slash final.
+  apiBase: "https://cuadros-basicos.vercel.app",
+  // El mismo REFRESH_SECRET1 que está en Vercel env vars (el que ya usa
+  // Power Automate hoy). Pedírselo al dev.
+  secret: "PEGAR_REFRESH_SECRET1_ACA",
+
+  // Nombre interno de la tabla FC en el workbook (Excel: solapa FC →
+  // Table Design → Table Name). Si no fue renombrada, suele ser "Table1".
+  tableNameFC: "FC",
+  tableNameBO: "BO",
+};
+
+// Mapeo de campos del schema → headers de columna en el Excel. La primera
+// alternativa que matchee (case-insensitive, trim) se usa. Si los headers
+// del Excel cambian, agregar variantes acá.
+const COLUMN_MAPPING = {
+  fc: {
+    documentoVentas: ["No. de Orden ID", "Documento Venta", "No de Orden ID"],
+    cliente: ["Cliente", "Cliente Descripción", "Cliente Descripcion"],
+    sku: ["Material ID", "Material", "SKU"],
+    unidades: ["CANTIDAD PEDIDO FC", "Volumen Ventas", "Cantidad"],
+    fecha: ["Fecha de Creación de Factura", "Fecha Creación Doc. Venta", "Fecha"],
+    vendedor: ["Ejecutivo de Venta", "Ejecutivo Venta Descripción", "Vendedor"],
+  },
+  bo: {
+    documentoVentas: ["Documento Venta", "No. de Orden ID"],
+    cliente: ["Cliente Descripción", "Cliente Descripcion", "Cliente"],
+    sku: ["Material", "Material ID", "SKU"],
+    unidades: ["Cantidad Pendiente", "CantidadPendiente", "Cantidad"],
+    fecha: ["Fecha Creación Cabecera", "Fecha Creación", "Fecha"],
+    vendedor: [
+      "Cliente Venta Ejecutivo Venta Descripción",
+      "Ejecutivo Venta Descripción",
+      "Ejecutivo de Venta",
+      "Vendedor",
+    ],
+  },
+};
+
+// =========================================================================
+// Tipos
+// =========================================================================
+
+type PayloadRow = {
+  documentoVentas: string | number;
+  cliente: string;
+  sku: string;
+  unidades: number;
+  fecha: string | number;
+  vendedor: string;
+};
+
+type Mapping = Record<string, string[]>;
+
+// =========================================================================
+// Helpers
+// =========================================================================
+
+function normalizeCliente(s: string): string {
+  return String(s ?? "").trim().toUpperCase().replace(/\s+/g, " ");
+}
+
+function buildIndex(headers: string[], mapping: Mapping): Record<string, number> {
+  const lc = headers.map((h) => String(h ?? "").trim().toLowerCase());
+  const idx: Record<string, number> = {};
+  for (const key of Object.keys(mapping)) {
+    const candidates = mapping[key];
+    let found = -1;
+    for (const c of candidates) {
+      const i = lc.indexOf(c.trim().toLowerCase());
+      if (i >= 0) { found = i; break; }
+    }
+    if (found < 0) {
+      throw new Error(
+        `No encontré la columna "${key}". Headers del Excel: [${headers.join(", ")}]. ` +
+        `Candidatos buscados: [${candidates.join(", ")}]. ` +
+        `Editar COLUMN_MAPPING en el script.`,
+      );
+    }
+    idx[key] = found;
+  }
+  return idx;
+}
+
+function readTable(
+  workbook: ExcelScript.Workbook,
+  tableName: string,
+  mapping: Mapping,
+  cbPairs: Set<string>,
+): PayloadRow[] {
+  const table = workbook.getTable(tableName);
+  if (!table) {
+    throw new Error(`No existe la tabla "${tableName}" en el workbook.`);
+  }
+  const headers = table.getHeaderRowRange().getValues()[0].map((v) => String(v ?? ""));
+  const idx = buildIndex(headers, mapping);
+
+  const body = table.getRangeBetweenHeaderAndTotal().getValues();
+  const out: PayloadRow[] = [];
+  for (const row of body) {
+    const cliente = String(row[idx["cliente"]] ?? "");
+    const sku = String(row[idx["sku"]] ?? "");
+    if (!cliente || !sku) continue;
+    const key = `${normalizeCliente(cliente)}|${sku}`;
+    if (!cbPairs.has(key)) continue;
+    out.push({
+      documentoVentas: row[idx["documentoVentas"]] as string | number,
+      cliente,
+      sku,
+      unidades: Number(row[idx["unidades"]] ?? 0),
+      fecha: row[idx["fecha"]] as string | number,
+      vendedor: String(row[idx["vendedor"]] ?? ""),
+    });
+  }
+  return out;
+}
+
+// =========================================================================
+// Main
+// =========================================================================
+
+async function main(workbook: ExcelScript.Workbook) {
+  console.log("Sync Dashboard Ventas — arrancando");
+
+  // 1) Bajar los pares del CB del servidor.
+  console.log("Pidiendo lista CB al servidor…");
+  const cbRes = await fetch(`${CONFIG.apiBase}/api/cb-pairs?secret=${encodeURIComponent(CONFIG.secret)}`);
+  if (!cbRes.ok) {
+    throw new Error(`GET /api/cb-pairs falló: ${cbRes.status} ${await cbRes.text()}`);
+  }
+  const cbBody = (await cbRes.json()) as { pairs: string[]; count: number };
+  const cbSet = new Set(cbBody.pairs);
+  console.log(`CB pairs recibidos: ${cbSet.size}`);
+
+  // 2) Leer y filtrar FC.
+  console.log(`Leyendo tabla "${CONFIG.tableNameFC}"…`);
+  const fc = readTable(workbook, CONFIG.tableNameFC, COLUMN_MAPPING.fc, cbSet);
+  console.log(`FC filtradas: ${fc.length}`);
+
+  // 3) Leer y filtrar BO.
+  console.log(`Leyendo tabla "${CONFIG.tableNameBO}"…`);
+  const bo = readTable(workbook, CONFIG.tableNameBO, COLUMN_MAPPING.bo, cbSet);
+  console.log(`BO filtradas: ${bo.length}`);
+
+  if (fc.length === 0 && bo.length === 0) {
+    throw new Error("Después del filtro CB no quedó ninguna fila. Revisar nombres de cliente/SKU.");
+  }
+
+  // 4) POST al dashboard.
+  const payload = {
+    generatedAt: new Date().toISOString(),
+    fc,
+    bo,
+  };
+  const bodyStr = JSON.stringify(payload);
+  console.log(`POSTeando ${(bodyStr.length / 1024).toFixed(0)} KB al dashboard…`);
+
+  const postRes = await fetch(`${CONFIG.apiBase}/api/ventas`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-refresh-secret": CONFIG.secret,
+    },
+    body: bodyStr,
+  });
+  const postBody = await postRes.text();
+  if (!postRes.ok) {
+    throw new Error(`POST /api/ventas falló: ${postRes.status}\n${postBody}`);
+  }
+  console.log(`Sync OK:\n${postBody}`);
+}
