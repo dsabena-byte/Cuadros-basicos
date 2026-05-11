@@ -56,7 +56,7 @@ const COLUMN_MAPPING = {
     documentoVentas: ["No. de Orden ID", "Documento Venta", "No de Orden ID"],
     cliente: ["Cliente", "Cliente Descripción", "Cliente Descripcion"],
     sku: ["Material ID", "Material", "SKU"],
-    unidades: ["CANTIDAD PEDIDO FC", "Volumen Ventas", "Cantidad"],
+    unidades: ["VolumenVentas", "Volumen Ventas", "CANTIDAD PEDIDO FC", "Cantidad"],
     fecha: ["Fecha de Creación de Factura", "Fecha Creación Doc. Venta", "Fecha"],
     vendedor: ["Ejecutivo de Venta", "Ejecutivo Venta Descripción", "Vendedor"],
   },
