@@ -54,17 +54,30 @@ export async function GET(request: Request) {
   }
 }
 
-function normalizeFecha(raw: string): string {
-  // Acepta YYYY-MM-DD, ISO completo, o DD/MM/YYYY.
-  if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10);
-  const m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+function normalizeFecha(raw: string | number): string {
+  const s = String(raw).trim();
+  // YYYY-MM-DD o ISO completo
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  // DD/MM/YYYY
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
   if (m) {
     const [, d, mo, y] = m;
     return `${y}-${mo.padStart(2, "0")}-${d.padStart(2, "0")}`;
   }
-  const d = new Date(raw);
+  // YYYYMMDD (típico de la solapa FC del Excel — se almacena como int)
+  if (/^\d{8}$/.test(s)) {
+    return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+  }
+  const d = new Date(s);
   if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
   throw new Error(`Fecha inválida: "${raw}"`);
+}
+
+// Mismo cliente puede aparecer escrito como "FRAVEGA S A C I E I" o
+// "FRAVEGA  S A C I E I" según la fila del Excel. Normalizamos antes de
+// matchear contra cuadro-basico.json: trim, uppercase, espacios colapsados.
+function normalizeCliente(s: string): string {
+  return s.trim().toUpperCase().replace(/\s+/g, " ");
 }
 
 function toRow(p: VentasPayloadRow, tipo: "FC" | "BO"): VentaRow {
@@ -104,27 +117,31 @@ export async function POST(request: Request) {
     );
   }
 
-  // Set de pares "cliente|sku" del Cuadro Básico. Cualquier fila del Excel
-  // que no matchee se descarta antes de validar — el dashboard sólo usa
-  // esos pares, así que persistir el resto sólo infla el blob.
+  // Mapa "cliente_normalizado|sku" → cliente canónico del CB. Filtramos
+  // descartando las filas del Excel cuyo (cliente, sku) no matchea — el
+  // dashboard sólo usa esos pares y persistir el resto infla el blob. El
+  // cliente se normaliza para tolerar variantes en el Excel, y al persistir
+  // se usa el nombre canónico del catálogo así el dashboard hace match
+  // exacto sin tener que normalizar también del lado del cliente.
   const cb = await loadCuadroBasico();
-  const cbKeys = new Set(cb.map((c) => `${c.cliente}|${c.sku}`));
-  const inCB = (p: VentasPayloadRow) =>
-    cbKeys.has(`${p.cliente}|${p.sku}`);
+  const cbCanonical = new Map<string, string>();
+  for (const c of cb) cbCanonical.set(`${normalizeCliente(c.cliente)}|${c.sku}`, c.cliente);
+  const canonicalFor = (p: VentasPayloadRow): string | undefined =>
+    cbCanonical.get(`${normalizeCliente(p.cliente)}|${p.sku}`);
 
-  const fcCB = payload.fc.filter(inCB);
-  const boCB = payload.bo.filter(inCB);
+  const fcCB = payload.fc.filter((p) => canonicalFor(p) !== undefined);
+  const boCB = payload.bo.filter((p) => canonicalFor(p) !== undefined);
   const skipped = (payload.fc.length - fcCB.length) + (payload.bo.length - boCB.length);
 
   const errors: string[] = [];
   const rows: VentaRow[] = [];
   fcCB.forEach((p, i) => {
-    try { rows.push(toRow(p, "FC")); } catch (e) {
+    try { rows.push(toRow({ ...p, cliente: canonicalFor(p)! }, "FC")); } catch (e) {
       errors.push(`fc[${i}]: ${e instanceof Error ? e.message : "error"}`);
     }
   });
   boCB.forEach((p, i) => {
-    try { rows.push(toRow(p, "BO")); } catch (e) {
+    try { rows.push(toRow({ ...p, cliente: canonicalFor(p)! }, "BO")); } catch (e) {
       errors.push(`bo[${i}]: ${e instanceof Error ? e.message : "error"}`);
     }
   });
