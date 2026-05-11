@@ -7,11 +7,13 @@
  * Scripts corren dentro de Excel y leen las 35K+ filas sin restricción.
  *
  * Flujo:
- *   1. GET /api/cb-pairs → lista de "CLIENTE|SKU" del Cuadro Básico.
- *   2. Leer tabla FC del workbook, mapear columnas a schema, filtrar por
+ *   1. Refrescar todas las data connections del workbook (Power Query
+ *      etc) — equivalente al botón "Refresh All" del tab Data.
+ *   2. GET /api/cb-pairs → lista de "CLIENTE|SKU" del Cuadro Básico.
+ *   3. Leer tabla FC del workbook, mapear columnas a schema, filtrar por
  *      los pares del CB.
- *   3. Idem tabla BO.
- *   4. POST /api/ventas con {fc: [...], bo: [...]}.
+ *   4. Idem tabla BO.
+ *   5. POST /api/ventas con {fc: [...], bo: [...]}.
  *
  * Cómo instalarlo:
  *   1. Abrir el Excel en Excel Online (en navegador, no en escritorio).
@@ -175,7 +177,14 @@ function readTable(
 async function main(workbook: ExcelScript.Workbook) {
   console.log("Sync Dashboard Ventas — arrancando");
 
-  // 1) Bajar los pares del CB del servidor.
+  // 1) Refrescar Power Query y todas las data connections del workbook.
+  //    Equivalente a clickear "Refresh All" en el tab Data. Sin esto las
+  //    tablas FC y BO siguen mostrando la data vieja del último guardado.
+  console.log("Refrescando data connections del workbook…");
+  workbook.refreshAllDataConnections();
+  console.log("Refresh OK.");
+
+  // 2) Bajar los pares del CB del servidor.
   console.log("Pidiendo lista CB al servidor…");
   const cbRes = await fetch(`${CONFIG.apiBase}/api/cb-pairs?secret=${encodeURIComponent(CONFIG.secret)}`);
   if (!cbRes.ok) {
@@ -185,12 +194,12 @@ async function main(workbook: ExcelScript.Workbook) {
   const cbSet = new Set(cbBody.pairs);
   console.log(`CB pairs recibidos: ${cbSet.size}`);
 
-  // 2) Leer y filtrar FC.
+  // 3) Leer y filtrar FC.
   console.log(`Leyendo tabla "${CONFIG.tableNameFC}"…`);
   const fc = readTable(workbook, CONFIG.tableNameFC, COLUMN_MAPPING.fc, cbSet);
   console.log(`FC filtradas: ${fc.length}`);
 
-  // 3) Leer y filtrar BO.
+  // 4) Leer y filtrar BO.
   console.log(`Leyendo tabla "${CONFIG.tableNameBO}"…`);
   const bo = readTable(workbook, CONFIG.tableNameBO, COLUMN_MAPPING.bo, cbSet);
   console.log(`BO filtradas: ${bo.length}`);
@@ -199,7 +208,7 @@ async function main(workbook: ExcelScript.Workbook) {
     throw new Error("Después del filtro CB no quedó ninguna fila. Revisar nombres de cliente/SKU.");
   }
 
-  // 4) POST al dashboard.
+  // 5) POST al dashboard.
   const payload = {
     generatedAt: new Date().toISOString(),
     fc,
