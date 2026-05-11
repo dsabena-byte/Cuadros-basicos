@@ -98,6 +98,25 @@ function normalizeCliente(s: string): string {
   return String(s ?? "").trim().toUpperCase().replace(/\s+/g, " ");
 }
 
+// Convierte Excel serial date (ej. 46121) a YYYY-MM-DD. Si ya es un
+// número estilo YYYYMMDD (8 dígitos, ej. 20260427) o un string, lo deja
+// como está — el server normaliza el resto.
+//
+// Necesario porque las celdas formateadas como Date en Excel se leen
+// como serial number vía getValues(), y el server no las reconoce.
+function normalizeRawFecha(raw: unknown): string | number {
+  if (typeof raw === "number") {
+    if (raw >= 10000000 && raw < 99999999 && Number.isInteger(raw)) return raw;
+    if (raw > 0 && raw < 100000) {
+      const utcMs = (raw - 25569) * 86400 * 1000;
+      const d = new Date(utcMs);
+      if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    }
+    return raw;
+  }
+  return String(raw ?? "");
+}
+
 function buildIndex(headers: string[], mapping: Mapping): Record<string, number> {
   const lc = headers.map((h) => String(h ?? "").trim().toLowerCase());
   const idx: Record<string, number> = {};
@@ -162,7 +181,7 @@ function readTable(
         cliente,
         sku,
         unidades: Number(row[idx["unidades"]] ?? 0),
-        fecha: row[idx["fecha"]] as string | number,
+        fecha: normalizeRawFecha(row[idx["fecha"]]),
         vendedor: String(row[idx["vendedor"]] ?? ""),
       });
     }
