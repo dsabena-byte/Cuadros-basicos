@@ -388,9 +388,9 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
         ) : (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <KpiCard label="% CB Global" value={`${kpisGlobales.pctCB}%`} subtitle={`${kpisGlobales.cumplidosCB}/${kpisGlobales.totalCB} SKUs`} icon={<Target />} color="blue" pct={kpisGlobales.pctCB} />
-              <KpiCard label="% Infaltables" value={`${kpisGlobales.pctInf}%`} subtitle={`${kpisGlobales.cumplidosInf}/${kpisGlobales.totalInf} SKUs`} icon={<CheckCircle2 />} color="violet" pct={kpisGlobales.pctInf} />
-              <KpiCard label="% Estratégico" value={`${kpisGlobales.pctEst}%`} subtitle={`${kpisGlobales.cumplidosEst}/${kpisGlobales.totalEst} SKUs`} icon={<BarChart3 />} color="pink" pct={kpisGlobales.pctEst} />
+              <KpiCard label="% Cuadro Básico" value={`${kpisGlobales.pctCB}%`} subtitle={`${kpisGlobales.cumplidosCB}/${kpisGlobales.totalCB} SKUs`} icon={<Target />} color="blue" pct={kpisGlobales.pctCB} objetivo={OBJETIVO} featured />
+              <KpiCard label="% Infaltables" value={`${kpisGlobales.pctInf}%`} subtitle={`${kpisGlobales.cumplidosInf}/${kpisGlobales.totalInf} SKUs`} icon={<CheckCircle2 />} color="violet" pct={kpisGlobales.pctInf} objetivo={OBJETIVO} />
+              <KpiCard label="% Estratégico" value={`${kpisGlobales.pctEst}%`} subtitle={`${kpisGlobales.cumplidosEst}/${kpisGlobales.totalEst} SKUs`} icon={<BarChart3 />} color="pink" pct={kpisGlobales.pctEst} objetivo={OBJETIVO} />
               <KpiCard label="Clientes" value={kpisGlobales.cantClientes} subtitle={`${kpisGlobales.cantVendedores} vendedores`} icon={<Users />} color="slate" />
             </div>
 
@@ -610,7 +610,7 @@ function FilterDropdown({
 }
 
 function KpiCard({
-  label, value, subtitle, icon, color, pct,
+  label, value, subtitle, icon, color, pct, objetivo, featured,
 }: {
   label: string;
   value: string | number;
@@ -618,29 +618,77 @@ function KpiCard({
   icon: React.ReactElement;
   color: "blue" | "violet" | "pink" | "slate" | "red";
   pct?: number;
+  objetivo?: number;
+  featured?: boolean;
 }) {
-  const colors: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600",
-    violet: "bg-violet-50 text-violet-600",
-    pink: "bg-pink-50 text-pink-600",
-    slate: "bg-slate-100 text-slate-600",
-    red: "bg-red-50 text-red-600",
+  const colors: Record<string, { bg: string; text: string }> = {
+    blue: { bg: "bg-blue-50", text: "text-blue-600" },
+    violet: { bg: "bg-violet-50", text: "text-violet-600" },
+    pink: { bg: "bg-pink-50", text: "text-pink-600" },
+    slate: { bg: "bg-slate-100", text: "text-slate-700" },
+    red: { bg: "bg-red-50", text: "text-red-600" },
   };
-  return (
-    <div className="bg-white p-4 rounded-lg border border-slate-200">
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="text-xs text-slate-600">{label}</div>
-          <div className="text-2xl font-bold text-slate-900 mt-1">{value}</div>
-          {subtitle && <div className="text-xs text-slate-500 mt-1">{subtitle}</div>}
+
+  if (featured) {
+    // Paleta replicada de .fs-headline (Trade Marketing dashboard) para
+    // mantener consistencia entre los dos dashboards: gradient slate-900
+    // → blue-900, valor en coral #e63946, labels en blanco con opacidad.
+    return (
+      <div
+        className="p-5 rounded-lg shadow-md"
+        style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)" }}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold text-white/85 uppercase tracking-wider">{label}</div>
+            <div className="flex items-baseline gap-2 mt-2">
+              <div className="text-5xl font-bold leading-none" style={{ color: "#e63946" }}>{value}</div>
+              {pct !== undefined && objetivo !== undefined && (
+                <div className="text-base font-medium text-white/75">/ {objetivo}%</div>
+              )}
+            </div>
+            {subtitle && <div className="text-xs text-white/75 mt-2">{subtitle}</div>}
+          </div>
+          <div className="p-2.5 rounded-lg bg-white/15 text-white flex-shrink-0">
+            {React.cloneElement(icon, { className: "w-5 h-5" } as React.HTMLAttributes<HTMLElement>)}
+          </div>
         </div>
-        <div className={`p-2 rounded-lg ${colors[color]}`}>
+        {pct !== undefined && (
+          <div className="mt-4 w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full transition-all"
+              style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: "#e63946" }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const c = colors[color];
+  return (
+    <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
+          <div className="flex items-baseline gap-2 mt-2">
+            <div className={`text-4xl font-bold ${c.text} leading-none`}>{value}</div>
+            {pct !== undefined && objetivo !== undefined && (
+              <div className="text-sm text-slate-400 font-medium">/ {objetivo}%</div>
+            )}
+          </div>
+          {subtitle && <div className="text-xs text-slate-500 mt-2">{subtitle}</div>}
+        </div>
+        <div className={`p-2.5 rounded-lg ${c.bg} ${c.text} flex-shrink-0`}>
           {React.cloneElement(icon, { className: "w-5 h-5" } as React.HTMLAttributes<HTMLElement>)}
         </div>
       </div>
       {pct !== undefined && (
-        <div className="mt-3 w-full h-1 bg-slate-200 rounded-full overflow-hidden">
-          <div className={`h-full ${pct >= 80 ? "bg-green-500" : pct >= 70 ? "bg-yellow-400" : "bg-red-500"}`} style={{ width: `${pct}%` }} />
+        <div className="mt-4 w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all ${pct >= 80 ? "bg-green-500" : pct >= 70 ? "bg-yellow-400" : "bg-red-500"}`}
+            style={{ width: `${Math.min(pct, 100)}%` }}
+          />
         </div>
       )}
     </div>
