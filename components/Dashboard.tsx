@@ -225,7 +225,11 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
     const mesesActivos = MESES.filter((m) => m.num <= mesActual);
     return mesesActivos.map((m) => {
       const comprasHastaMes = ventas.rows.filter((c) => {
-        if (c.mes > m.num) return false;
+        // BO con fecha de entrega futura (c.mes > mesActual) cuentan como
+        // si fueran del mes actual — sino el último punto del gráfico
+        // subreporta vs los KPIs, que sí los incluyen.
+        const mesEfectivo = Math.min(c.mes, mesActual);
+        if (mesEfectivo > m.num) return false;
         if (filters.vendedor !== "TODOS" && c.vendedor !== filters.vendedor) return false;
         return true;
       });
