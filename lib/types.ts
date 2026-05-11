@@ -52,11 +52,11 @@ export type VentasFile = {
 // Una entrada por fila de la solapa correspondiente; el server las
 // concatena en `VentasFile.rows` con su `tipo` ("FC" o "BO").
 export type VentasPayloadRow = {
-  documentoVentas: string;
+  documentoVentas: string | number;
   cliente: string;
   sku: string;
-  unidades: number;
-  fecha: string; // YYYY-MM-DD
+  unidades: number | string;
+  fecha: string | number; // YYYY-MM-DD, DD/MM/YYYY, ISO, o YYYYMMDD (int)
   vendedor: string;
 };
 
