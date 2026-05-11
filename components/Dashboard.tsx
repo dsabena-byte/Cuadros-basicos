@@ -166,8 +166,17 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
   );
 
   const calcularPorcentajes = (items: CuadroBasicoItem[]) => {
-    const cumplido = (item: CuadroBasicoItem) =>
-      comprasFiltradas.some((c) => c.cliente === item.cliente && c.sku === item.sku);
+    // "Cumplido" = la suma de unidades (FC + BO) del par (cliente, sku) es
+    // > 0 en el universo filtrado. Mismo criterio que TablaSKUs — antes
+    // se usaba `some(...)` que daba true para filas con 0 unidades
+    // (ajustes/cancelaciones), inflando el % vs lo que veías en la tabla.
+    const cumplido = (item: CuadroBasicoItem) => {
+      let total = 0;
+      for (const c of comprasFiltradas) {
+        if (c.cliente === item.cliente && c.sku === item.sku) total += c.unidades;
+      }
+      return total > 0;
+    };
     const totalCB = items.length;
     const cumplidosCB = items.filter(cumplido).length;
     const inf = items.filter((i) => i.tipo === "INFALTABLE");
@@ -233,8 +242,13 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
         if (filters.vendedor !== "TODOS" && c.vendedor !== filters.vendedor) return false;
         return true;
       });
-      const cumplido = (item: CuadroBasicoItem) =>
-        comprasHastaMes.some((c) => c.cliente === item.cliente && c.sku === item.sku);
+      const cumplido = (item: CuadroBasicoItem) => {
+        let total = 0;
+        for (const c of comprasHastaMes) {
+          if (c.cliente === item.cliente && c.sku === item.sku) total += c.unidades;
+        }
+        return total > 0;
+      };
       const totalCB = cbFiltrado.length;
       const cumplidosCB = cbFiltrado.filter(cumplido).length;
       const inf = cbFiltrado.filter((i) => i.tipo === "INFALTABLE");
