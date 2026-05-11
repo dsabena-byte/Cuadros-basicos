@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { invalidateDatasetCache } from "@/lib/dataset";
+import { invalidateCBDriveCache } from "@/lib/cb-drive";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,10 @@ export async function POST(request: Request) {
   }
 
   invalidateDatasetCache();
+  invalidateCBDriveCache();
   revalidatePath("/api/data");
+  revalidatePath("/");
+  revalidatePath("/ventas");
 
   return NextResponse.json({ ok: true, refreshedAt: new Date().toISOString() });
 }
