@@ -468,9 +468,6 @@ function render() {
     '<div class="kpi inf"><div class="label">% Infaltables</div><div class="value">' + fmtPct(k.pctInf) + '</div><div class="sub-val">' + k.realInf + ' / ' + k.targetInf + '</div></div>' +
     '<div class="kpi est"><div class="label">% Estratégico</div><div class="value">' + fmtPct(k.pctEst) + '</div><div class="sub-val">' + k.realEst + ' / ' + k.targetEst + '</div></div>' +
     '<div class="kpi green"><div class="label">Tiendas</div><div class="value">' + k.tiendas + '</div></div>' +
-    '<div class="kpi amber"><div class="label">SKUs</div><div class="value">' + k.skus + '</div></div>' +
-    '<div class="kpi gray"><div class="label">Semanas</div><div class="value">' + k.semanas + '</div></div>' +
-    '<div class="kpi gray"><div class="label">Total Target CB</div><div class="value">' + k.targetCB + '</div></div>' +
     '</div>';
 
   if (showEvolucion) {

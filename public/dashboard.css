@@ -14,9 +14,13 @@
   .filters select:focus { outline: none; border-color: #3b82f6; }
   .reset-btn { padding: 8px 14px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; height: 36px; }
   .reset-btn:hover { background: #dc2626; }
-  .kpis { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 16px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
   .kpi { background: #fff; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 4px solid #3b82f6; }
-  .kpi.cb { border-left-color: #1e40af; }
+  /* % Cuadro Básico = card destacada (misma paleta que .fs-headline). */
+  .kpi.cb { background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); border-left: none; box-shadow: 0 4px 12px rgba(15,23,42,0.15); padding: 18px; }
+  .kpi.cb .label { color: rgba(255,255,255,0.85); }
+  .kpi.cb .value { color: #e63946; font-size: 36px; }
+  .kpi.cb .sub-val { color: rgba(255,255,255,0.75); }
   .kpi.inf { border-left-color: #8b5cf6; }
   .kpi.est { border-left-color: #ec4899; }
   .kpi.green { border-left-color: #10b981; }

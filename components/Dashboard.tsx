@@ -630,26 +630,35 @@ function KpiCard({
   };
 
   if (featured) {
+    // Paleta replicada de .fs-headline (Trade Marketing dashboard) para
+    // mantener consistencia entre los dos dashboards: gradient slate-900
+    // → blue-900, valor en coral #e63946, labels en blanco con opacidad.
     return (
-      <div className="bg-gradient-to-br from-blue-700 to-blue-900 p-5 rounded-lg shadow-md">
+      <div
+        className="p-5 rounded-lg shadow-md"
+        style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)" }}
+      >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold text-blue-200 uppercase tracking-wider">{label}</div>
+            <div className="text-[11px] font-semibold text-white/85 uppercase tracking-wider">{label}</div>
             <div className="flex items-baseline gap-2 mt-2">
-              <div className="text-5xl font-bold text-white leading-none">{value}</div>
+              <div className="text-5xl font-bold leading-none" style={{ color: "#e63946" }}>{value}</div>
               {pct !== undefined && objetivo !== undefined && (
-                <div className="text-base text-blue-200 font-medium">/ {objetivo}%</div>
+                <div className="text-base font-medium text-white/75">/ {objetivo}%</div>
               )}
             </div>
-            {subtitle && <div className="text-xs text-blue-200 mt-2">{subtitle}</div>}
+            {subtitle && <div className="text-xs text-white/75 mt-2">{subtitle}</div>}
           </div>
           <div className="p-2.5 rounded-lg bg-white/15 text-white flex-shrink-0">
             {React.cloneElement(icon, { className: "w-5 h-5" } as React.HTMLAttributes<HTMLElement>)}
           </div>
         </div>
         {pct !== undefined && (
-          <div className="mt-4 w-full h-1.5 bg-blue-950/50 rounded-full overflow-hidden">
-            <div className="h-full bg-white transition-all" style={{ width: `${Math.min(pct, 100)}%` }} />
+          <div className="mt-4 w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full transition-all"
+              style={{ width: `${Math.min(pct, 100)}%`, backgroundColor: "#e63946" }}
+            />
           </div>
         )}
       </div>
