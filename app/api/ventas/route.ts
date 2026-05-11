@@ -133,6 +133,10 @@ export async function POST(request: Request) {
   const boCB = payload.bo.filter((p) => canonicalFor(p) !== undefined);
   const skipped = (payload.fc.length - fcCB.length) + (payload.bo.length - boCB.length);
 
+  // Filas con datos sucios (fechas inválidas, sin documentoVentas, etc.) se
+  // descartan y se loguean — Excel productivo siempre tiene ruido, no
+  // queremos abortar todo el batch por un puñado de filas malas. Sólo
+  // devolvemos 422 si NO se pudo procesar nada.
   const errors: string[] = [];
   const rows: VentaRow[] = [];
   fcCB.forEach((p, i) => {
@@ -145,8 +149,14 @@ export async function POST(request: Request) {
       errors.push(`bo[${i}]: ${e instanceof Error ? e.message : "error"}`);
     }
   });
-  if (errors.length > 0) {
-    return NextResponse.json({ error: "Validación falló", details: errors.slice(0, 20), totalErrors: errors.length }, { status: 422 });
+  if (rows.length === 0 && (fcCB.length + boCB.length) > 0) {
+    return NextResponse.json({
+      error: "Todas las filas (post-filtro CB) fallaron validación",
+      details: errors.slice(0, 20),
+      totalErrors: errors.length,
+      received: { fc: payload.fc.length, bo: payload.bo.length },
+      matchedCB: { fc: fcCB.length, bo: boCB.length },
+    }, { status: 422 });
   }
 
   const file: VentasFile = {
@@ -162,11 +172,14 @@ export async function POST(request: Request) {
     ok: true,
     generatedAt: file.generatedAt,
     rows: rows.length,
-    fc: fcCB.length,
-    bo: boCB.length,
+    fc: rows.filter((r) => r.tipo === "FC").length,
+    bo: rows.filter((r) => r.tipo === "BO").length,
     pedidos: new Set(rows.map((r) => r.documentoVentas)).size,
     received: { fc: payload.fc.length, bo: payload.bo.length },
+    matchedCB: { fc: fcCB.length, bo: boCB.length },
     skippedNoCB: skipped,
+    skippedInvalid: errors.length,
+    invalidSample: errors.slice(0, 10),
     blobUrl: url,
   });
 }
