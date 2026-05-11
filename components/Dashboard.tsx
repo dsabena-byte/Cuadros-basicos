@@ -365,17 +365,17 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4">
         <div className="max-w-[1600px] mx-auto">
-          <h1 className="text-2xl font-bold text-slate-900">Cumplimiento Cuadro Básico</h1>
-          <p className="text-sm text-slate-500">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Cumplimiento Cuadro Básico</h1>
+          <p className="text-xs sm:text-sm text-slate-500">
             Drean Argentina · Última sincronización: {new Date(ventas.generatedAt).toLocaleString("es-AR")} ·
             Fuente: {ventas.source} · Objetivo: {OBJETIVO}%
           </p>
         </div>
       </div>
 
-      <div className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-10 shadow-sm">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-10 shadow-sm">
         <div className="max-w-[1600px] mx-auto">
           <div className="flex flex-wrap gap-2 items-end">
             <MultiSelectDropdown
@@ -417,7 +417,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-6 py-6 space-y-6">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
         {kpisGlobales.totalCB === 0 ? (
           <div className="bg-white rounded-lg border border-slate-200 p-12 text-center">
             <AlertTriangle className="w-12 h-12 text-amber-400 mx-auto mb-3" />
@@ -448,7 +448,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
               </ResponsiveContainer>
             </Panel>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <Panel title="Cumplimiento por Categoría" icon={<BarChart3 className="w-4 h-4 text-blue-600" />}>
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={cumplPorCategoria} margin={{ top: 30, right: 20, left: 0, bottom: 5 }}>
@@ -492,7 +492,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
               </Panel>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <TablaCumplimiento title="Cumplimiento por Vendedor" icon={<Trophy className="w-4 h-4 text-amber-500" />} columnHeader="Vendedor" rows={cumplPorVendedor} />
               <TablaCumplimiento title="Cumplimiento por Cliente / Cadena" icon={<Building2 className="w-4 h-4 text-blue-600" />} columnHeader="Cliente / Cadena" rows={cumplPorCliente} onRowClick={(cli) => setClienteSeleccionado(cli)} />
             </div>
@@ -656,7 +656,7 @@ function FilterDropdown({
   wide?: boolean;
 }) {
   return (
-    <div className={`flex flex-col ${wide ? "min-w-[200px]" : "min-w-[140px]"}`}>
+    <div className={`flex flex-col flex-1 ${wide ? "min-w-[160px] sm:min-w-[200px]" : "min-w-[120px] sm:min-w-[140px]"}`}>
       <label className="text-[10px] font-bold text-slate-600 mb-1 tracking-wider">{label}</label>
       <select
         value={value}
@@ -697,14 +697,14 @@ function KpiCard({
     // → blue-900, valor en coral #e63946, labels en blanco con opacidad.
     return (
       <div
-        className="p-5 rounded-lg shadow-md"
+        className="p-4 sm:p-5 rounded-lg shadow-md"
         style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)" }}
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold text-white/85 uppercase tracking-wider">{label}</div>
+            <div className="text-[10px] sm:text-[11px] font-semibold text-white/85 uppercase tracking-wider">{label}</div>
             <div className="flex items-baseline gap-2 mt-2">
-              <div className="text-5xl font-bold leading-none" style={{ color: "#e63946" }}>{value}</div>
+              <div className="text-3xl sm:text-5xl font-bold leading-none" style={{ color: "#e63946" }}>{value}</div>
               {pct !== undefined && objetivo !== undefined && (
                 <div className="text-base font-medium text-white/75">/ {objetivo}%</div>
               )}
@@ -729,12 +729,12 @@ function KpiCard({
 
   const c = colors[color];
   return (
-    <div className="bg-white p-5 rounded-lg border border-slate-200 shadow-sm">
+    <div className="bg-white p-4 sm:p-5 rounded-lg border border-slate-200 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
+          <div className="text-[10px] sm:text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</div>
           <div className="flex items-baseline gap-2 mt-2">
-            <div className={`text-4xl font-bold ${c.text} leading-none`}>{value}</div>
+            <div className={`text-3xl sm:text-4xl font-bold ${c.text} leading-none`}>{value}</div>
             {pct !== undefined && objetivo !== undefined && (
               <div className="text-sm text-slate-400 font-medium">/ {objetivo}%</div>
             )}
@@ -799,7 +799,7 @@ function MultiSelectDropdown({
     onChange(values.includes(v) ? values.filter((x) => x !== v) : [...values, v]);
 
   return (
-    <div ref={ref} className="flex flex-col min-w-[140px] relative">
+    <div ref={ref} className="flex flex-col flex-1 min-w-[120px] sm:min-w-[140px] relative">
       <label className="text-[10px] font-bold text-slate-600 mb-1 tracking-wider">{label}</label>
       <button
         type="button"
