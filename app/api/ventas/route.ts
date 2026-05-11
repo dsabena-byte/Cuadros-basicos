@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { writeVentas, readVentas } from "@/lib/storage";
 import { loadCuadroBasico } from "@/lib/data";
+import { withCors, corsPreflight } from "@/lib/cors";
 import type {
   VentasPayload,
   VentasPayloadRow,
@@ -12,6 +13,8 @@ import type {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+export const OPTIONS = () => corsPreflight();
+
 // GET → metadata (para debug y para que Power Automate verifique conectividad).
 // POST → recibe el payload del flow con las dos solapas (FC + BO),
 //        las flatten en VentaRow[] y persiste el archivo.
@@ -19,7 +22,7 @@ export const dynamic = "force-dynamic";
 // Auth: header `x-refresh-secret` que matchee REFRESH_SECRET1.
 
 function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
 }
 
 function checkSecret(request: Request): boolean {
@@ -37,7 +40,7 @@ export async function GET(request: Request) {
   if (!checkSecret(request)) return unauthorized();
   try {
     const v = await readVentas();
-    return NextResponse.json({
+    return withCors(NextResponse.json({
       ok: true,
       generatedAt: v.generatedAt,
       source: v.source,
@@ -45,12 +48,12 @@ export async function GET(request: Request) {
       fc: v.rows.filter((r) => r.tipo === "FC").length,
       bo: v.rows.filter((r) => r.tipo === "BO").length,
       pedidos: new Set(v.rows.map((r) => r.documentoVentas)).size,
-    });
+    }));
   } catch (err) {
-    return NextResponse.json(
+    return withCors(NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : "read failed" },
       { status: 500 },
-    );
+    ));
   }
 }
 
@@ -112,13 +115,13 @@ export async function POST(request: Request) {
   try {
     payload = (await request.json()) as VentasPayload;
   } catch {
-    return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
+    return withCors(NextResponse.json({ error: "JSON inválido" }, { status: 400 }));
   }
   if (!payload || !Array.isArray(payload.fc) || !Array.isArray(payload.bo)) {
-    return NextResponse.json(
+    return withCors(NextResponse.json(
       { error: "El payload tiene que tener arrays `fc` y `bo`" },
       { status: 400 },
-    );
+    ));
   }
 
   // Mapa "cliente_normalizado|sku" → cliente canónico del CB. Filtramos
@@ -154,13 +157,13 @@ export async function POST(request: Request) {
     }
   });
   if (rows.length === 0 && (fcCB.length + boCB.length) > 0) {
-    return NextResponse.json({
+    return withCors(NextResponse.json({
       error: "Todas las filas (post-filtro CB) fallaron validación",
       details: errors.slice(0, 20),
       totalErrors: errors.length,
       received: { fc: payload.fc.length, bo: payload.bo.length },
       matchedCB: { fc: fcCB.length, bo: boCB.length },
-    }, { status: 422 });
+    }, { status: 422 }));
   }
 
   const file: VentasFile = {
@@ -172,7 +175,7 @@ export async function POST(request: Request) {
   const { url } = await writeVentas(file);
   revalidatePath("/");
 
-  return NextResponse.json({
+  return withCors(NextResponse.json({
     ok: true,
     generatedAt: file.generatedAt,
     rows: rows.length,
@@ -185,5 +188,5 @@ export async function POST(request: Request) {
     skippedInvalid: errors.length,
     invalidSample: errors.slice(0, 10),
     blobUrl: url,
-  });
+  }));
 }
