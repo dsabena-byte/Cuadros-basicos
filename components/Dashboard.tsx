@@ -10,7 +10,7 @@ import {
   RotateCcw, Users, Target, FileText, CheckCircle2, Clock, XCircle, TrendingUp,
 } from "lucide-react";
 import type {
-  CuadroBasicoItem, ClasificacionCliente, VentaRow, VentasFile,
+  CuadroBasicoItem, ClasificacionCliente, VentaRow, VentasFile, Tipologia,
 } from "@/lib/types";
 
 const OBJETIVO = 80;
@@ -80,12 +80,28 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
 
   const updateFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
     const next = { ...filters, [key]: value };
-    if (key === "gerente") next.vendedor = "TODOS";
+    // Cuando cambia un filtro upstream, los downstream se resetean para que
+    // no queden valores que ya no existen en el subconjunto filtrado.
+    if (key === "gerente") {
+      next.vendedor = "TODOS";
+      next.tipologia = "TODAS";
+      next.cliente = "TODOS";
+    }
+    if (key === "vendedor") {
+      next.tipologia = "TODAS";
+      next.cliente = "TODOS";
+    }
     if (key === "tipologia") next.cliente = "TODOS";
     setFilters(next);
   };
   const limpiarFiltros = () =>
     setFilters({ mes: [], categoria: "TODAS", gerente: "TODOS", vendedor: "TODOS", tipologia: "TODAS", cliente: "TODOS" });
+
+  const tipologiaPorCliente = useMemo(() => {
+    const m = new Map<string, Tipologia>();
+    for (const c of cuadroBasico) m.set(c.cliente, c.tipologia);
+    return m;
+  }, [cuadroBasico]);
 
   const vendedoresDisponibles = useMemo(
     () => filters.gerente === "TODOS"
@@ -94,11 +110,36 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
     [filters.gerente, VENDEDORES, gerentePorVendedor],
   );
 
+  // Clientes "en alcance" según Gerente y Vendedor (independiente de Tipología
+  // y Cliente). Sirve de base para los dropdowns de Tipología y Cliente.
+  const clientesEnAlcance = useMemo(
+    () => CLIENTES_UNICOS.filter((cli) => {
+      const v = vendedorPorCliente.get(cli);
+      if (filters.gerente !== "TODOS" && (v ? gerentePorVendedor.get(v) : undefined) !== filters.gerente) return false;
+      if (filters.vendedor !== "TODOS" && v !== filters.vendedor) return false;
+      return true;
+    }),
+    [CLIENTES_UNICOS, vendedorPorCliente, gerentePorVendedor, filters.gerente, filters.vendedor],
+  );
+
+  const tipologiasDisponibles = useMemo(
+    () => {
+      const tipos = new Set<Tipologia>();
+      for (const cli of clientesEnAlcance) {
+        const t = tipologiaPorCliente.get(cli);
+        if (t) tipos.add(t);
+      }
+      return [...tipos];
+    },
+    [clientesEnAlcance, tipologiaPorCliente],
+  );
+
   const clientesDisponibles = useMemo(
-    () => filters.tipologia === "TODAS"
-      ? CLIENTES_UNICOS
-      : [...new Set(cuadroBasico.filter((c) => c.tipologia === filters.tipologia).map((c) => c.cliente))],
-    [filters.tipologia, CLIENTES_UNICOS, cuadroBasico],
+    () => clientesEnAlcance.filter((cli) => {
+      if (filters.tipologia !== "TODAS" && tipologiaPorCliente.get(cli) !== filters.tipologia) return false;
+      return true;
+    }),
+    [clientesEnAlcance, tipologiaPorCliente, filters.tipologia],
   );
 
   const comprasFiltradas = useMemo(() => {
@@ -315,9 +356,13 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
             <FilterDropdown label="GERENTE" value={filters.gerente} onChange={(v) => updateFilter("gerente", v)} options={[{ v: "TODOS", l: "Todos" }, ...GERENTES.map((g) => ({ v: g, l: g }))]} />
             <FilterDropdown label="VENDEDOR" value={filters.vendedor} onChange={(v) => updateFilter("vendedor", v)} options={[{ v: "TODOS", l: "Todos" }, ...vendedoresDisponibles.map((v) => ({ v, l: v }))]} />
             <FilterDropdown label="TIPOLOGÍA" value={filters.tipologia} onChange={(v) => updateFilter("tipologia", v)} options={[
-              { v: "TODAS", l: "Todas" }, { v: "TOP 10", l: "Grandes Cuentas Top 10" },
-              { v: "GRANDES CUENTAS RESTO", l: "Grandes Cuentas Resto" },
-              { v: "HIPERMERCADOS", l: "Hipermercados" }, { v: "SMALL RETAILERS", l: "Small Retailers" },
+              { v: "TODAS", l: "Todas" },
+              ...[
+                { v: "TOP 10" as const, l: "Grandes Cuentas Top 10" },
+                { v: "GRANDES CUENTAS RESTO" as const, l: "Grandes Cuentas Resto" },
+                { v: "HIPERMERCADOS" as const, l: "Hipermercados" },
+                { v: "SMALL RETAILERS" as const, l: "Small Retailers" },
+              ].filter((o) => tipologiasDisponibles.includes(o.v)),
             ]} />
             <FilterDropdown label="CLIENTE" value={filters.cliente} onChange={(v) => updateFilter("cliente", v)} options={[{ v: "TODOS", l: "Todos" }, ...clientesDisponibles.slice().sort().map((c) => ({ v: c, l: c }))]} wide />
             <button onClick={limpiarFiltros} className="flex items-center gap-1.5 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm font-medium transition-colors">
