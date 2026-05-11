@@ -131,22 +131,39 @@ function readTable(
   const headers = table.getHeaderRowRange().getValues()[0].map((v) => String(v ?? ""));
   const idx = buildIndex(headers, mapping);
 
-  const body = table.getRangeBetweenHeaderAndTotal().getValues();
+  // Leemos en chunks de 5K filas porque getValues() de una tabla entera
+  // (35K filas × 20 cols) supera el límite de payload del runtime de
+  // Office Scripts (~5MB). El total de chunks se loguea para que Hanna
+  // vea progreso.
+  const dataBody = table.getRangeBetweenHeaderAndTotal();
+  const rowCount = dataBody.getRowCount();
+  const colCount = dataBody.getColumnCount();
+  const startRow = dataBody.getRowIndex();
+  const startCol = dataBody.getColumnIndex();
+  const sheet = dataBody.getWorksheet();
+
+  const CHUNK = 5000;
   const out: PayloadRow[] = [];
-  for (const row of body) {
-    const cliente = String(row[idx["cliente"]] ?? "");
-    const sku = String(row[idx["sku"]] ?? "");
-    if (!cliente || !sku) continue;
-    const key = `${normalizeCliente(cliente)}|${sku}`;
-    if (!cbPairs.has(key)) continue;
-    out.push({
-      documentoVentas: row[idx["documentoVentas"]] as string | number,
-      cliente,
-      sku,
-      unidades: Number(row[idx["unidades"]] ?? 0),
-      fecha: row[idx["fecha"]] as string | number,
-      vendedor: String(row[idx["vendedor"]] ?? ""),
-    });
+  for (let r = 0; r < rowCount; r += CHUNK) {
+    const thisChunk = Math.min(CHUNK, rowCount - r);
+    const chunkRange = sheet.getRangeByIndexes(startRow + r, startCol, thisChunk, colCount);
+    const values = chunkRange.getValues();
+    console.log(`  ${tableName}: chunk ${r + 1}-${r + thisChunk} de ${rowCount} filas leído`);
+    for (const row of values) {
+      const cliente = String(row[idx["cliente"]] ?? "");
+      const sku = String(row[idx["sku"]] ?? "");
+      if (!cliente || !sku) continue;
+      const key = `${normalizeCliente(cliente)}|${sku}`;
+      if (!cbPairs.has(key)) continue;
+      out.push({
+        documentoVentas: row[idx["documentoVentas"]] as string | number,
+        cliente,
+        sku,
+        unidades: Number(row[idx["unidades"]] ?? 0),
+        fecha: row[idx["fecha"]] as string | number,
+        vendedor: String(row[idx["vendedor"]] ?? ""),
+      });
+    }
   }
   return out;
 }
