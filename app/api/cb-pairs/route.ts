@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { loadCuadroBasico } from "@/lib/data";
+import { withCors, corsPreflight } from "@/lib/cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+export const OPTIONS = () => corsPreflight();
 
 // GET → devuelve la lista de pares "CLIENTE_NORMALIZADO|SKU" del Cuadro
 // Básico, para que el Office Script en Excel (docs/office-scripts.md)
@@ -14,7 +17,7 @@ export const dynamic = "force-dynamic";
 // espacios colapsados) para tolerar variaciones del Excel.
 
 function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
 }
 
 function checkSecret(request: Request): boolean {
@@ -39,15 +42,15 @@ export async function GET(request: Request) {
     const pairs = Array.from(
       new Set(cb.map((c) => `${normalizeCliente(c.cliente)}|${c.sku}`)),
     );
-    return NextResponse.json({
+    return withCors(NextResponse.json({
       ok: true,
       count: pairs.length,
       pairs,
-    });
+    }));
   } catch (err) {
-    return NextResponse.json(
+    return withCors(NextResponse.json(
       { ok: false, error: err instanceof Error ? err.message : "read failed" },
       { status: 500 },
-    );
+    ));
   }
 }
