@@ -81,17 +81,21 @@ function normalizeCliente(s: string): string {
 }
 
 function toRow(p: VentasPayloadRow, tipo: "FC" | "BO"): VentaRow {
-  if (!p.documentoVentas) throw new Error("documentoVentas requerido");
+  // documentoVentas es opcional: si Power Automate no lo mapea (puede pasar
+  // por nombres internos raros del Excel), persistimos string vacío. El
+  // dashboard no lo usa para filtrar, sólo para contar pedidos únicos.
   if (!p.cliente) throw new Error("cliente requerido");
   if (!p.sku) throw new Error("sku requerido");
   const unidades = Number(p.unidades);
-  if (!Number.isFinite(unidades) || unidades < 0) {
-    throw new Error(`unidades inválidas para ${p.documentoVentas}/${p.sku}: ${p.unidades}`);
+  if (!Number.isFinite(unidades)) {
+    throw new Error(`unidades inválidas para ${p.sku}: ${p.unidades}`);
   }
+  // Las unidades negativas son devoluciones reales del negocio; las sumamos
+  // tal cual y dejamos que el dashboard refleje el neto.
   const fecha = normalizeFecha(p.fecha);
   const mes = Number(fecha.slice(5, 7));
   return {
-    documentoVentas: String(p.documentoVentas),
+    documentoVentas: p.documentoVentas != null ? String(p.documentoVentas) : "",
     cliente: p.cliente,
     sku: p.sku,
     tipo,
