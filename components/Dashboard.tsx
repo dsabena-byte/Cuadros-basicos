@@ -229,6 +229,24 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
     });
   }, [cbFiltrado, comprasFiltradas]);
 
+  const cumplPorGerencia = useMemo(() => {
+    const byGerencia = new Map<string, CuadroBasicoItem[]>();
+    for (const item of cbFiltrado) {
+      const v = vendedorPorCliente.get(item.cliente);
+      const g = v ? gerentePorVendedor.get(v) : undefined;
+      if (!g) continue;
+      const arr = byGerencia.get(g) ?? [];
+      arr.push(item);
+      byGerencia.set(g, arr);
+    }
+    return Array.from(byGerencia.entries())
+      .map(([gerencia, items]) => {
+        const p = calcularPorcentajes(items);
+        return { gerencia, "% CB": p.pctCB, "% Infaltables": p.pctInf, "% Estratégico": p.pctEst };
+      })
+      .sort((a, b) => b["% CB"] - a["% CB"]);
+  }, [cbFiltrado, comprasFiltradas, vendedorPorCliente, gerentePorVendedor]);
+
   const evolucionMensual = useMemo(() => {
     const mesActual = new Date(ventas.generatedAt).getMonth() + 1;
     const mesesActivos = MESES.filter((m) => m.num <= mesActual);
@@ -430,26 +448,49 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
               </ResponsiveContainer>
             </Panel>
 
-            <Panel title="Cumplimiento por Categoría" icon={<BarChart3 className="w-4 h-4 text-blue-600" />}>
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={cumplPorCategoria} margin={{ top: 30, right: 20, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="categoria" tick={{ fontSize: 12, fill: "#64748b" }} />
-                  <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
-                  <Tooltip formatter={(v: number) => `${v}%`} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Bar dataKey="% CB" fill="#2542C2">
-                    <LabelList dataKey="% CB" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
-                  </Bar>
-                  <Bar dataKey="% Infaltables" fill="#A855F7">
-                    <LabelList dataKey="% Infaltables" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
-                  </Bar>
-                  <Bar dataKey="% Estratégico" fill="#EC4899">
-                    <LabelList dataKey="% Estratégico" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </Panel>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <Panel title="Cumplimiento por Categoría" icon={<BarChart3 className="w-4 h-4 text-blue-600" />}>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={cumplPorCategoria} margin={{ top: 30, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis dataKey="categoria" tick={{ fontSize: 12, fill: "#64748b" }} />
+                    <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
+                    <Tooltip formatter={(v: number) => `${v}%`} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="% CB" fill="#2542C2">
+                      <LabelList dataKey="% CB" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                    <Bar dataKey="% Infaltables" fill="#A855F7">
+                      <LabelList dataKey="% Infaltables" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                    <Bar dataKey="% Estratégico" fill="#EC4899">
+                      <LabelList dataKey="% Estratégico" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Panel>
+
+              <Panel title="Cumplimiento por Gerencia" icon={<Building2 className="w-4 h-4 text-blue-600" />}>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={cumplPorGerencia} margin={{ top: 30, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis dataKey="gerencia" tick={{ fontSize: 12, fill: "#64748b" }} interval={0} />
+                    <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
+                    <Tooltip formatter={(v: number) => `${v}%`} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="% CB" fill="#2542C2">
+                      <LabelList dataKey="% CB" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                    <Bar dataKey="% Infaltables" fill="#A855F7">
+                      <LabelList dataKey="% Infaltables" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                    <Bar dataKey="% Estratégico" fill="#EC4899">
+                      <LabelList dataKey="% Estratégico" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Panel>
+            </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <TablaCumplimiento title="Cumplimiento por Vendedor" icon={<Trophy className="w-4 h-4 text-amber-500" />} columnHeader="Vendedor" rows={cumplPorVendedor} />
