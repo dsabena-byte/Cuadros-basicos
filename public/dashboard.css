@@ -12,6 +12,14 @@
   .filters label { display: block; font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .3px; }
   .filters select { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; cursor: pointer; }
   .filters select:focus { outline: none; border-color: #3b82f6; }
+  .ms-wrap { position: relative; }
+  .ms-btn { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #fff; cursor: pointer; text-align: left; }
+  .ms-btn:hover { border-color: #94a3b8; }
+  .ms-btn:focus { outline: none; border-color: #3b82f6; }
+  .ms-panel { position: absolute; top: 100%; left: 0; right: 0; margin-top: 4px; background: #fff; border: 1px solid #d1d5db; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); max-height: 260px; overflow-y: auto; z-index: 100; padding: 4px 0; min-width: 140px; }
+  .ms-panel label { display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; font-size: 13px; }
+  .ms-panel label:hover { background: #f1f5f9; }
+  .ms-panel input[type="checkbox"] { margin: 0; }
   .reset-btn { padding: 8px 14px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; height: 36px; }
   .reset-btn:hover { background: #dc2626; }
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }

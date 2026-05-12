@@ -169,6 +169,7 @@ const escapeHtml = s => (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&am
 // ============= ESTADO =============
 let allData = [];
 let semanasCargadas = new Set();
+let selectedSemanas = new Set(); // Set<string> con las semanas elegidas en el filtro multi-select (vacío = todas).
 let chartInstances = [];
 let sortKey = 'pctCB', sortDir = 'asc';
 
@@ -223,7 +224,7 @@ function parseCSVText(text, semana) {
 function getFilters() {
   return {
     mes: document.getElementById('fMes').value,
-    semana: document.getElementById('fSemana').value,
+    semana: [...selectedSemanas], // array de strings; vacío = todas.
     division: document.getElementById('fDivision').value,
     supervisor: document.getElementById('fSupervisor').value,
     promotor: document.getElementById('fPromotor').value,
@@ -236,7 +237,7 @@ function applyFilters(data) {
   const f = getFilters();
   return data.filter(r => {
     if (f.mes && r.mes !== f.mes) return false;
-    if (f.semana && String(r.semana) !== f.semana) return false;
+    if (f.semana.length > 0 && !f.semana.includes(String(r.semana))) return false;
     if (f.division && r.division !== f.division) return false;
     if (f.supervisor && r.supervisor !== f.supervisor) return false;
     if (f.promotor && r.promotor !== f.promotor) return false;
@@ -258,6 +259,30 @@ function fillSelect(id, items, current, formatter) {
   sel.innerHTML = html;
 }
 
+function fillSemanaMulti(items) {
+  // Limpiamos selecciones de semanas que ya no están disponibles (ej. tras
+  // cambiar de mes). Mantiene los que sí siguen en la lista actual.
+  const available = new Set(items.map(String));
+  for (const s of [...selectedSemanas]) {
+    if (!available.has(s)) selectedSemanas.delete(s);
+  }
+
+  const panel = document.getElementById('fSemanaPanel');
+  const btn = document.getElementById('fSemanaBtn');
+  if (!panel || !btn) return;
+
+  panel.innerHTML = items.map(i => {
+    const s = String(i);
+    const checked = selectedSemanas.has(s) ? 'checked' : '';
+    return '<label><input type="checkbox" value="' + escapeHtml(s) + '" ' + checked + '> Semana ' + escapeHtml(s) + '</label>';
+  }).join('');
+
+  // Texto del botón.
+  if (selectedSemanas.size === 0) btn.textContent = 'Todas';
+  else if (selectedSemanas.size === 1) btn.textContent = 'Semana ' + [...selectedSemanas][0];
+  else btn.textContent = selectedSemanas.size + ' seleccionadas';
+}
+
 function populateFilters() {
   const f = getFilters();
   const mesesOrden = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -266,10 +291,10 @@ function populateFilters() {
 
   let dataS = f.mes ? allData.filter(r => r.mes === f.mes) : allData;
   const semanas = [...new Set(dataS.map(r => r.semana))].sort((a,b) => a - b);
-  fillSelect('fSemana', semanas, f.semana, s => 'Semana ' + s);
+  fillSemanaMulti(semanas);
 
   let dataD = dataS;
-  if (f.semana) dataD = dataD.filter(r => String(r.semana) === f.semana);
+  if (f.semana.length > 0) dataD = dataD.filter(r => f.semana.includes(String(r.semana)));
   const divisiones = [...new Set(dataD.map(r => r.division).filter(Boolean))].sort();
   fillSelect('fDivision', divisiones, f.division);
 
@@ -869,18 +894,44 @@ if (fileInputEl) {
 }
 
 // ============= FILTROS =============
-['fMes','fSemana','fDivision','fSupervisor','fPromotor','fCliente','fTienda'].forEach(id => {
+['fMes','fDivision','fSupervisor','fPromotor','fCliente','fTienda'].forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('change', () => { populateFilters(); render(); });
 });
 
+// Multi-select de Semana: toggle del panel + delegated change para checkboxes.
+const fSemanaBtnEl = document.getElementById('fSemanaBtn');
+const fSemanaPanelEl = document.getElementById('fSemanaPanel');
+if (fSemanaBtnEl && fSemanaPanelEl) {
+  fSemanaBtnEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    fSemanaPanelEl.hidden = !fSemanaPanelEl.hidden;
+  });
+  fSemanaPanelEl.addEventListener('change', (e) => {
+    const t = e.target;
+    if (!(t instanceof HTMLInputElement)) return;
+    if (t.checked) selectedSemanas.add(t.value);
+    else selectedSemanas.delete(t.value);
+    populateFilters();
+    render();
+  });
+  // Cerrar el panel al clickear afuera.
+  document.addEventListener('click', (e) => {
+    if (fSemanaPanelEl.hidden) return;
+    if (!fSemanaPanelEl.contains(e.target) && e.target !== fSemanaBtnEl) {
+      fSemanaPanelEl.hidden = true;
+    }
+  });
+}
+
 const btnResetEl = document.getElementById('btnReset');
 if (btnResetEl) {
   btnResetEl.addEventListener('click', () => {
-    ['fMes','fSemana','fDivision','fSupervisor','fPromotor','fCliente','fTienda'].forEach(id => {
+    ['fMes','fDivision','fSupervisor','fPromotor','fCliente','fTienda'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
+    selectedSemanas.clear();
     populateFilters();
     render();
   });
@@ -1611,7 +1662,7 @@ function buildShell() {
       <div class="card">
         <div class="filters">
           <div><label>Mes</label><select id="fMes"><option value="">Todos</option></select></div>
-          <div><label>Semana</label><select id="fSemana"><option value="">Todos</option></select></div>
+          <div class="ms-wrap"><label>Semana</label><button type="button" class="ms-btn" id="fSemanaBtn">Todas</button><div class="ms-panel" id="fSemanaPanel" hidden></div></div>
           <div><label>Categoría</label><select id="fDivision"><option value="">Todos</option></select></div>
           <div><label>Supervisor</label><select id="fSupervisor"><option value="">Todos</option></select></div>
           <div><label>Promotor</label><select id="fPromotor"><option value="">Todos</option></select></div>
