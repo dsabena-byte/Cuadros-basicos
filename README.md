@@ -1,46 +1,108 @@
-# Dashboard Cumplimiento Cuadros Básicos
+# Dashboards Drean — Trade Marketing + Cumplimiento CB Ventas
 
-Dashboard que se actualiza automáticamente cuando se suben CSVs nuevos a una
-carpeta de Google Drive. Calcula los KPIs de cumplimiento de **Cuadro Básico**,
-**Infaltables** y **Estratégicos** por cliente, tienda, supervisor y promotor.
+Repo con **dos dashboards** que comparten infraestructura (Next.js en Vercel + Google Drive como fuente de datos):
+
+| URL | Nombre | Foco | Fuente principal |
+|---|---|---|---|
+| [`/`](https://cuadros-basicos.vercel.app/) | **Dashboard Trade Marketing** | Cumplimiento CB por tienda + Floor Share por categoría | CSVs semanales en Google Drive |
+| [`/ventas`](https://cuadros-basicos.vercel.app/ventas) | **Cumplimiento Cuadro Básico — Ventas** | Cumplimiento CB por cliente/vendedor/gerencia, basado en facturación (FC) y backorder (BO) | Excel SharePoint `FC + BO 2026 - Hanna.xlsx` |
 
 ```
-Drive (carpeta "Tablero CB")
-        │
-        ├─ 15.csv, 16.csv, 17.csv, …       (datos semanales — se acumulan)
-        └─ Tiendas-promotor-supervisor.csv (mapeo de tiendas)
-                    │
-                    │   onChange (Apps Script)
-                    ▼
-        POST /api/refresh   →   Vercel revalida /api/data
-                    │
-                    ▼
-                Next.js page (lee Drive, arma dataset, sirve dashboard)
+                ┌────────────────────────────────────────────────────────────────┐
+                │                       Google Drive                              │
+                │  Tablero CB/                                                    │
+                │   ├── Sem15.csv, Sem16.csv, …     (Trade MKT data)             │
+                │   ├── Tiendas-promotor-supervisor.csv                          │
+                │   ├── floor-share/  (Trade MKT floor share)                    │
+                │   └── cuadro-basico-ventas/                                    │
+                │       ├── Cuadros-basicos-*.csv     (catálogo CB)              │
+                │       └── Clasificacion-clientes-*.csv  (cliente → vendedor)   │
+                └────────────────────────────────────────────────────────────────┘
+                                              │
+                          ┌───────────────────┴───────────────────┐
+                          ▼                                       ▼
+                  ┌────────────────┐                     ┌──────────────────┐
+                  │ Trade MKT (/)  │                     │ Ventas (/ventas) │
+                  │                │                     │                  │
+                  │ Lee CSVs       │                     │ Lee CB y         │
+                  │ semanales      │                     │ clasificación    │
+                  │                │                     │                  │
+                  └────────────────┘                     └────────┬─────────┘
+                                                                  │
+                                                                  ▼
+                                                  ┌─────────────────────────────┐
+                                                  │ Excel SharePoint            │
+                                                  │ "FC + BO 2026 - Hanna.xlsx" │
+                                                  │                             │
+                                                  │ Office Script lee FC+BO,    │
+                                                  │ filtra contra CB y          │
+                                                  │ POSTea a /api/ventas        │
+                                                  └──────────────┬──────────────┘
+                                                                 ▼
+                                                       ventas.json (Vercel Blob)
 ```
 
-## Estructura
+---
+
+## Estructura del repo
 
 ```
 app/
-  layout.tsx                   Shell HTML
-  page.tsx                     Shell HTML, fetch del dataset desde el cliente
-  api/data/route.ts            JSON crudo del dataset (debug / consumo externo)
-  api/refresh/route.ts         Webhook con secret → revalida la home
+  layout.tsx                  Shell HTML
+  page.tsx                    Trade MKT dashboard (vanilla JS + Chart.js)
+  ventas/                     Cumplimiento CB Ventas (Next.js + React + Recharts)
+    layout.tsx
+    page.tsx
+  api/
+    data/route.ts             Dataset Trade MKT (JSON crudo desde Drive)
+    refresh/route.ts          Invalida caches de ambos dashboards
+    ventas/route.ts           POST: recibe FC+BO del Office Script; GET: metadata
+    cb-pairs/route.ts         Lista de pares (cliente|sku) del CB; la usa el Office Script
+
+components/
+  Dashboard.tsx               Componente React del dashboard de Ventas
 
 lib/
-  drive.ts                     Cliente Drive (service account)
-  parse.ts                     Parser CSV + normalización + clasificación SKU
-  dataset.ts                   Junta CSVs de la carpeta y arma el dataset
+  drive.ts                    Cliente Google Drive (service account)
+  parse.ts                    Parser CSV + normalización + clasificación SKU (Trade MKT)
+  parse-floorshare.ts         Parser de Floor Share
+  dataset.ts                  Trade MKT: junta CSVs y arma el dataset
+  dataset-floorshare.ts       Floor Share: idem
+  cb-drive.ts                 Ventas: lee CB + clasificación de Drive dinámicamente
+  data.ts                     Loaders unificados (CB, clasificación, ventas)
+  storage.ts                  Vercel Blob para ventas.json
+  ingest-ventas.ts            Procesa payload FC+BO del Office Script
+  cors.ts                     Helper CORS para que el Office Script pueda fetchear
+  types.ts                    Tipos compartidos
 
 public/
-  dashboard.js                 JS del dashboard (Chart.js + render)
-  dashboard.css                Estilos
+  dashboard.js                Trade MKT: render del dashboard
+  dashboard.css               Estilos del Trade MKT
+
+office-scripts/
+  sync-ventas.ts              Office Script que corre dentro del Excel de Hanna
 
 apps-script/
-  code.gs                      Trigger que avisa a Vercel cuando hay cambios
+  code.gs                     Trigger Google Drive → /api/refresh
+
+docs/
+  ventas-dashboard.md         Detalles del dashboard de Ventas
+  office-scripts.md           Setup del Office Script en Excel
+  power-automate.md           [Deprecado] Flow original de Power Automate
 ```
 
-## KPIs
+---
+
+## Dashboard Trade Marketing (`/`)
+
+Dashboard de cumplimiento de CB por tienda + Floor Share por categoría. Vanilla JS con Chart.js.
+
+### Pestañas
+
+- **Cumplimiento CB**: % de cumplimiento de Cuadro Básico / Infaltables / Estratégico por semana, tienda, promotor, supervisor, cliente/cadena, categoría.
+- **Floor Share**: % de participación de marca Drean en el anaquel por categoría.
+
+### KPIs
 
 ```
 Cumplimiento CB         = Σ realCB / Σ targetCB
@@ -55,110 +117,121 @@ targetCB - targetInf == 0  →  Infaltable
 targetCB - targetInf  > 0  →  Estratégico
 ```
 
-## Setup
+### Filtros
 
-### 1. Service account de Google Cloud
+- Mes, **Semana (multi-select)**, Categoría, Supervisor, Promotor, Cliente/Cadena, Tienda.
 
-1. Entrá a [console.cloud.google.com](https://console.cloud.google.com/) y creá
-   un proyecto nuevo (o usá uno existente).
-2. **APIs & Services → Library** → habilitá **Google Drive API**.
-3. **APIs & Services → Credentials → Create credentials → Service account**:
-   - Nombre: `cb-dashboard-reader`
-   - Rol: ninguno (lectura via share)
-4. Una vez creada, abrí la service account → pestaña **Keys → Add key →
-   Create new key → JSON**. Descargá el archivo `.json`.
-5. Copiá el `client_email` que aparece en el JSON (algo como
-   `cb-dashboard-reader@tu-proyecto.iam.gserviceaccount.com`) y compartí la
-   carpeta de Drive **"Tablero CB"** con ese email, permiso de **Viewer**.
+### Cards (4)
 
-### 2. Vercel
+- `% Cuadro Básico` (featured, gradient navy + coral)
+- `% Infaltables`
+- `% Estratégico`
+- `Tiendas`
 
-1. Importá el repo en Vercel (`vercel.com/new`).
-2. En **Settings → Environment Variables** agregá:
+### Formato de los CSVs
 
-   | Variable | Valor |
-   |---|---|
-   | `GOOGLE_SERVICE_ACCOUNT_JSON` | Pegá el JSON entero de la service account, en una sola línea |
-   | `DRIVE_FOLDER_ID` | `1J7NORR3iwnjbKrIAbjB79N7h5klGFYR3` |
-   | `REFRESH_SECRET` | Cualquier string aleatorio largo (lo vas a reusar en Apps Script) |
+#### Semanales
 
-3. Deploy.
+Nombre: cualquier cosa que contenga el número de semana (`15.csv`, `Sem15.csv`, `semana-15.csv`, etc.). Encoding: UTF-8 o Windows-1252 (autodetecta). Separador: `;`, `\t` o `,` (autodetecta).
 
-### 3. Apps Script (trigger de Drive → Vercel)
-
-1. Abrí [script.google.com](https://script.google.com) → **New project**.
-2. Pegá el contenido de `apps-script/code.gs` en `Code.gs`.
-3. **Project Settings → Script properties → Add script property** (tres
-   propiedades):
-
-   | Property | Value |
-   |---|---|
-   | `VERCEL_REFRESH_URL` | `https://<tu-app>.vercel.app/api/refresh` |
-   | `REFRESH_SECRET` | Mismo valor que en Vercel |
-   | `DRIVE_FOLDER_ID` | `1J7NORR3iwnjbKrIAbjB79N7h5klGFYR3` |
-
-4. En el editor, ejecutá **`installTrigger`** una vez. Te va a pedir
-   autorización — autorizá con tu cuenta `dsabena@gmail.com`.
-5. A partir de ahí, cada 5 minutos el script chequea si la carpeta cambió y, si
-   hay novedad, llama al webhook `/api/refresh`. El dashboard queda actualizado.
-
-> Si querés probar manualmente, ejecutá `refreshNow` desde el editor de Apps
-> Script — fuerza un refresh inmediato.
-
-## Formato de los archivos
-
-### CSVs semanales
-
-Nombre: cualquier cosa que contenga el número de semana (`15.csv`, `Sem15.csv`,
-`semana-15.csv`, etc.). Encoding: UTF-8 o Windows-1252 (se autodetecta).
-Separador: `;`, `\t` o `,` (autodetecta).
-
-Columnas requeridas:
+Columnas:
 
 ```
 DIVISION; CATEGORIA; SKU MABE; CLIENTE/CADENA; TIENDA HMPDV;
 targetCB; realCB; %cumpCB; targetInf; realInf; %cumpInf
 ```
 
-Las filas con `TIENDA HMPDV = "Total"` o `SKU MABE = "Total"` se ignoran. Las
-filas con `targetCB = targetInf = 0` se ignoran.
+Filas con `TIENDA HMPDV = "Total"` o `SKU MABE = "Total"` se ignoran. Filas con `targetCB = targetInf = 0` se ignoran.
 
-### Archivo de contactos
+#### Contactos (tiendas → promotor/supervisor)
 
-Nombre: cualquier archivo cuyo nombre matchee `tiendas-promotor-supervisor`,
-`promotor-supervisor`, `contactos` o `maestro-tiendas`. Columnas:
+Nombre: matchea `tiendas-promotor-supervisor`, `promotor-supervisor`, `contactos` o `maestro-tiendas`. Columnas:
 
 ```
 CANAL; CADENA; FORMATO; N TIENDA; TIENDA; PROMOTOR; SUPERVISOR;
 TIPO DE TIENDA; EMAIL_PROMOTOR
 ```
 
-El join con los CSVs de datos se hace por **número de tienda** (el prefijo
-numérico de `TIENDA HMPDV`).
+Join con los CSVs de datos por **número de tienda** (prefijo numérico de `TIENDA HMPDV`).
 
-### CSVs de Floor Share
+**Aliases de promotores**: nombres con variantes "First Last" / "Last First" se unifican vía `PROMOTOR_ALIASES_RAW` en `lib/parse.ts`. Agregar nuevos pares ahí si aparecen duplicados en el dropdown.
 
-Van en la subcarpeta `floor-share/` dentro de "Tablero CB". Convención de
-nombre: **`YYYY-MM_CATEGORIA.csv`** (ej: `2026-01_COCCION.csv`,
-`2026-04_LAVADO.csv`, `2026-03_REFRIGERACION.csv`).
+#### Floor Share
 
-El parser es tolerante: acepta espacios extras alrededor del separador o
-antes de `.csv`, y normaliza la categoría a minúsculas (se muestra
-capitalizada en el dashboard). Si el nombre no matchea el patrón, el
-archivo se ignora con un warning en los logs del server.
+Van en la subcarpeta `floor-share/` dentro de "Tablero CB". Convención de nombre: **`YYYY-MM_CATEGORIA.csv`** (ej: `2026-04_LAVADO.csv`).
 
-Formato del CSV (pivot con doble header, exportado de la planilla):
+---
 
-```
-Subcategoría Participación Anaquel ; Marca1 ;     ; Marca2 ;     ; …
-                                   ; Unid.  ; %Part; Unid.  ; %Part; …
-124 - Frávega Once Ciudad         ; 12     ; 5,2 ; 8      ; 3,5 ; …
-…
-```
+## Dashboard Cumplimiento CB — Ventas (`/ventas`)
 
-El join con contactos se hace por número de tienda (igual que CB). El %
-de Floor Share se recalcula desde unidades — el `%Part` del archivo se
-ignora para el cálculo.
+Dashboard de cumplimiento de CB por cliente, basado en data de facturación (FC) y backorder (BO) que vive en un Excel de SharePoint.
+
+Ver detalles en [docs/ventas-dashboard.md](docs/ventas-dashboard.md).
+
+### Pipeline (resumen)
+
+1. Excel `FC + BO 2026 - Hanna.xlsx` en SharePoint con Power Query alimentando tablas FC y BO.
+2. Office Script (`office-scripts/sync-ventas.ts`) corre dentro del Excel, lee las tablas, filtra contra el CB y POSTea a `/api/ventas`.
+3. El server persiste `ventas.json` en Vercel Blob.
+4. El dashboard `/ventas` lee CB + clasificación de Drive (dinámico) y ventas.json del blob; los une y renderiza.
+
+### Setup operativo
+
+Ver [docs/office-scripts.md](docs/office-scripts.md) para instalar el Office Script en el Excel de Hanna paso a paso.
+
+---
+
+## Setup técnico (común a ambos dashboards)
+
+### 1. Service account de Google Cloud
+
+1. [console.cloud.google.com](https://console.cloud.google.com/) → crear proyecto.
+2. **APIs & Services → Library** → habilitar **Google Drive API**.
+3. **APIs & Services → Credentials → Create credentials → Service account**:
+   - Nombre: `cb-dashboard-reader`
+4. Service account → pestaña **Keys → Add key → Create new key → JSON**. Descargar el `.json`.
+5. Copiar el `client_email` del JSON y compartir la carpeta de Drive **"Tablero CB"** con permiso de **Viewer**.
+
+### 2. Vercel — Environment Variables
+
+| Variable | Para qué | Ejemplo |
+|---|---|---|
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | Auth contra Drive | JSON entero de la service account |
+| `DRIVE_FOLDER_ID` | Carpeta padre de Tablero CB | `1J7NORR3iwn...` |
+| `DRIVE_CB_FOLDER_ID` | (opcional) Override directo al folder de CB Ventas. Sino busca subfolder `cuadro-basico-ventas` dentro de DRIVE_FOLDER_ID | `1ABC...` |
+| `REFRESH_SECRET` | Webhook que invalida cache (lo usa Apps Script y manualmente) | random string |
+| `REFRESH_SECRET1` | Auth para POST `/api/ventas` (Office Script). **Distinto** del anterior por razones históricas | random string |
+| `BLOB_READ_WRITE_TOKEN` | Vercel Blob (lo provee Vercel automáticamente al crear el blob store) | (auto) |
+
+### 3. Apps Script (refresh automático de Trade MKT)
+
+1. [script.google.com](https://script.google.com) → **New project**.
+2. Pegar `apps-script/code.gs` en `Code.gs`.
+3. **Project Settings → Script properties**:
+   - `VERCEL_REFRESH_URL` = `https://<tu-app>.vercel.app/api/refresh`
+   - `REFRESH_SECRET` = mismo valor que Vercel
+   - `DRIVE_FOLDER_ID` = `1J7NORR3iwn...`
+4. Ejecutar `installTrigger` una vez (pide autorización).
+
+Cada 5 min Apps Script chequea si la carpeta cambió y, si sí, llama al webhook.
+
+### 4. Office Script (refresh manual de /ventas)
+
+Ver [docs/office-scripts.md](docs/office-scripts.md). Setup ~10 min en el Excel de Hanna.
+
+---
+
+## Endpoints
+
+| Método | Path | Auth | Para qué |
+|---|---|---|---|
+| GET | `/` | — | Dashboard Trade Marketing (HTML) |
+| GET | `/ventas` | — | Dashboard Cumplimiento CB Ventas (HTML) |
+| GET | `/api/data` | — | Dataset Trade MKT (JSON crudo, debug) |
+| POST/GET | `/api/refresh` | `?secret=$REFRESH_SECRET` | Invalida cache de Drive + revalida páginas |
+| POST | `/api/ventas` | `x-refresh-secret: $REFRESH_SECRET1` | Office Script POSTea aquí el payload FC+BO |
+| GET | `/api/ventas` | `x-refresh-secret: $REFRESH_SECRET1` | Metadata de la última sync (debug) |
+| GET | `/api/cb-pairs` | `?secret=$REFRESH_SECRET1` | Lista de `cliente|sku` del CB. La consume el Office Script para pre-filtrar |
 
 ## Desarrollo local
 
@@ -169,10 +242,16 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Abrí <http://localhost:3000>.
+Abrir <http://localhost:3000> (Trade MKT) o <http://localhost:3000/ventas>.
 
-## Endpoints
+En local, si no hay `GOOGLE_SERVICE_ACCOUNT_JSON` configurado, `/ventas` cae a los JSONs estáticos `data/cuadro-basico.json` y `data/clasificacion-clientes.json` (snapshot de abril 2026).
 
-- `GET /` — dashboard HTML.
-- `GET /api/data` — dataset JSON crudo (útil para debug).
-- `POST /api/refresh` — fuerza revalidación. Header `x-refresh-secret: <REFRESH_SECRET>`.
+## Forzar refresh inmediato
+
+Cuando actualizás archivos en Drive o el catálogo del CB, los cambios tardan hasta 5 min en aparecer (cache TTL). Para forzar:
+
+```bash
+curl "https://cuadros-basicos.vercel.app/api/refresh?secret=$REFRESH_SECRET"
+```
+
+Después del refresh, hacer **hard refresh** del browser (Ctrl+Shift+R) para evitar cache del lado del cliente.
