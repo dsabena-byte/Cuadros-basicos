@@ -157,6 +157,16 @@ const PROMOTOR_ALIASES_RAW: Record<string, string> = {
   "vallejos margarita": "Vallejo Margarita",
   "margarita vallejo": "Vallejo Margarita",
   "vallejo margarita": "Vallejo Margarita",
+  "emiliano gayford": "Gayford Emiliano",
+  "gayford emiliano": "Gayford Emiliano",
+  "esteban paez": "Paez Esteban",
+  "paez esteban": "Paez Esteban",
+  "fernandez matias": "Fernandez Matias",
+  "matias fernandez": "Fernandez Matias",
+  "martina perez": "Perez Martina",
+  "perez martina": "Perez Martina",
+  "scoppa victor": "Scoppa Victor",
+  "victor scoppa": "Scoppa Victor",
 };
 
 function promotorAliasKey(name: string): string {
