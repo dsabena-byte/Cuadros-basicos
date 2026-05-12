@@ -488,10 +488,19 @@ function render() {
   const showRankCliente = !f.cliente;
   const showEvolucion = k.semanas > 1;
 
+  // Helper para el bloque Obj + desvío al pie de cada KPI card.
+  const targetBlock = (value) => {
+    if (value == null || isNaN(value)) return '';
+    const delta = value - CB_TARGET;
+    const cls = delta >= 0 ? 'fs-delta-pos' : 'fs-delta-neg';
+    const txt = (delta >= 0 ? '+' : '') + (Math.round(delta * 10) / 10).toFixed(1) + ' pp';
+    return '<div class="kpi-target"><span class="kpi-target-val">Obj ' + CB_TARGET + '%</span><span class="fs-delta-pill ' + cls + '">' + txt + '</span></div>';
+  };
+
   let html = '<div class="kpis">' +
-    '<div class="kpi cb"><div class="label">% Cuadro Básico</div><div class="value">' + fmtPct(k.pctCB) + '</div><div class="sub-val">' + k.realCB + ' / ' + k.targetCB + '</div></div>' +
-    '<div class="kpi inf"><div class="label">% Infaltables</div><div class="value">' + fmtPct(k.pctInf) + '</div><div class="sub-val">' + k.realInf + ' / ' + k.targetInf + '</div></div>' +
-    '<div class="kpi est"><div class="label">% Estratégico</div><div class="value">' + fmtPct(k.pctEst) + '</div><div class="sub-val">' + k.realEst + ' / ' + k.targetEst + '</div></div>' +
+    '<div class="kpi cb"><div class="label">% Cuadro Básico</div><div class="value">' + fmtPct(k.pctCB) + '</div><div class="sub-val">' + k.realCB + ' / ' + k.targetCB + '</div>' + targetBlock(k.pctCB) + '</div>' +
+    '<div class="kpi inf"><div class="label">% Infaltables</div><div class="value">' + fmtPct(k.pctInf) + '</div><div class="sub-val">' + k.realInf + ' / ' + k.targetInf + '</div>' + targetBlock(k.pctInf) + '</div>' +
+    '<div class="kpi est"><div class="label">% Estratégico</div><div class="value">' + fmtPct(k.pctEst) + '</div><div class="sub-val">' + k.realEst + ' / ' + k.targetEst + '</div>' + targetBlock(k.pctEst) + '</div>' +
     '<div class="kpi green"><div class="label">Tiendas</div><div class="value">' + k.tiendas + '</div></div>' +
     '</div>';
 

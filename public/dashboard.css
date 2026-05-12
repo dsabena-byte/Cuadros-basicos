@@ -37,6 +37,11 @@
   .kpi .label { font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: .3px; margin-bottom: 6px; }
   .kpi .value { font-size: 24px; font-weight: 700; color: #0f172a; }
   .kpi .sub-val { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .kpi-target { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #cbd5e1; }
+  .kpi-target .kpi-target-val { color: #475569; }
+  /* Variante para la card destacada .kpi.cb (fondo navy gradient): line dashed y labels más claros. */
+  .kpi.cb .kpi-target { border-top-color: rgba(255,255,255,0.3); }
+  .kpi.cb .kpi-target .kpi-target-val { color: rgba(255,255,255,0.85); }
   .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
   .charts-cb-rank > .fs-promotor-card:only-child { grid-column: 1 / -1; }
   .chart-box { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
