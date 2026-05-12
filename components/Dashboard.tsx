@@ -340,6 +340,19 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
       });
   }, [cbFiltrado, comprasFiltradas]);
 
+  // Map<sku, Set<cliente>>: por cada SKU, los clientes (filtrados) que lo
+  // tienen en su CB. La usa TablaSKUs para construir el breakdown FC por
+  // fecha cuando el usuario expande una fila.
+  const cbClientesPorSku = useMemo(() => {
+    const m = new Map<string, Set<string>>();
+    for (const item of cbFiltrado) {
+      const s = m.get(item.sku) ?? new Set<string>();
+      s.add(item.cliente);
+      m.set(item.sku, s);
+    }
+    return m;
+  }, [cbFiltrado]);
+
   const detalleSKUs = useMemo(() => {
     if (!clienteSeleccionado) return [];
     return cbFiltrado
@@ -531,7 +544,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
             )}
 
             <Panel title="Detalle por SKU del Cuadro Básico" icon={<FileText className="w-4 h-4 text-slate-600" />}>
-              <TablaSKUs rows={skusDetalle} mostrarClientes={filters.cliente === "TODOS"} />
+              <TablaSKUs rows={skusDetalle} mostrarClientes={filters.cliente === "TODOS"} comprasFiltradas={comprasFiltradas} cbClientesPorSku={cbClientesPorSku} />
             </Panel>
           </>
         )}
@@ -837,7 +850,7 @@ function MultiSelectDropdown({
   );
 }
 
-function TablaSKUs({ rows, mostrarClientes }: {
+function TablaSKUs({ rows, mostrarClientes, comprasFiltradas, cbClientesPorSku }: {
   rows: Array<{
     sku: string;
     categoria: string;
@@ -849,7 +862,10 @@ function TablaSKUs({ rows, mostrarClientes }: {
     pct: number;
   }>;
   mostrarClientes: boolean;
+  comprasFiltradas: VentaRow[];
+  cbClientesPorSku: Map<string, Set<string>>;
 }) {
+  const [expandedSku, setExpandedSku] = useState<string | null>(null);
   const totalPorTipo = (tipo: "INFALTABLE" | "ESTRATEGICO") => {
     const r = rows.filter((x) => x.tipo === tipo);
     const en = r.reduce((a, x) => a + x.clientesEnCB, 0);
@@ -907,7 +923,18 @@ function TablaSKUs({ rows, mostrarClientes }: {
               <td colSpan={totalCols} className="px-3 py-1.5 text-xs font-bold text-violet-800 uppercase tracking-wider">Infaltables</td>
             </tr>
           )}
-          {infRows.map((r) => <FilaSKU key={`inf-${r.sku}`} r={r} mostrarClientes={mostrarClientes} />)}
+          {infRows.map((r) => (
+            <FilaSKU
+              key={`inf-${r.sku}`}
+              r={r}
+              mostrarClientes={mostrarClientes}
+              totalCols={totalCols}
+              expanded={expandedSku === `inf-${r.sku}`}
+              onToggle={r.fcUnits > 0 ? () => setExpandedSku((cur) => cur === `inf-${r.sku}` ? null : `inf-${r.sku}`) : undefined}
+              comprasFiltradas={comprasFiltradas}
+              clientesScope={cbClientesPorSku.get(r.sku)}
+            />
+          ))}
           {infRows.length > 0 && <FilaTotal r={totInf} accent="violet" labelSpan={labelSpan} />}
 
           {estRows.length > 0 && (
@@ -915,7 +942,18 @@ function TablaSKUs({ rows, mostrarClientes }: {
               <td colSpan={totalCols} className="px-3 py-1.5 text-xs font-bold text-pink-800 uppercase tracking-wider">Estratégico</td>
             </tr>
           )}
-          {estRows.map((r) => <FilaSKU key={`est-${r.sku}`} r={r} mostrarClientes={mostrarClientes} />)}
+          {estRows.map((r) => (
+            <FilaSKU
+              key={`est-${r.sku}`}
+              r={r}
+              mostrarClientes={mostrarClientes}
+              totalCols={totalCols}
+              expanded={expandedSku === `est-${r.sku}`}
+              onToggle={r.fcUnits > 0 ? () => setExpandedSku((cur) => cur === `est-${r.sku}` ? null : `est-${r.sku}`) : undefined}
+              comprasFiltradas={comprasFiltradas}
+              clientesScope={cbClientesPorSku.get(r.sku)}
+            />
+          ))}
           {estRows.length > 0 && <FilaTotal r={totEst} accent="pink" labelSpan={labelSpan} />}
 
           {(infRows.length > 0 || estRows.length > 0) && <FilaTotal r={totGen} accent="slate" labelSpan={labelSpan} grand />}
@@ -925,7 +963,7 @@ function TablaSKUs({ rows, mostrarClientes }: {
   );
 }
 
-function FilaSKU({ r, mostrarClientes }: {
+function FilaSKU({ r, mostrarClientes, totalCols, expanded, onToggle, comprasFiltradas, clientesScope }: {
   r: {
     sku: string;
     categoria: string;
@@ -937,21 +975,90 @@ function FilaSKU({ r, mostrarClientes }: {
     pct: number;
   };
   mostrarClientes: boolean;
+  totalCols: number;
+  expanded: boolean;
+  onToggle?: () => void;
+  comprasFiltradas: VentaRow[];
+  clientesScope?: Set<string>;
 }) {
   const pctBg = r.pct >= 80 ? "bg-green-100 text-green-800" : r.pct >= 70 ? "bg-yellow-100 text-yellow-800" : "bg-red-100 text-red-800";
   const total = r.fcUnits + r.boUnits;
+  const clickable = !!onToggle;
   return (
-    <tr className="border-b border-slate-100 hover:bg-slate-50">
-      <td className="p-3 text-slate-600">{r.categoria}</td>
-      <td className="p-3 font-mono text-slate-900">{r.sku}</td>
-      {mostrarClientes && (
-        <td className="p-3 text-right text-slate-600 font-mono text-xs">{r.clientesCumplidos}/{r.clientesEnCB}</td>
+    <>
+      <tr
+        className={`border-b border-slate-100 ${clickable ? "cursor-pointer hover:bg-blue-50" : "hover:bg-slate-50"}`}
+        onClick={onToggle}
+      >
+        <td className="p-3 text-slate-600">
+          {clickable && (
+            <ChevronDown
+              className={`inline w-3.5 h-3.5 text-slate-400 mr-1 transition-transform ${expanded ? "rotate-180" : ""}`}
+            />
+          )}
+          {r.categoria}
+        </td>
+        <td className="p-3 font-mono text-slate-900">{r.sku}</td>
+        {mostrarClientes && (
+          <td className="p-3 text-right text-slate-600 font-mono text-xs">{r.clientesCumplidos}/{r.clientesEnCB}</td>
+        )}
+        <td className="p-3 text-right text-green-700 font-medium">{r.fcUnits > 0 ? `${r.fcUnits.toLocaleString("es-AR")}u` : "—"}</td>
+        <td className="p-3 text-right text-amber-700 font-medium">{r.boUnits > 0 ? `${r.boUnits.toLocaleString("es-AR")}u` : "—"}</td>
+        <td className="p-3 text-right text-slate-900 font-semibold">{total > 0 ? `${total.toLocaleString("es-AR")}u` : "—"}</td>
+        <td className={`p-3 text-right font-bold ${pctBg}`}>{r.pct}%</td>
+      </tr>
+      {expanded && (
+        <tr className="border-b border-slate-100">
+          <td colSpan={totalCols} className="p-0">
+            <DetalleFCPorFecha sku={r.sku} clientesScope={clientesScope} comprasFiltradas={comprasFiltradas} />
+          </td>
+        </tr>
       )}
-      <td className="p-3 text-right text-green-700 font-medium">{r.fcUnits > 0 ? `${r.fcUnits.toLocaleString("es-AR")}u` : "—"}</td>
-      <td className="p-3 text-right text-amber-700 font-medium">{r.boUnits > 0 ? `${r.boUnits.toLocaleString("es-AR")}u` : "—"}</td>
-      <td className="p-3 text-right text-slate-900 font-semibold">{total > 0 ? `${total.toLocaleString("es-AR")}u` : "—"}</td>
-      <td className={`p-3 text-right font-bold ${pctBg}`}>{r.pct}%</td>
-    </tr>
+    </>
+  );
+}
+
+function DetalleFCPorFecha({ sku, clientesScope, comprasFiltradas }: {
+  sku: string;
+  clientesScope?: Set<string>;
+  comprasFiltradas: VentaRow[];
+}) {
+  const filas = useMemo(() => {
+    const byFecha = new Map<string, number>();
+    for (const c of comprasFiltradas) {
+      if (c.tipo !== "FC") continue;
+      if (c.sku !== sku) continue;
+      if (clientesScope && !clientesScope.has(c.cliente)) continue;
+      byFecha.set(c.fecha, (byFecha.get(c.fecha) ?? 0) + c.unidades);
+    }
+    return Array.from(byFecha.entries())
+      .map(([fecha, unidades]) => ({ fecha, unidades }))
+      .sort((a, b) => a.fecha.localeCompare(b.fecha));
+  }, [sku, clientesScope, comprasFiltradas]);
+
+  const totalFC = filas.reduce((a, r) => a + r.unidades, 0);
+
+  if (filas.length === 0) {
+    return (
+      <div className="px-4 py-3 bg-slate-50 text-xs text-slate-500">
+        Sin facturación en el período filtrado.
+      </div>
+    );
+  }
+  return (
+    <div className="px-4 py-3 bg-slate-50">
+      <div className="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wider">
+        Detalle facturación por fecha · {filas.length} {filas.length === 1 ? "factura" : "fechas"} · {totalFC.toLocaleString("es-AR")}u
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+        {filas.map((f) => (
+          <div key={f.fecha} className="flex justify-between items-center bg-white px-3 py-1.5 rounded border border-slate-200">
+            <span className="text-xs text-slate-600">{formatFecha(f.fecha)}</span>
+            <span className="text-sm font-semibold text-slate-900">{f.unidades.toLocaleString("es-AR")}u</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
