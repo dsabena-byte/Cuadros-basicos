@@ -37,9 +37,14 @@ export type VentaRow = {
   sku: string;
   tipo: VentaTipo;
   unidades: number;
-  fecha: string; // YYYY-MM-DD
+  fecha: string; // YYYY-MM-DD. Para FC: período fiscal (EjercicioPeriodo,
+                  // día 01). Para BO: Fecha Creación Cabecera real.
   mes: number;   // 1..12 (derivado de fecha)
   vendedor: string;
+  fechaFactura?: string; // YYYY-MM-DD. Solo FC. Fecha REAL de emisión de
+                         // la factura, separada de "fecha" para mostrar
+                         // en el detalle expandido (sino se ven todas
+                         // como día 01 del mes por el calendario fiscal).
 };
 
 export type VentasFile = {
@@ -56,8 +61,11 @@ export type VentasPayloadRow = {
   cliente: string;
   sku: string;
   unidades: number | string;
-  fecha: string | number; // YYYY-MM-DD, DD/MM/YYYY, ISO, o YYYYMMDD (int)
+  fecha: string | number; // YYYY-MM-DD, DD/MM/YYYY, ISO, YYYYMMDD (int) o
+                          // YYYYNNN (período fiscal SAP).
   vendedor: string;
+  fechaFactura?: string | number; // Opcional. Fecha real de emisión de
+                                   // factura, distinta del período fiscal.
 };
 
 export type VentasPayload = {

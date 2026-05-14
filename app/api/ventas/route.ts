@@ -106,6 +106,16 @@ function toRow(p: VentasPayloadRow, tipo: "FC" | "BO"): VentaRow {
   // tal cual y dejamos que el dashboard refleje el neto.
   const fecha = normalizeFecha(p.fecha);
   const mes = Number(fecha.slice(5, 7));
+  // fechaFactura es opcional (solo FC la manda). Si viene, normalizamos
+  // igual; si falla el parseo, la ignoramos en lugar de tirar el row.
+  let fechaFactura: string | undefined;
+  if (p.fechaFactura != null && p.fechaFactura !== "") {
+    try {
+      fechaFactura = normalizeFecha(p.fechaFactura);
+    } catch {
+      fechaFactura = undefined;
+    }
+  }
   return {
     documentoVentas: p.documentoVentas != null ? String(p.documentoVentas) : "",
     cliente: p.cliente,
@@ -115,6 +125,7 @@ function toRow(p: VentasPayloadRow, tipo: "FC" | "BO"): VentaRow {
     fecha,
     mes,
     vendedor: p.vendedor ?? "",
+    ...(fechaFactura ? { fechaFactura } : {}),
   };
 }
 
