@@ -607,12 +607,6 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
             </Panel>
           </>
         )}
-
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-900">
-            <strong>Mockup con datos simulados.</strong> Hacé click en una fila de la tabla &ldquo;Cumplimiento por Cliente&rdquo; para ver el detalle de SKUs.
-          </p>
-        </div>
       </div>
     </div>
   );
