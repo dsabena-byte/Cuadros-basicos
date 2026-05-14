@@ -143,9 +143,22 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
   );
 
   const comprasFiltradas = useMemo(() => {
+    // FC y BO se filtran por mes con semánticas distintas:
+    //   - FC: por mes EXACTO. Una factura de marzo solo cuenta en marzo.
+    //   - BO: ACUMULADO hasta el último mes seleccionado. Una BO de enero
+    //     sigue pendiente en marzo si no se facturó antes — para una vista
+    //     "estado al cierre del mes X", todos los BOs con mes ≤ X cuentan.
     const mesesSel = new Set(filters.mes.map(Number));
+    const maxMesSel = mesesSel.size > 0 ? Math.max(...mesesSel) : null;
     return ventas.rows.filter((c) => {
-      if (mesesSel.size > 0 && !mesesSel.has(c.mes)) return false;
+      if (mesesSel.size > 0) {
+        if (c.tipo === "FC") {
+          if (!mesesSel.has(c.mes)) return false;
+        } else {
+          // tipo === "BO": acumulado hasta el último mes elegido.
+          if (maxMesSel !== null && c.mes > maxMesSel) return false;
+        }
+      }
       if (filters.vendedor !== "TODOS" && c.vendedor !== filters.vendedor) return false;
       return true;
     });
