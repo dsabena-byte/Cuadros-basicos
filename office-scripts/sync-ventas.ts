@@ -57,7 +57,7 @@ const COLUMN_MAPPING = {
     cliente: ["Cliente", "Cliente Descripción", "Cliente Descripcion"],
     sku: ["Material ID", "Material", "SKU"],
     unidades: ["VolumenVentas", "Volumen Ventas", "CANTIDAD PEDIDO FC", "Cantidad"],
-    fecha: ["Fecha de Creación de Factura", "Fecha Creación Doc. Venta", "Fecha"],
+    fecha: ["EjercicioPeriodo", "Ejercicio Periodo", "Ejercicio Período", "EjercicioPeríodo", "Fecha de Creación de Factura", "Fecha Creación Doc. Venta", "Fecha"],
     vendedor: ["Ejecutivo de Venta", "Ejecutivo Venta Descripción", "Vendedor"],
   },
   bo: {
@@ -98,15 +98,22 @@ function normalizeCliente(s: string): string {
   return String(s ?? "").trim().toUpperCase().replace(/\s+/g, " ");
 }
 
-// Convierte Excel serial date (ej. 46121) a YYYY-MM-DD. Si ya es un
-// número estilo YYYYMMDD (8 dígitos, ej. 20260427) o un string, lo deja
-// como está — el server normaliza el resto.
-//
-// Necesario porque las celdas formateadas como Date en Excel se leen
-// como serial number vía getValues(), y el server no las reconoce.
+// Convierte fechas de Excel a un formato que el server reconozca:
+//   * YYYYMMDD (8 dígitos, ej. 20260427) → passthrough (server lo parsea).
+//   * YYYYNNN (7 dígitos, ej. 2026004) → "YYYY-MM-01". Es el campo
+//     EjercicioPeriodo que usa SAP (Año + Período fiscal/contable).
+//   * Excel serial (0-100K, ej. 46121) → YYYY-MM-DD vía new Date().
+//   * String → passthrough.
 function normalizeRawFecha(raw: unknown): string | number {
   if (typeof raw === "number") {
     if (raw >= 10000000 && raw < 99999999 && Number.isInteger(raw)) return raw;
+    if (raw >= 1000000 && raw < 10000000 && Number.isInteger(raw)) {
+      const year = Math.floor(raw / 1000);
+      const month = raw % 1000;
+      if (year >= 2000 && year < 2100 && month >= 1 && month <= 12) {
+        return `${year}-${String(month).padStart(2, "0")}-01`;
+      }
+    }
     if (raw > 0 && raw < 100000) {
       const utcMs = (raw - 25569) * 86400 * 1000;
       const d = new Date(utcMs);
