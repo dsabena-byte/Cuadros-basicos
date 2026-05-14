@@ -71,6 +71,15 @@ function normalizeFecha(raw: string | number): string {
   if (/^\d{8}$/.test(s)) {
     return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
   }
+  // YYYYNNN (7 dígitos) — EjercicioPeriodo de SAP: año + período fiscal.
+  // Default día 01. Ej. 2026004 → 2026-04-01.
+  if (/^\d{7}$/.test(s)) {
+    const year = s.slice(0, 4);
+    const monthNum = Number(s.slice(4, 7));
+    if (monthNum >= 1 && monthNum <= 12) {
+      return `${year}-${String(monthNum).padStart(2, "0")}-01`;
+    }
+  }
   const d = new Date(s);
   if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
   throw new Error(`Fecha inválida: "${raw}"`);
