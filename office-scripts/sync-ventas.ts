@@ -57,7 +57,12 @@ const COLUMN_MAPPING = {
     cliente: ["Cliente", "Cliente Descripción", "Cliente Descripcion"],
     sku: ["Material ID", "Material", "SKU"],
     unidades: ["VolumenVentas", "Volumen Ventas", "CANTIDAD PEDIDO FC", "Cantidad"],
+    // `fecha` = período fiscal (EjercicioPeriodo). Define el "mes" del row.
     fecha: ["EjercicioPeriodo", "Ejercicio Periodo", "Ejercicio Período", "EjercicioPeríodo", "Fecha de Creación de Factura", "Fecha Creación Doc. Venta", "Fecha"],
+    // `fechaFactura` = fecha real de emisión, solo para mostrar en el
+    // detalle expandido del SKU. Opcional — si no existe la columna,
+    // el dashboard cae a `fecha` (día 01 del mes).
+    fechaFactura: ["Fecha de Creación de Factura", "Fecha Creación Doc. Venta", "Fecha de Factura", "Fecha Factura"],
     vendedor: ["Ejecutivo de Venta", "Ejecutivo Venta Descripción", "Vendedor"],
   },
   bo: {
@@ -86,6 +91,7 @@ type PayloadRow = {
   unidades: number;
   fecha: string | number;
   vendedor: string;
+  fechaFactura?: string | number;
 };
 
 type Mapping = Record<string, string[]>;
@@ -124,6 +130,10 @@ function normalizeRawFecha(raw: unknown): string | number {
   return String(raw ?? "");
 }
 
+// Campos del mapping que son opcionales — si no existe la columna en
+// el Excel, no se rompe el script (solo no se manda ese campo).
+const OPTIONAL_FIELDS = new Set<string>(["fechaFactura"]);
+
 function buildIndex(headers: string[], mapping: Mapping): Record<string, number> {
   const lc = headers.map((h) => String(h ?? "").trim().toLowerCase());
   const idx: Record<string, number> = {};
@@ -135,6 +145,7 @@ function buildIndex(headers: string[], mapping: Mapping): Record<string, number>
       if (i >= 0) { found = i; break; }
     }
     if (found < 0) {
+      if (OPTIONAL_FIELDS.has(key)) continue; // omitir, no falla
       throw new Error(
         `No encontré la columna "${key}". Headers del Excel: [${headers.join(", ")}]. ` +
         `Candidatos buscados: [${candidates.join(", ")}]. ` +
@@ -183,14 +194,23 @@ function readTable(
       if (!cliente || !sku) continue;
       const key = `${normalizeCliente(cliente)}|${sku}`;
       if (!cbPairs.has(key)) continue;
-      out.push({
+      const payload: PayloadRow = {
         documentoVentas: row[idx["documentoVentas"]] as string | number,
         cliente,
         sku,
         unidades: Number(row[idx["unidades"]] ?? 0),
         fecha: normalizeRawFecha(row[idx["fecha"]]),
         vendedor: String(row[idx["vendedor"]] ?? ""),
-      });
+      };
+      // fechaFactura es opcional (solo FC). Si la columna existe y el
+      // valor no está vacío, lo mandamos normalizado.
+      if (idx["fechaFactura"] !== undefined) {
+        const fr = row[idx["fechaFactura"]];
+        if (fr !== null && fr !== undefined && fr !== "") {
+          payload.fechaFactura = normalizeRawFecha(fr);
+        }
+      }
+      out.push(payload);
     }
   }
   return out;

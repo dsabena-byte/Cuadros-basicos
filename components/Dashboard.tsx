@@ -1081,12 +1081,16 @@ function DetalleFCPorFecha({ sku, clientesScope, comprasFiltradas }: {
   comprasFiltradas: VentaRow[];
 }) {
   const filas = useMemo(() => {
+    // Para el detalle usamos fechaFactura (real, día concreto) si vino
+    // del Office Script. Si no está, fallback a fecha (que para FC es el
+    // período fiscal con día 01 — agrupa todo el mes en una fila).
     const byFecha = new Map<string, number>();
     for (const c of comprasFiltradas) {
       if (c.tipo !== "FC") continue;
       if (c.sku !== sku) continue;
       if (clientesScope && !clientesScope.has(c.cliente)) continue;
-      byFecha.set(c.fecha, (byFecha.get(c.fecha) ?? 0) + c.unidades);
+      const key = c.fechaFactura ?? c.fecha;
+      byFecha.set(key, (byFecha.get(key) ?? 0) + c.unidades);
     }
     return Array.from(byFecha.entries())
       .map(([fecha, unidades]) => ({ fecha, unidades }))
