@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LabelList, Legend, LineChart, Line,
+  LabelList, Legend, LineChart, Line, ReferenceLine,
 } from "recharts";
 import {
   AlertTriangle, Trophy, Building2, BarChart3, ChevronUp, ChevronDown, Minus,
@@ -490,6 +490,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
                     <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "#64748b" }} />
                     <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]} />
                     <Tooltip formatter={(v: number) => `${v}%`} />
+                    <ReferenceLine y={OBJETIVO} stroke="#e63946" strokeDasharray="4 4" strokeWidth={1.5} ifOverflow="extendDomain" label={{ value: `Obj ${OBJETIVO}%`, position: "insideTopRight", fill: "#e63946", fontSize: 11, fontWeight: 600 }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Line type="monotone" dataKey="% CB" stroke="#2542C2" strokeWidth={2.5} dot={{ r: 4, fill: "#2542C2" }} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="% Infaltables" stroke="#A855F7" strokeWidth={2.5} dot={{ r: 4, fill: "#A855F7" }} activeDot={{ r: 6 }} />
@@ -505,6 +506,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
                     <XAxis dataKey="categoria" tick={{ fontSize: 12, fill: "#64748b" }} />
                     <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
                     <Tooltip formatter={(v: number) => `${v}%`} />
+                    <ReferenceLine y={OBJETIVO} stroke="#e63946" strokeDasharray="4 4" strokeWidth={1.5} ifOverflow="extendDomain" label={{ value: `Obj ${OBJETIVO}%`, position: "insideTopRight", fill: "#e63946", fontSize: 11, fontWeight: 600 }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="% CB" fill="#2542C2">
                       <LabelList dataKey="% CB" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
@@ -528,6 +530,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
                     <XAxis dataKey="tipologia" tick={{ fontSize: 11, fill: "#64748b" }} interval={0} />
                     <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
                     <Tooltip formatter={(v: number) => `${v}%`} />
+                    <ReferenceLine y={OBJETIVO} stroke="#e63946" strokeDasharray="4 4" strokeWidth={1.5} ifOverflow="extendDomain" label={{ value: `Obj ${OBJETIVO}%`, position: "insideTopRight", fill: "#e63946", fontSize: 11, fontWeight: 600 }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="% CB" fill="#2542C2">
                       <LabelList dataKey="% CB" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
@@ -549,6 +552,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
                     <XAxis dataKey="gerencia" tick={{ fontSize: 12, fill: "#64748b" }} interval={0} />
                     <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
                     <Tooltip formatter={(v: number) => `${v}%`} />
+                    <ReferenceLine y={OBJETIVO} stroke="#e63946" strokeDasharray="4 4" strokeWidth={1.5} ifOverflow="extendDomain" label={{ value: `Obj ${OBJETIVO}%`, position: "insideTopRight", fill: "#e63946", fontSize: 11, fontWeight: 600 }} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Bar dataKey="% CB" fill="#2542C2">
                       <LabelList dataKey="% CB" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
