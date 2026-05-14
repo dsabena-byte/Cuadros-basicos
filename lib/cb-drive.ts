@@ -51,13 +51,52 @@ function parsePeso(s: string): number {
   return Number.isFinite(n) ? n / 100 : 0;
 }
 
+function normalizeHeader(h: string): string {
+  return h
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[\s_\-]+/g, " ")
+    .trim();
+}
+
+function pick(row: Record<string, string>, ...candidates: string[]): string {
+  // Caché del lookup normalizado en el row (lazy, una sola vez por row).
+  const cache = (row as Record<string, string> & { __idx?: Record<string, string> }).__idx;
+  let idx: Record<string, string>;
+  if (cache) {
+    idx = cache;
+  } else {
+    idx = {};
+    for (const k of Object.keys(row)) {
+      if (k === "__idx") continue;
+      idx[normalizeHeader(k)] = k;
+    }
+    (row as Record<string, string> & { __idx?: Record<string, string> }).__idx = idx;
+  }
+  for (const c of candidates) {
+    const realKey = idx[normalizeHeader(c)];
+    if (realKey != null) return row[realKey] ?? "";
+  }
+  return "";
+}
+
 function parseCsv(buf: Buffer): Array<Record<string, string>> {
-  // Encoding latin1 — los CSVs vienen de un export de SAP que usa Windows-1252.
-  const text = new TextDecoder("latin1").decode(buf).replace(/\r\n/g, "\n").trim();
+  // Tratamos de leer UTF-8 (con BOM) primero; si vemos caracteres de reemplazo,
+  // re-decodificamos como latin1 (Windows-1252). Cubre tanto exports de Google
+  // Sheets/Excel modernos como exports legacy de SAP.
+  let text = new TextDecoder("utf-8").decode(buf).replace(/^﻿/, "").replace(/\r\n/g, "\n").trim();
+  if (text.includes("�")) {
+    text = new TextDecoder("latin1").decode(buf).replace(/\r\n/g, "\n").trim();
+  }
+  const firstLine = text.split("\n")[0] ?? "";
+  // Autodetect delimiter: priorizamos ; (lo más común en SAP/locale es-AR),
+  // después tab, después coma.
+  const delim = firstLine.includes(";") ? ";" : firstLine.includes("\t") ? "\t" : ",";
   const [header, ...lines] = text.split("\n");
-  const cols = header.split(";").map((c) => c.trim());
+  const cols = header.split(delim).map((c) => c.trim());
   return lines.filter((l) => l.length > 0).map((line) => {
-    const cells = line.split(";");
+    const cells = line.split(delim);
     const row: Record<string, string> = {};
     for (let i = 0; i < cols.length; i++) row[cols[i]] = (cells[i] ?? "").trim();
     return row;
@@ -117,18 +156,20 @@ async function build(): Promise<CBSnapshot> {
   ]);
 
   // ----- Clasificación -----
+  // Uso pick() para tolerar variantes case/acentos/espacios/guiones en los
+  // headers (ej. "TIPOLOGIA" vs "Tipología" vs "tipologia").
   const clasifRows = parseCsv(clasifBuf);
   const clasificacion: ClasificacionCliente[] = [];
   for (const r of clasifRows) {
-    const tip = normTipologia(r.TIPOLOGIA ?? "");
+    const tip = normTipologia(pick(r, "TIPOLOGIA"));
     if (!tip) continue;
     clasificacion.push({
-      id: r.ID,
-      cliente: r.CLIENTE,
-      pesoFacturacion: parsePeso(r["PESO FACTURACION"] ?? "0"),
+      id: pick(r, "ID"),
+      cliente: pick(r, "CLIENTE"),
+      pesoFacturacion: parsePeso(pick(r, "PESO FACTURACION", "PESO FACTURACIÓN")),
       tipologia: tip,
-      vendedor: r.VENDEDOR,
-      gerente: r.GERENCIA,
+      vendedor: pick(r, "VENDEDOR"),
+      gerente: pick(r, "GERENCIA", "GERENTE"),
     });
   }
 
@@ -146,15 +187,15 @@ async function build(): Promise<CBSnapshot> {
   const cbRows = parseCsv(cbBuf);
   const cuadroBasico: CuadroBasicoItem[] = [];
   for (const r of cbRows) {
-    const tipologia = normTipologia(r.TIPOLOGIA ?? "");
+    const tipologia = normTipologia(pick(r, "TIPOLOGIA"));
     if (!tipologia) continue;
-    const cb = (r["CUADRO BASICO"] ?? "").trim().toUpperCase();
+    const cb = pick(r, "CUADRO BASICO", "CUADRO BÁSICO").trim().toUpperCase();
     if (cb !== "INFALTABLE" && cb !== "ESTRATEGICO") continue;
-    const categoria = (r.CATEGORIA ?? "").trim().toUpperCase();
+    const categoria = pick(r, "CATEGORIA", "CATEGORÍA").trim().toUpperCase();
     if (!["LAVADO", "REFRIGERACION", "COCCION"].includes(categoria)) continue;
-    const sku = (r.MODELO ?? "").trim();
+    const sku = pick(r, "MODELO", "SKU", "MATERIAL").trim();
     if (!sku) continue;
-    const clienteExplicito = (r.CLIENTE ?? "").trim();
+    const clienteExplicito = pick(r, "CLIENTE").trim();
     const tipo: TipoCB = cb === "INFALTABLE" ? "INFALTABLE" : "ESTRATEGICO";
     const cat: Categoria =
       categoria === "LAVADO" ? "LAVADO" : categoria === "REFRIGERACION" ? "REFRIGERACION" : "COCCION";
