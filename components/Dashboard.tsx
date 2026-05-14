@@ -260,6 +260,29 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
       .sort((a, b) => b["% CB"] - a["% CB"]);
   }, [cbFiltrado, comprasFiltradas, vendedorPorCliente, gerentePorVendedor]);
 
+  const cumplPorTipologia = useMemo(() => {
+    const byTipologia = new Map<string, CuadroBasicoItem[]>();
+    for (const item of cbFiltrado) {
+      const arr = byTipologia.get(item.tipologia) ?? [];
+      arr.push(item);
+      byTipologia.set(item.tipologia, arr);
+    }
+    // Orden fijo (más amigable visualmente que sort por %).
+    const order: Array<string> = ["TOP 10", "HIPERMERCADOS", "GRANDES CUENTAS RESTO", "SMALL RETAILERS"];
+    const labelMap: Record<string, string> = {
+      "TOP 10": "Top 10",
+      "HIPERMERCADOS": "Hipermercados",
+      "GRANDES CUENTAS RESTO": "Grandes Cuentas Resto",
+      "SMALL RETAILERS": "Small Retailers",
+    };
+    return Array.from(byTipologia.entries())
+      .map(([tipologia, items]) => {
+        const p = calcularPorcentajes(items);
+        return { tipologia: labelMap[tipologia] ?? tipologia, _key: tipologia, "% CB": p.pctCB, "% Infaltables": p.pctInf, "% Estratégico": p.pctEst };
+      })
+      .sort((a, b) => order.indexOf(a._key) - order.indexOf(b._key));
+  }, [cbFiltrado, comprasFiltradas]);
+
   const evolucionMensual = useMemo(() => {
     const mesActual = new Date(ventas.generatedAt).getMonth() + 1;
     const mesesActivos = MESES.filter((m) => m.num <= mesActual);
@@ -459,27 +482,50 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
               <KpiCard label="Clientes" value={kpisGlobales.cantClientes} subtitle={`${kpisGlobales.cantVendedores} vendedores`} icon={<Users />} color="slate" />
             </div>
 
-            <Panel title="Evolución mensual" icon={<TrendingUp className="w-4 h-4 text-pink-600" />}>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={evolucionMensual} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-                  <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "#64748b" }} />
-                  <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]} />
-                  <Tooltip formatter={(v: number) => `${v}%`} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
-                  <Line type="monotone" dataKey="% CB" stroke="#2542C2" strokeWidth={2.5} dot={{ r: 4, fill: "#2542C2" }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="% Infaltables" stroke="#A855F7" strokeWidth={2.5} dot={{ r: 4, fill: "#A855F7" }} activeDot={{ r: 6 }} />
-                  <Line type="monotone" dataKey="% Estratégico" stroke="#EC4899" strokeWidth={2.5} dot={{ r: 4, fill: "#EC4899" }} activeDot={{ r: 6 }} />
-                </LineChart>
-              </ResponsiveContainer>
-            </Panel>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <Panel title="Evolución mensual" icon={<TrendingUp className="w-4 h-4 text-pink-600" />}>
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={evolucionMensual} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis dataKey="mes" tick={{ fontSize: 12, fill: "#64748b" }} />
+                    <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]} />
+                    <Tooltip formatter={(v: number) => `${v}%`} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Line type="monotone" dataKey="% CB" stroke="#2542C2" strokeWidth={2.5} dot={{ r: 4, fill: "#2542C2" }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="% Infaltables" stroke="#A855F7" strokeWidth={2.5} dot={{ r: 4, fill: "#A855F7" }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="% Estratégico" stroke="#EC4899" strokeWidth={2.5} dot={{ r: 4, fill: "#EC4899" }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Panel>
+
               <Panel title="Cumplimiento por Categoría" icon={<BarChart3 className="w-4 h-4 text-blue-600" />}>
                 <ResponsiveContainer width="100%" height={320}>
                   <BarChart data={cumplPorCategoria} margin={{ top: 30, right: 20, left: 0, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                     <XAxis dataKey="categoria" tick={{ fontSize: 12, fill: "#64748b" }} />
+                    <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
+                    <Tooltip formatter={(v: number) => `${v}%`} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="% CB" fill="#2542C2">
+                      <LabelList dataKey="% CB" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                    <Bar dataKey="% Infaltables" fill="#A855F7">
+                      <LabelList dataKey="% Infaltables" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                    <Bar dataKey="% Estratégico" fill="#EC4899">
+                      <LabelList dataKey="% Estratégico" position="top" formatter={(v: number) => `${v}%`} style={{ fontSize: 11, fontWeight: 600, fill: "#1e293b" }} />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </Panel>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <Panel title="Cumplimiento por Tipología" icon={<BarChart3 className="w-4 h-4 text-violet-600" />}>
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart data={cumplPorTipologia} margin={{ top: 30, right: 20, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis dataKey="tipologia" tick={{ fontSize: 11, fill: "#64748b" }} interval={0} />
                     <YAxis tickFormatter={(v) => `${v}%`} domain={[0, 100]} tick={{ fontSize: 11, fill: "#64748b" }} />
                     <Tooltip formatter={(v: number) => `${v}%`} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
