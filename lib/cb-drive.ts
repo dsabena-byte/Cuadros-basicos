@@ -20,8 +20,11 @@ import type {
 //
 // Cache en memoria con TTL para evitar pegarle a Drive en cada request.
 
-const CB_FILENAME_PATTERN = /^cuadros?-basicos/i;
-const CLASIF_FILENAME_PATTERN = /^clasificacion-clientes/i;
+// Match: "Cuadros-basicos-*", "Cuadro-basico-*", "Cuadros Basicos -*",
+// "Cuadro Basico *", etc. — acepta espacio, guion o ambos entre las
+// palabras y al final, para tolerar variantes de naming en Drive.
+const CB_FILENAME_PATTERN = /^cuadros?[\s\-_]*basicos?/i;
+const CLASIF_FILENAME_PATTERN = /^clasificacion[\s\-_]*clientes?/i;
 const CB_SUBFOLDER_NAME = "cuadro-basico-ventas";
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 
