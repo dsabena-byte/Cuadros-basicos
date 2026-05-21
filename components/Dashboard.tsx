@@ -1189,18 +1189,29 @@ function PwInput({
   );
 }
 
+type AdminUser = {
+  email: string;
+  nombre: string;
+  rol: "all" | "vendedor";
+  vendedor: string;
+  hasCustomPassword: boolean;
+};
+
 function UserMenu({
   user,
 }: {
   user: { email: string; nombre: string; rol: "all" | "vendedor"; vendedor: string };
 }) {
   const [open, setOpen] = useState(false);
-  const [showChange, setShowChange] = useState(false);
+  const [view, setView] = useState<"main" | "change" | "admin">("main");
   const [current, setCurrent] = useState("");
   const [next1, setNext1] = useState("");
   const [next2, setNext2] = useState("");
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [adminUsers, setAdminUsers] = useState<AdminUser[] | null>(null);
+  const [adminFilter, setAdminFilter] = useState("");
+  const [resettingEmail, setResettingEmail] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -1214,6 +1225,47 @@ function UserMenu({
   const onLogout = async () => {
     await fetch("/api/ventas/auth/logout", { method: "POST" });
     window.location.href = "/ventas/login";
+  };
+
+  const openAdmin = async () => {
+    setView("admin");
+    setMsg(null);
+    if (!adminUsers) {
+      try {
+        const res = await fetch("/api/ventas/auth/admin/users");
+        const json = await res.json();
+        if (!res.ok) {
+          setMsg({ kind: "err", text: json.error || "Error" });
+          return;
+        }
+        setAdminUsers(json.users);
+      } catch {
+        setMsg({ kind: "err", text: "Error de red" });
+      }
+    }
+  };
+
+  const onResetUser = async (email: string) => {
+    setMsg(null);
+    setResettingEmail(email);
+    try {
+      const res = await fetch("/api/ventas/auth/admin/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setMsg({ kind: "err", text: json.error || "Error" });
+        return;
+      }
+      setAdminUsers((prev) =>
+        prev?.map((u) => (u.email === email ? { ...u, hasCustomPassword: false } : u)) ?? null,
+      );
+      setMsg({ kind: "ok", text: `Reseteada. Avisale que entre con la clave inicial.` });
+    } finally {
+      setResettingEmail(null);
+    }
   };
 
   const onChange = async (e: React.FormEvent) => {
@@ -1257,7 +1309,7 @@ function UserMenu({
         <ChevronDown className="w-3.5 h-3.5" />
       </button>
       {open && (
-        <div className="absolute right-0 mt-1 w-72 bg-white border border-slate-200 rounded-md shadow-lg z-20 p-3">
+        <div className={`absolute right-0 mt-1 ${view === "admin" ? "w-96" : "w-72"} bg-white border border-slate-200 rounded-md shadow-lg z-20 p-3`}>
           <div className="text-xs text-slate-500 mb-2">
             <div className="font-semibold text-slate-700">{user.nombre || user.email}</div>
             <div>{user.email}</div>
@@ -1266,7 +1318,7 @@ function UserMenu({
               {user.rol === "vendedor" && user.vendedor && <> · {user.vendedor}</>}
             </div>
           </div>
-          {showChange ? (
+          {view === "change" ? (
             <form onSubmit={onChange} className="space-y-2 border-t pt-2">
               <PwInput placeholder="Clave actual" value={current} onChange={setCurrent} />
               <PwInput placeholder="Clave nueva" value={next1} onChange={setNext1} />
@@ -1279,16 +1331,75 @@ function UserMenu({
                   className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded text-xs font-medium">
                   {busy ? "…" : "Guardar"}
                 </button>
-                <button type="button" onClick={() => { setShowChange(false); setMsg(null); }}
+                <button type="button" onClick={() => { setView("main"); setMsg(null); }}
                   className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium">
                   Cancelar
                 </button>
               </div>
             </form>
+          ) : view === "admin" ? (
+            <div className="border-t pt-2 space-y-2">
+              <div className="flex items-center gap-2">
+                <input
+                  type="search"
+                  placeholder="Buscar usuario…"
+                  value={adminFilter}
+                  onChange={(e) => setAdminFilter(e.target.value)}
+                  className="flex-1 px-2 py-1.5 border border-slate-300 rounded text-xs"
+                />
+                <button
+                  onClick={() => { setView("main"); setMsg(null); }}
+                  className="px-2 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs"
+                >
+                  Volver
+                </button>
+              </div>
+              {msg && (
+                <div className={`text-xs ${msg.kind === "ok" ? "text-emerald-600" : "text-red-600"}`}>{msg.text}</div>
+              )}
+              {adminUsers === null ? (
+                <div className="text-xs text-slate-500 py-2">Cargando…</div>
+              ) : (
+                <div className="max-h-64 overflow-y-auto -mx-1">
+                  {adminUsers
+                    .filter((u) => {
+                      const q = adminFilter.trim().toLowerCase();
+                      if (!q) return true;
+                      return u.email.includes(q) || u.nombre.toLowerCase().includes(q);
+                    })
+                    .map((u) => (
+                      <div key={u.email} className="flex items-center gap-2 px-1 py-1.5 border-b border-slate-100 last:border-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-xs font-semibold text-slate-700 truncate">{u.nombre || u.email}</div>
+                          <div className="text-[10px] text-slate-500 truncate">{u.email}</div>
+                        </div>
+                        {u.hasCustomPassword ? (
+                          <button
+                            onClick={() => onResetUser(u.email)}
+                            disabled={resettingEmail === u.email}
+                            className="px-2 py-1 bg-red-50 hover:bg-red-100 disabled:opacity-60 text-red-700 rounded text-[10px] font-medium whitespace-nowrap"
+                          >
+                            {resettingEmail === u.email ? "…" : "Resetear"}
+                          </button>
+                        ) : (
+                          <span className="px-2 py-1 text-[10px] text-slate-400 italic whitespace-nowrap">sin cambios</span>
+                        )}
+                      </div>
+                    ))}
+                </div>
+              )}
+              <p className="text-[10px] text-slate-400 leading-snug pt-1">
+                "Resetear" borra la clave personalizada — la persona vuelve a entrar con la clave inicial y la cambia desde su menú.
+              </p>
+            </div>
           ) : (
             <div className="flex flex-col gap-1 border-t pt-2">
-              <button onClick={() => setShowChange(true)}
-                className="text-left text-sm px-2 py-1.5 hover:bg-slate-100 rounded">Cambiar clave</button>
+              <button onClick={() => { setView("change"); setMsg(null); }}
+                className="text-left text-sm px-2 py-1.5 hover:bg-slate-100 rounded">Cambiar mi clave</button>
+              {user.rol === "all" && (
+                <button onClick={openAdmin}
+                  className="text-left text-sm px-2 py-1.5 hover:bg-slate-100 rounded">Resetear clave de un usuario</button>
+              )}
               <button onClick={onLogout}
                 className="text-left text-sm px-2 py-1.5 hover:bg-slate-100 rounded text-red-600">Cerrar sesión</button>
             </div>

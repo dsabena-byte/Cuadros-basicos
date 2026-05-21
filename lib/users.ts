@@ -300,36 +300,39 @@ export const SESSION_COOKIE = {
   maxAge: SESSION_TTL_SECONDS,
 };
 
-// ----- Magic link de reset (single-use vía hash actual) --------------------
+// ----- Admin: listar usuarios y resetear claves ----------------------------
 
-const RESET_TTL_SECONDS = 30 * 60; // 30 min
+export type PublicUser = {
+  email: string;
+  nombre: string;
+  rol: UserRol;
+  vendedor: string;
+  hasCustomPassword: boolean; // true si el usuario ya cambió la clave (hay override)
+};
 
-export async function signResetToken(email: string, currentHash: string): Promise<string> {
-  // El payload incluye un fingerprint del hash actual. Cuando el usuario
-  // setea una clave nueva, el hash cambia y todos los tokens viejos quedan
-  // inválidos. Eso nos da single-use sin tener que persistir tokens.
-  const fp = currentHash ? currentHash.slice(-12) : "empty";
-  return new SignJWT({ email, fp, scope: "reset" })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${RESET_TTL_SECONDS}s`)
-    .sign(getJwtSecret());
+export async function listUsersPublic(): Promise<PublicUser[]> {
+  const { users, overrides } = await getSnapshot();
+  return users.map((u) => ({
+    email: u.email,
+    nombre: u.nombre,
+    rol: u.rol,
+    vendedor: u.vendedor,
+    hasCustomPassword: Boolean(overrides[u.email]?.hash) || Boolean(u.passwordHash),
+  }));
 }
 
-export async function verifyResetToken(
-  token: string,
-): Promise<{ email: string; fp: string } | null> {
-  try {
-    const { payload } = await jwtVerify(token, getJwtSecret());
-    if (
-      payload.scope !== "reset" ||
-      typeof payload.email !== "string" ||
-      typeof payload.fp !== "string"
-    ) {
-      return null;
-    }
-    return { email: payload.email, fp: payload.fp };
-  } catch {
-    return null;
+// "Resetear" = borrar el override en Blob para que el usuario vuelva a poder
+// entrar con INITIAL_PASSWORD. No tocamos el password_hash del sheet (que es
+// read-only en nuestra integración).
+export async function adminResetPassword(emailRaw: string): Promise<void> {
+  const email = emailRaw.trim().toLowerCase();
+  if (!email) throw new Error("email requerido");
+  const { users } = await getSnapshot();
+  if (!users.find((u) => u.email === email)) throw new Error("Usuario no existe");
+  const overrides = await readOverrides();
+  if (overrides[email]) {
+    delete overrides[email];
+    await writeOverrides(overrides);
   }
+  invalidateUsersCache();
 }

@@ -37,30 +37,16 @@ function PasswordInput({
   );
 }
 
-type Mode = "login" | "forgot" | "reset";
-
-export default function LoginForm({
-  token,
-  from,
-}: {
-  token?: string;
-  from?: string;
-}) {
+export default function LoginForm({ from }: { from?: string }) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>(token ? "reset" : "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [newPassword2, setNewPassword2] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
-  const [resetDone, setResetDone] = useState<{ email: string; nombre: string; clave: string } | null>(null);
 
-  const onSubmitLogin = async (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setInfo(null);
     setLoading(true);
     try {
       const res = await fetch("/api/ventas/auth/login", {
@@ -73,67 +59,8 @@ export default function LoginForm({
         setError(json.error || "Error de login");
         return;
       }
-      // Redirige a la pantalla original o a /ventas.
       router.push(from || "/ventas");
       router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error de red");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onSubmitForgot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setInfo(null);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/ventas/auth/forgot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error || "Error");
-        return;
-      }
-      setInfo("Si el email existe, te mandamos un link para resetear la clave.");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error de red");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onSubmitReset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (newPassword !== newPassword2) {
-      setError("Las claves no coinciden");
-      return;
-    }
-    if (newPassword.length < 8) {
-      setError("La clave debe tener al menos 8 caracteres");
-      return;
-    }
-    setLoading(true);
-    try {
-      const res = await fetch("/api/ventas/auth/reset", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error || "No se pudo resetear");
-        return;
-      }
-      // No auto-login: el admin que clickea el link puede no ser la persona
-      // del email. Mostramos confirmación con el email y la clave elegida
-      // para que el admin se la copie y se la mande al usuario.
-      setResetDone({ email: json.email, nombre: json.nombre, clave: newPassword });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de red");
     } finally {
@@ -146,114 +73,34 @@ export default function LoginForm({
       <h1 className="text-xl font-bold text-slate-900 mb-1">Cumplimiento Cuadro Básico</h1>
       <p className="text-xs text-slate-500 mb-6">Drean Argentina · Acceso de ventas</p>
 
-      {mode === "reset" && resetDone ? (
-        <div className="space-y-3">
-          <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md p-3">
-            ✓ Clave actualizada para <strong>{resetDone.nombre || resetDone.email}</strong>.
-          </div>
-          <div className="text-xs text-slate-500">Compartile esto:</div>
-          <div className="text-sm bg-slate-50 border border-slate-200 rounded-md p-3 font-mono break-all">
-            Email: {resetDone.email}<br />
-            Clave: {resetDone.clave}
-          </div>
-          <a href="/ventas/login" className="block text-center text-xs text-slate-500 hover:text-slate-700 pt-2">
-            Volver al login
-          </a>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">EMAIL</label>
+          <input
+            type="email"
+            required
+            autoComplete="username"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-      ) : mode === "reset" ? (
-        <form onSubmit={onSubmitReset} className="space-y-4">
-          <p className="text-sm text-slate-600">Elegí una clave nueva (mínimo 8 caracteres).</p>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">NUEVA CLAVE</label>
-            <PasswordInput value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">REPETIR</label>
-            <PasswordInput value={newPassword2} onChange={setNewPassword2} autoComplete="new-password" />
-          </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-md text-sm font-medium transition-colors"
-          >
-            {loading ? "Guardando…" : "Guardar y entrar"}
-          </button>
-        </form>
-      ) : mode === "login" ? (
-        <form onSubmit={onSubmitLogin} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">EMAIL</label>
-            <input
-              type="email"
-              required
-              autoComplete="username"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">CLAVE</label>
-            <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" />
-          </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-md text-sm font-medium transition-colors"
-          >
-            {loading ? "Ingresando…" : "Ingresar"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("forgot");
-              setError(null);
-              setInfo(null);
-            }}
-            className="w-full text-xs text-slate-500 hover:text-slate-700"
-          >
-            Olvidé mi clave
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={onSubmitForgot} className="space-y-4">
-          <p className="text-sm text-slate-600">
-            Ingresá tu email y te mandamos un link para elegir una clave nueva.
-          </p>
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1">EMAIL</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          {error && <div className="text-sm text-red-600">{error}</div>}
-          {info && <div className="text-sm text-emerald-600">{info}</div>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-md text-sm font-medium transition-colors"
-          >
-            {loading ? "Mandando…" : "Mandar link"}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("login");
-              setError(null);
-              setInfo(null);
-            }}
-            className="w-full text-xs text-slate-500 hover:text-slate-700"
-          >
-            Volver al login
-          </button>
-        </form>
-      )}
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 mb-1">CLAVE</label>
+          <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" />
+        </div>
+        {error && <div className="text-sm text-red-600">{error}</div>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-md text-sm font-medium transition-colors"
+        >
+          {loading ? "Ingresando…" : "Ingresar"}
+        </button>
+        <p className="text-xs text-slate-400 text-center pt-2">
+          ¿Olvidaste tu clave? Pedile al admin que te la resetee.
+        </p>
+      </form>
     </div>
   );
 }
