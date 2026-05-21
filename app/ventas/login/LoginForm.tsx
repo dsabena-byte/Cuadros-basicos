@@ -98,13 +98,14 @@ export default function LoginForm({ from }: { from?: string }) {
           {loading ? "Ingresando…" : "Ingresar"}
         </button>
         <p className="text-xs text-slate-400 text-center pt-2">
-          ¿Olvidaste tu clave?{" "}
+          ¿Olvidaste la clave? pedile a{" "}
           <a
             href="mailto:daniel.sabena@mabe.com.ar?subject=Olvid%C3%A9%20mi%20clave%20del%20Cuadro%20B%C3%A1sico&body=Hola%20Daniel%2C%20olvid%C3%A9%20mi%20clave%20del%20dashboard.%20%C2%BFMe%20la%20podr%C3%ADas%20resetear%3F%20Gracias."
             className="text-blue-600 hover:underline"
           >
-            Escribile a Daniel Sabena
+            Daniel Sabena
           </a>
+          {" "}que te la resetee.
         </p>
       </form>
     </div>
