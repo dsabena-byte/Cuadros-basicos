@@ -35,6 +35,12 @@ type Props = {
   cuadroBasico: CuadroBasicoItem[];
   clasificacion: ClasificacionCliente[];
   ventas: VentasFile;
+  user?: {
+    email: string;
+    nombre: string;
+    rol: "all" | "vendedor";
+    vendedor: string;
+  };
 };
 
 type Filters = {
@@ -46,7 +52,9 @@ type Filters = {
   cliente: string;
 };
 
-export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props) {
+export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }: Props) {
+  const isVendedor = user?.rol === "vendedor";
+  const lockedVendedor = isVendedor ? user!.vendedor : null;
   const vendedorPorCliente = useMemo(() => {
     const m = new Map<string, string>();
     for (const c of clasificacion) m.set(c.cliente, c.vendedor);
@@ -73,8 +81,12 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
   );
 
   const [filters, setFilters] = useState<Filters>({
-    mes: [], categoria: "TODAS", gerente: "TODOS",
-    vendedor: "TODOS", tipologia: [], cliente: "TODOS",
+    mes: [],
+    categoria: "TODAS",
+    gerente: "TODOS",
+    vendedor: lockedVendedor ?? "TODOS",
+    tipologia: [],
+    cliente: "TODOS",
   });
   const [clienteSeleccionado, setClienteSeleccionado] = useState<string | null>(null);
 
@@ -95,7 +107,14 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
     setFilters(next);
   };
   const limpiarFiltros = () =>
-    setFilters({ mes: [], categoria: "TODAS", gerente: "TODOS", vendedor: "TODOS", tipologia: [], cliente: "TODOS" });
+    setFilters({
+      mes: [],
+      categoria: "TODAS",
+      gerente: "TODOS",
+      vendedor: lockedVendedor ?? "TODOS",
+      tipologia: [],
+      cliente: "TODOS",
+    });
 
   const tipologiaPorCliente = useMemo(() => {
     const m = new Map<string, Tipologia>();
@@ -415,12 +434,15 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-4">
-        <div className="max-w-[1600px] mx-auto">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Cumplimiento Cuadro Básico</h1>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Drean Argentina · Última sincronización: {new Date(ventas.generatedAt).toLocaleString("es-AR")} ·
-            Fuente: {ventas.source} · Objetivo: {OBJETIVO}%
-          </p>
+        <div className="max-w-[1600px] mx-auto flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Cumplimiento Cuadro Básico</h1>
+            <p className="text-xs sm:text-sm text-slate-500">
+              Drean Argentina · Última sincronización: {new Date(ventas.generatedAt).toLocaleString("es-AR")} ·
+              Fuente: {ventas.source} · Objetivo: {OBJETIVO}%
+            </p>
+          </div>
+          {user && <UserMenu user={user} />}
         </div>
       </div>
 
@@ -438,8 +460,16 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas }: Props
               { v: "TODAS", l: "Todas" }, { v: "LAVADO", l: "Lavado" },
               { v: "REFRIGERACION", l: "Refrigeración" }, { v: "COCCION", l: "Cocción" },
             ]} />
-            <FilterDropdown label="GERENTE" value={filters.gerente} onChange={(v) => updateFilter("gerente", v)} options={[{ v: "TODOS", l: "Todos" }, ...GERENTES.map((g) => ({ v: g, l: g }))]} />
-            <FilterDropdown label="VENDEDOR" value={filters.vendedor} onChange={(v) => updateFilter("vendedor", v)} options={[{ v: "TODOS", l: "Todos" }, ...vendedoresDisponibles.map((v) => ({ v, l: v }))]} />
+            {!isVendedor && (
+              <FilterDropdown label="GERENTE" value={filters.gerente} onChange={(v) => updateFilter("gerente", v)} options={[{ v: "TODOS", l: "Todos" }, ...GERENTES.map((g) => ({ v: g, l: g }))]} />
+            )}
+            <FilterDropdown
+              label="VENDEDOR"
+              value={filters.vendedor}
+              onChange={(v) => updateFilter("vendedor", v)}
+              options={[{ v: "TODOS", l: "Todos" }, ...vendedoresDisponibles.map((v) => ({ v, l: v }))]}
+              disabled={isVendedor}
+            />
             <MultiSelectDropdown
               label="TIPOLOGÍA"
               values={filters.tipologia}
@@ -717,13 +747,14 @@ function Panel({
 }
 
 function FilterDropdown({
-  label, value, onChange, options, wide,
+  label, value, onChange, options, wide, disabled,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   options: { v: string; l: string }[];
   wide?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <div className={`flex flex-col flex-1 ${wide ? "min-w-[160px] sm:min-w-[200px]" : "min-w-[120px] sm:min-w-[140px]"}`}>
@@ -731,7 +762,8 @@ function FilterDropdown({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-3 py-2 border border-slate-300 rounded-md bg-white text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        disabled={disabled}
+        className="px-3 py-2 border border-slate-300 rounded-md bg-white text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
       >
         {options.map((o) => (
           <option key={o.v} value={o.v}>{o.l}</option>
@@ -1123,6 +1155,119 @@ function DetalleFCPorFecha({ sku, clientesScope, comprasFiltradas }: {
   );
 }
 
+function UserMenu({
+  user,
+}: {
+  user: { email: string; nombre: string; rol: "all" | "vendedor"; vendedor: string };
+}) {
+  const [open, setOpen] = useState(false);
+  const [showChange, setShowChange] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next1, setNext1] = useState("");
+  const [next2, setNext2] = useState("");
+  const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const onLogout = async () => {
+    await fetch("/api/ventas/auth/logout", { method: "POST" });
+    window.location.href = "/ventas/login";
+  };
+
+  const onChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
+    if (next1 !== next2) {
+      setMsg({ kind: "err", text: "Las claves nuevas no coinciden" });
+      return;
+    }
+    if (next1.length < 8) {
+      setMsg({ kind: "err", text: "Mínimo 8 caracteres" });
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/ventas/auth/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword: current, newPassword: next1 }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setMsg({ kind: "err", text: json.error || "Error" });
+        return;
+      }
+      setMsg({ kind: "ok", text: "Clave actualizada" });
+      setCurrent(""); setNext1(""); setNext2("");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div ref={menuRef} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
+      >
+        <Users className="w-4 h-4" />
+        <span className="hidden sm:inline">{user.nombre || user.email}</span>
+        <ChevronDown className="w-3.5 h-3.5" />
+      </button>
+      {open && (
+        <div className="absolute right-0 mt-1 w-72 bg-white border border-slate-200 rounded-md shadow-lg z-20 p-3">
+          <div className="text-xs text-slate-500 mb-2">
+            <div className="font-semibold text-slate-700">{user.nombre || user.email}</div>
+            <div>{user.email}</div>
+            <div className="mt-0.5">
+              Rol: <span className="font-mono">{user.rol}</span>
+              {user.rol === "vendedor" && user.vendedor && <> · {user.vendedor}</>}
+            </div>
+          </div>
+          {showChange ? (
+            <form onSubmit={onChange} className="space-y-2 border-t pt-2">
+              <input type="password" placeholder="Clave actual" value={current} onChange={(e) => setCurrent(e.target.value)} required
+                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm" />
+              <input type="password" placeholder="Clave nueva" value={next1} onChange={(e) => setNext1(e.target.value)} required
+                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm" />
+              <input type="password" placeholder="Repetir" value={next2} onChange={(e) => setNext2(e.target.value)} required
+                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm" />
+              {msg && (
+                <div className={`text-xs ${msg.kind === "ok" ? "text-emerald-600" : "text-red-600"}`}>{msg.text}</div>
+              )}
+              <div className="flex gap-2">
+                <button type="submit" disabled={busy}
+                  className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded text-xs font-medium">
+                  {busy ? "…" : "Guardar"}
+                </button>
+                <button type="button" onClick={() => { setShowChange(false); setMsg(null); }}
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium">
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="flex flex-col gap-1 border-t pt-2">
+              <button onClick={() => setShowChange(true)}
+                className="text-left text-sm px-2 py-1.5 hover:bg-slate-100 rounded">Cambiar clave</button>
+              <button onClick={onLogout}
+                className="text-left text-sm px-2 py-1.5 hover:bg-slate-100 rounded text-red-600">Cerrar sesión</button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FilaTotal({ r, accent, labelSpan, grand }: {
   r: { label: string; fcUnits: number; boUnits: number; total: number; pct: number };
   accent: "violet" | "pink" | "slate";
@@ -1142,3 +1287,4 @@ function FilaTotal({ r, accent, labelSpan, grand }: {
     </tr>
   );
 }
+
