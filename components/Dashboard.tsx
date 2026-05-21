@@ -8,6 +8,7 @@ import {
 import {
   AlertTriangle, Trophy, Building2, BarChart3, ChevronUp, ChevronDown, Minus,
   RotateCcw, Users, Target, FileText, CheckCircle2, Clock, XCircle, TrendingUp,
+  Eye, EyeOff,
 } from "lucide-react";
 import type {
   CuadroBasicoItem, ClasificacionCliente, VentaRow, VentasFile, Tipologia,
@@ -1155,6 +1156,39 @@ function DetalleFCPorFecha({ sku, clientesScope, comprasFiltradas }: {
   );
 }
 
+function PwInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        type={show ? "text" : "password"}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        className="w-full pl-2 pr-8 py-1.5 border border-slate-300 rounded text-sm"
+      />
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        tabIndex={-1}
+        className="absolute inset-y-0 right-0 px-2 flex items-center text-slate-400 hover:text-slate-600"
+        aria-label={show ? "Ocultar" : "Mostrar"}
+      >
+        {show ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+      </button>
+    </div>
+  );
+}
+
 function UserMenu({
   user,
 }: {
@@ -1234,12 +1268,9 @@ function UserMenu({
           </div>
           {showChange ? (
             <form onSubmit={onChange} className="space-y-2 border-t pt-2">
-              <input type="password" placeholder="Clave actual" value={current} onChange={(e) => setCurrent(e.target.value)} required
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm" />
-              <input type="password" placeholder="Clave nueva" value={next1} onChange={(e) => setNext1(e.target.value)} required
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm" />
-              <input type="password" placeholder="Repetir" value={next2} onChange={(e) => setNext2(e.target.value)} required
-                className="w-full px-2 py-1.5 border border-slate-300 rounded text-sm" />
+              <PwInput placeholder="Clave actual" value={current} onChange={setCurrent} />
+              <PwInput placeholder="Clave nueva" value={next1} onChange={setNext1} />
+              <PwInput placeholder="Repetir" value={next2} onChange={setNext2} />
               {msg && (
                 <div className={`text-xs ${msg.kind === "ok" ? "text-emerald-600" : "text-red-600"}`}>{msg.text}</div>
               )}

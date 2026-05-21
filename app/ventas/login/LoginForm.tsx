@@ -2,6 +2,40 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+
+function PasswordInput({
+  value,
+  onChange,
+  autoComplete,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  autoComplete?: string;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        type={show ? "text" : "password"}
+        required
+        autoComplete={autoComplete}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full pl-3 pr-10 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        tabIndex={-1}
+        aria-label={show ? "Ocultar clave" : "Mostrar clave"}
+        className="absolute inset-y-0 right-0 px-3 flex items-center text-slate-400 hover:text-slate-600"
+      >
+        {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+      </button>
+    </div>
+  );
+}
 
 type Mode = "login" | "forgot" | "reset";
 
@@ -114,25 +148,11 @@ export default function LoginForm({
           <p className="text-sm text-slate-600">Elegí una clave nueva (mínimo 8 caracteres).</p>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">NUEVA CLAVE</label>
-            <input
-              type="password"
-              required
-              autoComplete="new-password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <PasswordInput value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">REPETIR</label>
-            <input
-              type="password"
-              required
-              autoComplete="new-password"
-              value={newPassword2}
-              onChange={(e) => setNewPassword2(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <PasswordInput value={newPassword2} onChange={setNewPassword2} autoComplete="new-password" />
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
           <button
@@ -158,14 +178,7 @@ export default function LoginForm({
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-600 mb-1">CLAVE</label>
-            <input
-              type="password"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <PasswordInput value={password} onChange={setPassword} autoComplete="current-password" />
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
           <button
