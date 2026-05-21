@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import {
   currentPasswordHash,
   setPassword,
-  signSessionToken,
   verifyResetToken,
   findUser,
-  SESSION_COOKIE,
 } from "@/lib/users";
 
 export const runtime = "nodejs";
@@ -52,16 +50,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 
-  // Al resetear, lo logueamos automáticamente.
-  const session = { email: user.email, nombre: user.nombre, rol: user.rol, vendedor: user.vendedor };
-  const sessionToken = await signSessionToken(session);
-  const res = NextResponse.json({ ok: true, user: session });
-  res.cookies.set(SESSION_COOKIE.name, sessionToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: SESSION_COOKIE.maxAge,
-  });
-  return res;
+  // No auto-logueamos: el reset lo dispara el admin para otro usuario.
+  // Le devolvemos el email para que la UI pueda mostrar "Compartilo con X".
+  return NextResponse.json({ ok: true, email: user.email, nombre: user.nombre });
 }

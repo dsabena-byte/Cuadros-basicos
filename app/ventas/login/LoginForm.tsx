@@ -55,6 +55,7 @@ export default function LoginForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const [resetDone, setResetDone] = useState<{ email: string; nombre: string; clave: string } | null>(null);
 
   const onSubmitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -129,8 +130,10 @@ export default function LoginForm({
         setError(json.error || "No se pudo resetear");
         return;
       }
-      router.push(from || "/ventas");
-      router.refresh();
+      // No auto-login: el admin que clickea el link puede no ser la persona
+      // del email. Mostramos confirmación con el email y la clave elegida
+      // para que el admin se la copie y se la mande al usuario.
+      setResetDone({ email: json.email, nombre: json.nombre, clave: newPassword });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error de red");
     } finally {
@@ -143,7 +146,21 @@ export default function LoginForm({
       <h1 className="text-xl font-bold text-slate-900 mb-1">Cumplimiento Cuadro Básico</h1>
       <p className="text-xs text-slate-500 mb-6">Drean Argentina · Acceso de ventas</p>
 
-      {mode === "reset" ? (
+      {mode === "reset" && resetDone ? (
+        <div className="space-y-3">
+          <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md p-3">
+            ✓ Clave actualizada para <strong>{resetDone.nombre || resetDone.email}</strong>.
+          </div>
+          <div className="text-xs text-slate-500">Compartile esto:</div>
+          <div className="text-sm bg-slate-50 border border-slate-200 rounded-md p-3 font-mono break-all">
+            Email: {resetDone.email}<br />
+            Clave: {resetDone.clave}
+          </div>
+          <a href="/ventas/login" className="block text-center text-xs text-slate-500 hover:text-slate-700 pt-2">
+            Volver al login
+          </a>
+        </div>
+      ) : mode === "reset" ? (
         <form onSubmit={onSubmitReset} className="space-y-4">
           <p className="text-sm text-slate-600">Elegí una clave nueva (mínimo 8 caracteres).</p>
           <div>
