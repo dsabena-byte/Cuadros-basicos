@@ -361,7 +361,11 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     pct: number;
   };
   const skusDetalle = useMemo<FilaSKU[]>(() => {
-    const byKey = new Map<string, FilaSKU & { _skuSet: Set<string> }>();
+    type Acc = FilaSKU & {
+      _declared: Set<string>;       // primary + homólogos declarados en el CB
+      _unitsBySku: Map<string, number>; // unidades reales (FC+BO) por SKU
+    };
+    const byKey = new Map<string, Acc>();
     for (const item of cbFiltrado) {
       const key = `${item.sku}|${item.tipo}`;
       let row = byKey.get(key);
@@ -369,7 +373,8 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
         row = {
           sku: item.sku,
           skus: [],
-          _skuSet: new Set<string>([item.sku]),
+          _declared: new Set<string>([item.sku]),
+          _unitsBySku: new Map<string, number>(),
           categoria: item.categoria,
           tipo: item.tipo,
           clientesEnCB: 0,
@@ -380,7 +385,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
         };
         byKey.set(key, row);
       }
-      for (const a of item.skuAliases ?? []) row._skuSet.add(a);
+      for (const a of item.skuAliases ?? []) row._declared.add(a);
       row.clientesEnCB += 1;
       const compras = comprasFiltradas.filter((c) => matchesCB(c, item));
       const fc = compras.filter((c) => c.tipo === "FC").reduce((a, c) => a + c.unidades, 0);
@@ -388,13 +393,24 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       row.fcUnits += fc;
       row.boUnits += bo;
       if (fc + bo > 0) row.clientesCumplidos += 1;
+      for (const c of compras) {
+        row._unitsBySku.set(c.sku, (row._unitsBySku.get(c.sku) ?? 0) + c.unidades);
+      }
     }
     return [...byKey.values()]
-      .map(({ _skuSet, ...r }) => ({
-        ...r,
-        skus: [r.sku, ...[..._skuSet].filter((s) => s !== r.sku)],
-        pct: r.clientesEnCB > 0 ? Math.round((r.clientesCumplidos / r.clientesEnCB) * 100) : 0,
-      }))
+      .map(({ _declared, _unitsBySku, ...r }) => {
+        // Mostramos el primary siempre + solo los homólogos que tuvieron
+        // facturación o back order. Si el primary no tuvo ventas pero los
+        // homólogos sí, queda el primary como referencia del target del CB.
+        const aliasesConVentas = [..._declared]
+          .filter((s) => s !== r.sku && (_unitsBySku.get(s) ?? 0) > 0)
+          .sort();
+        return {
+          ...r,
+          skus: [r.sku, ...aliasesConVentas],
+          pct: r.clientesEnCB > 0 ? Math.round((r.clientesCumplidos / r.clientesEnCB) * 100) : 0,
+        };
+      })
       .sort((a, b) => {
         // Infaltables primero, después por categoría, después alfabético por SKU
         if (a.tipo !== b.tipo) return a.tipo === "INFALTABLE" ? -1 : 1;
