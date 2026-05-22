@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { writeVentas, readVentas } from "@/lib/storage";
 import { loadCuadroBasico } from "@/lib/data";
 import { withCors, corsPreflight } from "@/lib/cors";
+import { allSkusOfCB } from "@/lib/cb-match";
 import type {
   VentasPayload,
   VentasPayloadRow,
@@ -151,8 +152,14 @@ export async function POST(request: Request) {
   // se usa el nombre canónico del catálogo así el dashboard hace match
   // exacto sin tener que normalizar también del lado del cliente.
   const cb = await loadCuadroBasico();
+  // Indexamos por todos los SKUs válidos del CB (primary + homólogos) para
+  // que ventas con cualquier homólogo matcheen y se persistan con el cliente
+  // canónico del catálogo.
   const cbCanonical = new Map<string, string>();
-  for (const c of cb) cbCanonical.set(`${normalizeCliente(c.cliente)}|${c.sku}`, c.cliente);
+  for (const c of cb) {
+    const norm = normalizeCliente(c.cliente);
+    for (const sku of allSkusOfCB(c)) cbCanonical.set(`${norm}|${sku}`, c.cliente);
+  }
   const canonicalFor = (p: VentasPayloadRow): string | undefined =>
     cbCanonical.get(`${normalizeCliente(p.cliente)}|${p.sku}`);
 

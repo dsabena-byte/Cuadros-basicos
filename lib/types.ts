@@ -14,6 +14,10 @@ export type CuadroBasicoItem = {
   tipo: TipoCB;
   categoria: Categoria;
   sku: string;
+  // SKUs alternativos del mismo producto (cambios de nomenclatura, variantes
+  // de color, etc.). Si el cliente compró cualquiera de estos, cumple el CB.
+  // Opcional para compat con el JSON estático en data/cuadro-basico.json.
+  skuAliases?: string[];
 };
 
 export type ClasificacionCliente = {

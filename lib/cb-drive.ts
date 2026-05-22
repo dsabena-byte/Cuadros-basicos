@@ -202,17 +202,30 @@ async function build(): Promise<CBSnapshot> {
     if (!["LAVADO", "REFRIGERACION", "COCCION"].includes(categoria)) continue;
     const sku = pick(r, "MODELO", "SKU", "MATERIAL").trim();
     if (!sku) continue;
+    // SKUs homólogos: cualquier columna cuyo header arranca con "HOMOLOGO"
+    // (HOMOLOGO 1, HOMOLOGO 2, ..., también "HOMÓLOGO" con tilde). Dedupeamos
+    // y excluimos el primary para evitar contar de más en el matching.
+    const seen = new Set<string>([sku]);
+    const skuAliases: string[] = [];
+    for (const key of Object.keys(r)) {
+      const nk = normalizeHeader(key);
+      if (!nk.startsWith("homologo")) continue;
+      const v = (r[key] ?? "").trim();
+      if (!v || seen.has(v)) continue;
+      seen.add(v);
+      skuAliases.push(v);
+    }
     const clienteExplicito = pick(r, "CLIENTE").trim();
     const tipo: TipoCB = cb === "INFALTABLE" ? "INFALTABLE" : "ESTRATEGICO";
     const cat: Categoria =
       categoria === "LAVADO" ? "LAVADO" : categoria === "REFRIGERACION" ? "REFRIGERACION" : "COCCION";
 
     if (clienteExplicito) {
-      cuadroBasico.push({ tipologia, cliente: clienteExplicito, tipo, categoria: cat, sku });
+      cuadroBasico.push({ tipologia, cliente: clienteExplicito, tipo, categoria: cat, sku, skuAliases });
     } else {
       const clientes = clientesPorTipologia.get(tipologia) ?? [];
       for (const cli of clientes) {
-        cuadroBasico.push({ tipologia, cliente: cli, tipo, categoria: cat, sku });
+        cuadroBasico.push({ tipologia, cliente: cli, tipo, categoria: cat, sku, skuAliases });
       }
     }
   }
