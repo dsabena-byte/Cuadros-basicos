@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { invalidateDatasetCache } from "@/lib/dataset";
+import { invalidateDataSourceCache } from "@/lib/data-source";
 import { invalidateCBDriveCache } from "@/lib/cb-drive";
 
 export const runtime = "nodejs";
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  invalidateDatasetCache();
+  invalidateDataSourceCache();
   invalidateCBDriveCache();
   revalidatePath("/api/data");
   revalidatePath("/");

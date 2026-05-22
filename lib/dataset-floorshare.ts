@@ -89,7 +89,7 @@ const MANUAL_CONTACTOS: Array<{
   { numero: "552", nombre: "Italhogar",                            cadena: "Italhogar",         promotor: "Scoppa Victor" },
 ];
 
-function applyManualContactos(map: Map<string, ContactoRow>): void {
+export function applyManualContactos(map: Map<string, ContactoRow>): void {
   const sortedKey = (name: string) =>
     name
       .normalize("NFD")
@@ -191,7 +191,7 @@ const STORE_OVERRIDES: StoreOverride[] = [
   { number: "772", nameContains: "av. san martin", cliente: "Cetrogar Sa" },
 ];
 
-function lookupStoreOverride(number: string, name: string): string | undefined {
+export function lookupStoreOverride(number: string, name: string): string | undefined {
   if (!number || !name) return undefined;
   const ln = name
     .normalize("NFD")
@@ -212,7 +212,7 @@ const EXCLUDED_STORE_PATTERNS = [
   "manuel y ricardo braude",
 ];
 
-function isExcludedStore(storeName: string): boolean {
+export function isExcludedStore(storeName: string): boolean {
   if (!storeName) return false;
   const normalized = storeName
     .normalize("NFD")
@@ -232,7 +232,7 @@ function canonicalizeKey(s: string): string {
     .trim();
 }
 
-function canonicalizeCliente(s: string): string {
+export function canonicalizeCliente(s: string): string {
   if (!s) return s;
   const key = canonicalizeKey(s);
   return CLIENTE_ALIASES_RAW[key] || s;
@@ -259,7 +259,7 @@ function titleCaseWord(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
-function inferClienteFromName(
+export function inferClienteFromName(
   storeName: string,
   cadenasByFirstWord: Map<string, string>,
 ): string {
@@ -279,7 +279,7 @@ function inferClienteFromName(
   return titleCaseWord(first);
 }
 
-function buildCadenasByFirstWord(
+export function buildCadenasByFirstWord(
   contactos: Map<string, ContactoRow>,
 ): Map<string, string> {
   const map = new Map<string, string>();
@@ -292,7 +292,7 @@ function buildCadenasByFirstWord(
   return map;
 }
 
-function lookupContacto(
+export function lookupFloorShareContacto(
   contactos: Map<string, ContactoRow>,
   byName: Map<string, ContactoRow>,
   storeNumber: string,
@@ -320,7 +320,7 @@ function lookupContacto(
   return undefined;
 }
 
-function buildContactosByName(
+export function buildContactosByName(
   contactos: Map<string, ContactoRow>,
 ): Map<string, ContactoRow> {
   const out = new Map<string, ContactoRow>();
@@ -429,7 +429,7 @@ export async function buildFloorShareDataset(
         const rawCliente =
           overridden || inferClienteFromName(r.storeName, cadenasByFirstWord);
         // Promotor / supervisor sí los tomamos de contactos cuando hay match.
-        const contacto = lookupContacto(
+        const contacto = lookupFloorShareContacto(
           mergedContactos,
           contactosByName,
           r.storeNumber,
