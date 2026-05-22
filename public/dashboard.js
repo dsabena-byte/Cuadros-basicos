@@ -1693,24 +1693,56 @@ fsRender();
 
 // ============= TABS =============
 function initTabs() {
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const target = btn.dataset.tab;
+  // === EMBED MODE ===
+  // Si la URL trae ?embed=cb o ?embed=floorshare:
+  // - activa esa tab automáticamente
+  // - oculta el switch de tabs (para uso embebido en iframes)
+  const params = new URLSearchParams(window.location.search);
+  const embedTab = params.get('embed');
+  const VALID_EMBEDS = ['cb', 'floorshare'];
+
+  if (embedTab && VALID_EMBEDS.includes(embedTab)) {
+    // Activa la tab pedida
     document.querySelectorAll('.tab').forEach(b => {
-      const active = b.dataset.tab === target;
+      const active = b.dataset.tab === embedTab;
       b.classList.toggle('active', active);
       b.setAttribute('aria-selected', active ? 'true' : 'false');
     });
     document.querySelectorAll('.tab-panel').forEach(p => {
-      const active = p.id === 'tab-' + target;
+      const active = p.id === 'tab-' + embedTab;
       p.classList.toggle('active', active);
       if (active) p.removeAttribute('hidden');
       else p.setAttribute('hidden', '');
     });
-  });
-});
-}
+    // Oculta la barra de tabs entera
+    const tabsBar = document.querySelector('.tabs');
+    if (tabsBar) tabsBar.style.display = 'none';
+    // Opcional: oculta el subtítulo "Análisis multi-semana · CB · Infaltables · Estratégico · Floor Share"
+    const subtitle = document.querySelector('h1 + p, .subtitle');
+    if (subtitle && subtitle.textContent.includes('Floor Share')) {
+      subtitle.style.display = 'none';
+    }
+    return; // No registramos listeners de tabs si está en modo embed
+  }
 
+  // === COMPORTAMIENTO NORMAL (sin embed) ===
+  document.querySelectorAll('.tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      document.querySelectorAll('.tab').forEach(b => {
+        const active = b.dataset.tab === target;
+        b.classList.toggle('active', active);
+        b.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => {
+        const active = p.id === 'tab-' + target;
+        p.classList.toggle('active', active);
+        if (active) p.removeAttribute('hidden');
+        else p.setAttribute('hidden', '');
+      });
+    });
+  });
+}
 // ============= SHELL HTML =============
 function buildShell() {
   const root = document.getElementById('root');
