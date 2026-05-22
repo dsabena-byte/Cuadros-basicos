@@ -229,30 +229,47 @@ function syncCuadroBasico(file, semana, ctx) {
   Logger.log('CB semana ' + semana + ': ' + deduped.length + ' filas (dedup ' + (out.length - deduped.length) + ')');
 }
 
-// Floor Share: estructura "wide": fila 0 con marcas en columnas, fila 1
-// header de "Units/%", y desde fila 2 cada row es una tienda con pares
-// (unidades, %) por marca.
+// Floor Share: estructura "wide".
+// - Fila 0: nombres de marca en columnas pares (después de la col de Tienda).
+// - Fila 1: pares de headers ("Participación Anaquel" + "%Part") por marca.
+// - Fila 2+: cada fila es una tienda (en la col "Tienda") con pares
+//   (unidades, %) por marca.
+// El formato semanal tiene "Formato" en col 0 y "Tienda" en col 1.
 function syncFloorShare(file, periodo, semana, categoria, ctx) {
   const grid = parseFileRaw(file);
   if (grid.length < 3) {
     writeSyncStatus(ctx, file, 'ok', 0, 'archivo vacío');
     return;
   }
-  const header = grid[0].map(function (c) { return (c || '').toString().trim(); });
-  // Pares de columnas: (marca @ col, units @ col, pct @ col+1)
+  const headerBrands = grid[0].map(function (c) { return (c || '').toString().trim(); });
+  const headerCols = grid[1].map(function (c) { return (c || '').toString().trim().toLowerCase(); });
+
+  // Detectar dónde está la columna de Tienda; los datos arrancan en la siguiente.
+  let storeCol = -1;
+  for (let i = 0; i < headerCols.length; i++) {
+    if (/^(tienda|pdv|punto de venta)$/.test(headerCols[i])) {
+      storeCol = i;
+      break;
+    }
+  }
+  if (storeCol < 0) storeCol = 0;
+  const dataStartCol = storeCol + 1;
+
   const brandPairs = [];
-  for (let col = 1; col < header.length; col += 2) {
-    const brand = header[col] || header[col + 1] || '';
-    if (brand) brandPairs.push({ brand: brand.trim(), unitsCol: col, pctCol: col + 1 });
+  for (let col = dataStartCol; col < headerBrands.length; col += 2) {
+    const brand = (headerBrands[col] || headerBrands[col + 1] || '').trim();
+    if (!brand || /^total$/i.test(brand)) continue;
+    brandPairs.push({ brand: brand, unitsCol: col, pctCol: col + 1 });
   }
 
   const out = [];
   for (let i = 2; i < grid.length; i++) {
     const row = grid[i];
-    if (!row || row.length === 0) continue;
-    const storeCell = (row[0] || '').toString();
+    if (!row || row.length <= storeCol) continue;
+    const storeCell = (row[storeCol] || '').toString();
     const store = splitStoreCell(storeCell);
     if (!store || !store.name) continue;
+    if (/^total\b/i.test(store.name)) continue;
 
     for (let p = 0; p < brandPairs.length; p++) {
       const pair = brandPairs[p];
@@ -266,7 +283,7 @@ function syncFloorShare(file, periodo, semana, categoria, ctx) {
         numero_tienda: store.number,
         nombre_tienda: store.name,
         marca: pair.brand,
-        unidades: units,
+        unidades: Math.round(units),
         pct_raw: pct,
       });
     }
