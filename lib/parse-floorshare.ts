@@ -2,7 +2,7 @@ import Papa from "papaparse";
 import { normalizeStoreNumber } from "./parse";
 
 export type FloorShareRow = {
-  month: string;          // YYYY-MM
+  month: string;          // YYYY-MM (mensual) o YYYY-MM derivado por calendario fiscal (semanal)
   monthLabel: string;     // "Octubre 2025"
   category: string;       // "coccion"
   storeNumber: string;    // "124"
@@ -10,6 +10,7 @@ export type FloorShareRow = {
   brand: string;          // "Drean"
   units: number;          // 12
   pctRaw: number | null;  // 0.052... — raw % from file (ignored for calcs)
+  semana?: number | null; // null = fila del archivo mensual; número = fila semanal
 };
 
 const MES_NOMBRES = [
