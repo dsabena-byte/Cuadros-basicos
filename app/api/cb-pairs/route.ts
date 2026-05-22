@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { loadCuadroBasico } from "@/lib/data";
 import { withCors, corsPreflight } from "@/lib/cors";
+import { allSkusOfCB } from "@/lib/cb-match";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,9 +40,15 @@ export async function GET(request: Request) {
   if (!checkSecret(request)) return unauthorized();
   try {
     const cb = await loadCuadroBasico();
-    const pairs = Array.from(
-      new Set(cb.map((c) => `${normalizeCliente(c.cliente)}|${c.sku}`)),
-    );
+    // Incluimos primary SKU + homólogos: Power Automate envía ventas con
+    // el SKU real que aparece en la factura, que puede ser cualquiera de
+    // los homólogos.
+    const set = new Set<string>();
+    for (const c of cb) {
+      const norm = normalizeCliente(c.cliente);
+      for (const sku of allSkusOfCB(c)) set.add(`${norm}|${sku}`);
+    }
+    const pairs = Array.from(set);
     return withCors(NextResponse.json({
       ok: true,
       count: pairs.length,

@@ -13,6 +13,7 @@ import {
 import type {
   CuadroBasicoItem, ClasificacionCliente, VentaRow, VentasFile, Tipologia,
 } from "@/lib/types";
+import { matchesCB } from "@/lib/cb-match";
 
 const OBJETIVO = 80;
 
@@ -206,7 +207,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     const cumplido = (item: CuadroBasicoItem) => {
       let total = 0;
       for (const c of comprasFiltradas) {
-        if (c.cliente === item.cliente && c.sku === item.sku) total += c.unidades;
+        if (matchesCB(c, item)) total += c.unidades;
       }
       return total > 0;
     };
@@ -319,7 +320,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       const cumplido = (item: CuadroBasicoItem) => {
         let total = 0;
         for (const c of comprasHastaMes) {
-          if (c.cliente === item.cliente && c.sku === item.sku) total += c.unidades;
+          if (matchesCB(c, item)) total += c.unidades;
         }
         return total > 0;
       };
@@ -377,9 +378,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
         byKey.set(key, row);
       }
       row.clientesEnCB += 1;
-      const compras = comprasFiltradas.filter(
-        (c) => c.cliente === item.cliente && c.sku === item.sku,
-      );
+      const compras = comprasFiltradas.filter((c) => matchesCB(c, item));
       const fc = compras.filter((c) => c.tipo === "FC").reduce((a, c) => a + c.unidades, 0);
       const bo = compras.filter((c) => c.tipo === "BO").reduce((a, c) => a + c.unidades, 0);
       row.fcUnits += fc;
@@ -414,9 +413,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     return cbFiltrado
       .filter((c) => c.cliente === clienteSeleccionado)
       .map((item) => {
-        const compras = comprasFiltradas.filter(
-          (c) => c.cliente === clienteSeleccionado && c.sku === item.sku,
-        );
+        const compras = comprasFiltradas.filter((c) => matchesCB(c, item));
         const fc = compras.filter((c) => c.tipo === "FC").reduce((a, c) => a + c.unidades, 0);
         const bo = compras.filter((c) => c.tipo === "BO").reduce((a, c) => a + c.unidades, 0);
         const ult = compras.map((c) => c.fecha).sort().pop();
