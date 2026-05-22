@@ -154,9 +154,10 @@ function syncContactos(file, ctx) {
       email_promotor: pick(r, ['email promotor', 'email_promotor', 'email']) || '',
     });
   }
-  upsertBatch(ctx, SB_TABLES.contactos, out);
-  writeSyncStatus(ctx, file, 'ok', out.length, null);
-  Logger.log('contactos: ' + out.length + ' filas');
+  const deduped = dedupByKey(out, function (r) { return r.numero_tienda + '|' + r.nombre_tienda; });
+  upsertBatch(ctx, SB_TABLES.contactos, deduped);
+  writeSyncStatus(ctx, file, 'ok', deduped.length, null);
+  Logger.log('contactos: ' + deduped.length + ' filas (dedup ' + (out.length - deduped.length) + ')');
 }
 
 function syncCuadroBasico(file, semana, ctx) {
@@ -191,9 +192,10 @@ function syncCuadroBasico(file, semana, ctx) {
       tipo_sku: tipoSku,
     });
   }
-  upsertBatch(ctx, SB_TABLES.cb, out);
-  writeSyncStatus(ctx, file, 'ok', out.length, null);
-  Logger.log('CB semana ' + semana + ': ' + out.length + ' filas');
+  const deduped = dedupByKey(out, function (r) { return r.semana + '|' + r.tienda + '|' + r.sku; });
+  upsertBatch(ctx, SB_TABLES.cb, deduped);
+  writeSyncStatus(ctx, file, 'ok', deduped.length, null);
+  Logger.log('CB semana ' + semana + ': ' + deduped.length + ' filas (dedup ' + (out.length - deduped.length) + ')');
 }
 
 // Floor Share: estructura "wide": fila 0 con marcas en columnas, fila 1
@@ -238,9 +240,21 @@ function syncFloorShare(file, periodo, semana, categoria, ctx) {
       });
     }
   }
-  upsertBatch(ctx, SB_TABLES.floorShare, out);
-  writeSyncStatus(ctx, file, 'ok', out.length, null);
-  Logger.log('floor_share ' + periodo + ' ' + categoria + ': ' + out.length + ' filas');
+  const deduped = dedupByKey(out, function (r) {
+    return r.periodo + '|' + r.categoria + '|' + r.numero_tienda + '|' + r.nombre_tienda + '|' + r.marca;
+  });
+  upsertBatch(ctx, SB_TABLES.floorShare, deduped);
+  writeSyncStatus(ctx, file, 'ok', deduped.length, null);
+  Logger.log('floor_share ' + periodo + ' ' + categoria + ': ' + deduped.length + ' filas (dedup ' + (out.length - deduped.length) + ')');
+}
+
+// Quita filas con la misma clave; deja la última ocurrencia.
+function dedupByKey(rows, keyFn) {
+  const seen = {};
+  for (let i = 0; i < rows.length; i++) seen[keyFn(rows[i])] = rows[i];
+  const out = [];
+  for (const k in seen) out.push(seen[k]);
+  return out;
 }
 
 // ----- CSV parsing ----------------------------------------------------------
