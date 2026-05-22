@@ -101,11 +101,11 @@ function syncFSFolder(ctx, syncStatus) {
     const name = file.getName();
     if (!/\.csv$/i.test(name)) continue;
     if (!needsSync(file, syncStatus[name])) continue;
-    // Soporta los dos formatos: "YYYY-MM_CATEGORIA.csv" (mensual hoy) y
-    // "XX_CATEGORIA.csv" (semanal futuro).
+    // Soporta los dos formatos: "YYYY-MM_CATEGORIA.csv" (mensual) y
+    // "XX-CATEGORIA.csv" / "XX_CATEGORIA.csv" (semanal).
     let periodo, semana, categoria;
-    const m1 = name.match(/^(\d{4})-(\d{2})_(.+?)\.csv$/i);
-    const m2 = name.match(/^(\d+)_(.+?)\.csv$/i);
+    const m1 = name.match(/^(\d{4})-(\d{2})[_-](.+?)\.csv$/i);
+    const m2 = name.match(/^(\d+)[_-](.+?)\.csv$/i);
     if (m1) {
       periodo = m1[1] + '-' + m1[2];
       semana = null;
