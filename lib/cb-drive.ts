@@ -1,4 +1,5 @@
 import { listFolderFiles, downloadFile, findSubfolderId } from "./drive";
+import Papa from "papaparse";
 import type {
   CuadroBasicoItem,
   ClasificacionCliente,
@@ -93,13 +94,19 @@ function parseCsv(buf: Buffer): Array<Record<string, string>> {
   // Autodetect delimiter: priorizamos ; (lo más común en SAP/locale es-AR),
   // después tab, después coma.
   const delim = firstLine.includes(";") ? ";" : firstLine.includes("\t") ? "\t" : ",";
-  const [header, ...lines] = text.split("\n");
-  const cols = header.split(delim).map((c) => c.trim());
-  return lines.filter((l) => l.length > 0).map((line) => {
-    const cells = line.split(delim);
-    const row: Record<string, string> = {};
-    for (let i = 0; i < cols.length; i++) row[cols[i]] = (cells[i] ?? "").trim();
-    return row;
+  // Usamos PapaParse para respetar comillas dobles (ej. campos con coma
+  // decimal: "10,19%") y evitar el bug de un split() naive que rompe
+  // filas con campos quoted.
+  const parsed = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    delimiter: delim,
+    skipEmptyLines: "greedy",
+    transformHeader: (h) => h.trim(),
+  });
+  return parsed.data.map((r) => {
+    const out: Record<string, string> = {};
+    for (const k of Object.keys(r)) out[k] = (r[k] ?? "").toString().trim();
+    return out;
   });
 }
 
