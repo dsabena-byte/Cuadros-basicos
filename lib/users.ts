@@ -2,6 +2,7 @@ import { listFolderFiles, downloadFile, findSubfolderId } from "./drive";
 import { put, get } from "@vercel/blob";
 import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
+import Papa from "papaparse";
 
 // Sistema de usuarios para el dashboard de Ventas.
 //
@@ -49,13 +50,16 @@ function parseCsv(buf: Buffer): Array<Record<string, string>> {
   }
   const firstLine = text.split("\n")[0] ?? "";
   const delim = firstLine.includes(";") ? ";" : firstLine.includes("\t") ? "\t" : ",";
-  const [header, ...lines] = text.split("\n");
-  const cols = header.split(delim).map((c) => c.trim());
-  return lines.filter((l) => l.length > 0).map((line) => {
-    const cells = line.split(delim);
-    const row: Record<string, string> = {};
-    for (let i = 0; i < cols.length; i++) row[cols[i]] = (cells[i] ?? "").trim();
-    return row;
+  const parsed = Papa.parse<Record<string, string>>(text, {
+    header: true,
+    delimiter: delim,
+    skipEmptyLines: "greedy",
+    transformHeader: (h) => h.trim(),
+  });
+  return parsed.data.map((r) => {
+    const out: Record<string, string> = {};
+    for (const k of Object.keys(r)) out[k] = (r[k] ?? "").toString().trim();
+    return out;
   });
 }
 
