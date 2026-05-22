@@ -140,18 +140,49 @@ function syncContactos(file, ctx) {
   const rows = parseFile(file);
   const out = [];
   for (const r of rows) {
-    const numero = pick(r, ['numero', 'numero pdv', 'codigo', 'cod']);
-    const nombre =
-      pick(r, ['nombre pdv', 'nombre tienda', 'pdv', 'tienda']) ||
-      pick(r, ['nombre']);
-    if (!numero && !nombre) continue;
+    // Prioridad 1: columna combinada "NN - NOMBRE" (formato común).
+    const combined = pick(r, [
+      'nombre de la tienda', 'tienda hmpdv',
+      'tienda nro nombre', 'tienda numero y nombre',
+    ]);
+    let numero = '';
+    let nombre = '';
+    if (combined) {
+      const m = combined.match(/^(\d+)\s*[-–]\s*(.+)$/) || combined.match(/^(\d+)\s+(.+)$/);
+      if (m) {
+        numero = m[1];
+        nombre = m[2].trim();
+      } else {
+        nombre = combined;
+      }
+    }
+    // Fallback: columnas separadas.
+    if (!numero) {
+      numero = pick(r, [
+        'n tienda', 'numero tienda', 'nro tienda',
+        'id tienda', 'numero', 'nro', 'n',
+        'codigo tienda', 'cod tienda', 'codigo', 'cod',
+        'store', 'store id',
+      ]) || pickFuzzy(r, [/(n°|nº|n |nro|num|numero|cod|codigo|id)/]);
+    }
+    if (!nombre) {
+      nombre = pick(r, [
+        'nombre pdv', 'nombre tienda', 'nombre de tienda',
+        'tienda', 'sucursal', 'punto de venta', 'pdv', 'nombre',
+      ]);
+    }
+    if (!numero || !nombre) continue;
     out.push({
-      numero_tienda: numero || '',
-      nombre_tienda: nombre || '',
-      cadena: pick(r, ['cadena']) || '',
+      numero_tienda: numero,
+      nombre_tienda: nombre,
+      cadena: pick(r, ['cadena', 'cliente/cadena', 'cliente']) || '',
       promotor: pick(r, ['promotor']) || '',
       supervisor: pick(r, ['supervisor']) || '',
-      email_promotor: pick(r, ['email promotor', 'email_promotor', 'email']) || '',
+      email_promotor:
+        pick(r, ['email promotor', 'email_promotor', 'email', 'mail', 'correo',
+                 'correo electronico', 'e mail', 'e mail promotor',
+                 'mail promotor', 'correo promotor']) ||
+        pickFuzzy(r, [/email|mail|correo/]) || '',
     });
   }
   const deduped = dedupByKey(out, function (r) { return r.numero_tienda + '|' + r.nombre_tienda; });
@@ -315,6 +346,20 @@ function pick(row, names) {
   for (let i = 0; i < names.length; i++) {
     const k = normalizeHeader(names[i]);
     if (row[k] != null && row[k] !== '') return row[k];
+  }
+  return '';
+}
+
+// Fallback: busca cualquier columna cuyo header normalizado matchee
+// alguna de las regex pasadas. Útil cuando hay muchas variantes del nombre.
+function pickFuzzy(row, regexes) {
+  for (const k in row) {
+    for (let i = 0; i < regexes.length; i++) {
+      if (regexes[i].test(k)) {
+        const v = row[k];
+        if (v != null && v !== '') return v;
+      }
+    }
   }
   return '';
 }
