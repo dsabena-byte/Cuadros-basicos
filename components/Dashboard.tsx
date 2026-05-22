@@ -350,7 +350,8 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
   // los clientes filtrados: unidades FC, BO, y % cumplimiento (clientes
   // con al menos 1 unidad / clientes que tienen el SKU en su CB).
   type FilaSKU = {
-    sku: string;
+    sku: string;        // primary (Modelo)
+    skus: string[];     // primary + homólogos deduplicados (todos los SKUs involucrados)
     categoria: string;
     tipo: "INFALTABLE" | "ESTRATEGICO";
     clientesEnCB: number;
@@ -360,13 +361,15 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     pct: number;
   };
   const skusDetalle = useMemo<FilaSKU[]>(() => {
-    const byKey = new Map<string, FilaSKU>();
+    const byKey = new Map<string, FilaSKU & { _skuSet: Set<string> }>();
     for (const item of cbFiltrado) {
       const key = `${item.sku}|${item.tipo}`;
       let row = byKey.get(key);
       if (!row) {
         row = {
           sku: item.sku,
+          skus: [],
+          _skuSet: new Set<string>([item.sku]),
           categoria: item.categoria,
           tipo: item.tipo,
           clientesEnCB: 0,
@@ -377,6 +380,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
         };
         byKey.set(key, row);
       }
+      for (const a of item.skuAliases ?? []) row._skuSet.add(a);
       row.clientesEnCB += 1;
       const compras = comprasFiltradas.filter((c) => matchesCB(c, item));
       const fc = compras.filter((c) => c.tipo === "FC").reduce((a, c) => a + c.unidades, 0);
@@ -386,7 +390,11 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       if (fc + bo > 0) row.clientesCumplidos += 1;
     }
     return [...byKey.values()]
-      .map((r) => ({ ...r, pct: r.clientesEnCB > 0 ? Math.round((r.clientesCumplidos / r.clientesEnCB) * 100) : 0 }))
+      .map(({ _skuSet, ...r }) => ({
+        ...r,
+        skus: [r.sku, ...[..._skuSet].filter((s) => s !== r.sku)],
+        pct: r.clientesEnCB > 0 ? Math.round((r.clientesCumplidos / r.clientesEnCB) * 100) : 0,
+      }))
       .sort((a, b) => {
         // Infaltables primero, después por categoría, después alfabético por SKU
         if (a.tipo !== b.tipo) return a.tipo === "INFALTABLE" ? -1 : 1;
@@ -940,6 +948,7 @@ function MultiSelectDropdown({
 function TablaSKUs({ rows, mostrarClientes, comprasFiltradas, cbClientesPorSku }: {
   rows: Array<{
     sku: string;
+    skus: string[];
     categoria: string;
     tipo: "INFALTABLE" | "ESTRATEGICO";
     clientesEnCB: number;
@@ -1053,6 +1062,7 @@ function TablaSKUs({ rows, mostrarClientes, comprasFiltradas, cbClientesPorSku }
 function FilaSKU({ r, mostrarClientes, totalCols, expanded, onToggle, comprasFiltradas, clientesScope }: {
   r: {
     sku: string;
+    skus: string[];
     categoria: string;
     tipo: "INFALTABLE" | "ESTRATEGICO";
     clientesEnCB: number;
@@ -1085,7 +1095,17 @@ function FilaSKU({ r, mostrarClientes, totalCols, expanded, onToggle, comprasFil
           )}
           {r.categoria}
         </td>
-        <td className="p-3 font-mono text-slate-900">{r.sku}</td>
+        <td className="p-3 font-mono text-slate-900">
+          {r.skus.length > 1 ? (
+            <div className="flex flex-col gap-0.5">
+              {r.skus.map((s, i) => (
+                <span key={s} className={i === 0 ? "" : "text-xs text-slate-500"}>{s}</span>
+              ))}
+            </div>
+          ) : (
+            r.sku
+          )}
+        </td>
         {mostrarClientes && (
           <td className="p-3 text-right text-slate-600 font-mono text-xs">{r.clientesCumplidos}/{r.clientesEnCB}</td>
         )}
@@ -1097,7 +1117,7 @@ function FilaSKU({ r, mostrarClientes, totalCols, expanded, onToggle, comprasFil
       {expanded && (
         <tr className="border-b border-slate-100">
           <td colSpan={totalCols} className="p-0">
-            <DetalleFCPorFecha sku={r.sku} clientesScope={clientesScope} comprasFiltradas={comprasFiltradas} />
+            <DetalleFCPorFecha skus={r.skus} clientesScope={clientesScope} comprasFiltradas={comprasFiltradas} />
           </td>
         </tr>
       )}
@@ -1105,29 +1125,37 @@ function FilaSKU({ r, mostrarClientes, totalCols, expanded, onToggle, comprasFil
   );
 }
 
-function DetalleFCPorFecha({ sku, clientesScope, comprasFiltradas }: {
-  sku: string;
+function DetalleFCPorFecha({ skus, clientesScope, comprasFiltradas }: {
+  skus: string[];
   clientesScope?: Set<string>;
   comprasFiltradas: VentaRow[];
 }) {
   const filas = useMemo(() => {
-    // Para el detalle usamos fechaFactura (real, día concreto) si vino
-    // del Office Script. Si no está, fallback a fecha (que para FC es el
+    // Agrupamos por (fecha, sku) para que el detalle muestre a qué SKU
+    // corresponde cada facturación — útil cuando el CB tiene homólogos.
+    // Para la fecha usamos fechaFactura (real, día concreto) si vino del
+    // Office Script. Si no está, fallback a fecha (que para FC es el
     // período fiscal con día 01 — agrupa todo el mes en una fila).
-    const byFecha = new Map<string, number>();
+    const skuSet = new Set(skus);
+    const byKey = new Map<string, { fecha: string; sku: string; unidades: number }>();
     for (const c of comprasFiltradas) {
       if (c.tipo !== "FC") continue;
-      if (c.sku !== sku) continue;
+      if (!skuSet.has(c.sku)) continue;
       if (clientesScope && !clientesScope.has(c.cliente)) continue;
-      const key = c.fechaFactura ?? c.fecha;
-      byFecha.set(key, (byFecha.get(key) ?? 0) + c.unidades);
+      const fecha = c.fechaFactura ?? c.fecha;
+      const key = `${fecha}|${c.sku}`;
+      const cur = byKey.get(key);
+      if (cur) cur.unidades += c.unidades;
+      else byKey.set(key, { fecha, sku: c.sku, unidades: c.unidades });
     }
-    return Array.from(byFecha.entries())
-      .map(([fecha, unidades]) => ({ fecha, unidades }))
-      .sort((a, b) => a.fecha.localeCompare(b.fecha));
-  }, [sku, clientesScope, comprasFiltradas]);
+    return Array.from(byKey.values()).sort((a, b) => {
+      if (a.fecha !== b.fecha) return a.fecha.localeCompare(b.fecha);
+      return a.sku.localeCompare(b.sku);
+    });
+  }, [skus, clientesScope, comprasFiltradas]);
 
   const totalFC = filas.reduce((a, r) => a + r.unidades, 0);
+  const fechasUnicas = new Set(filas.map((f) => f.fecha)).size;
 
   if (filas.length === 0) {
     return (
@@ -1139,12 +1167,15 @@ function DetalleFCPorFecha({ sku, clientesScope, comprasFiltradas }: {
   return (
     <div className="px-4 py-3 bg-slate-50">
       <div className="text-xs font-semibold text-slate-600 mb-2 uppercase tracking-wider">
-        Detalle facturación por fecha · {filas.length} {filas.length === 1 ? "factura" : "fechas"} · {totalFC.toLocaleString("es-AR")}u
+        Detalle facturación por fecha · {fechasUnicas} {fechasUnicas === 1 ? "fecha" : "fechas"} · {totalFC.toLocaleString("es-AR")}u
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
         {filas.map((f) => (
-          <div key={f.fecha} className="flex justify-between items-center bg-white px-3 py-1.5 rounded border border-slate-200">
-            <span className="text-xs text-slate-600">{formatFecha(f.fecha)}</span>
+          <div key={`${f.fecha}|${f.sku}`} className="flex justify-between items-center bg-white px-3 py-1.5 rounded border border-slate-200">
+            <div className="flex flex-col">
+              <span className="text-xs text-slate-600">{formatFecha(f.fecha)}</span>
+              <span className="text-[10px] font-mono text-slate-500">{f.sku}</span>
+            </div>
             <span className="text-sm font-semibold text-slate-900">{f.unidades.toLocaleString("es-AR")}u</span>
           </div>
         ))}
