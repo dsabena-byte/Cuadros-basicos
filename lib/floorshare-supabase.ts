@@ -32,6 +32,14 @@ type FloorShareDB = {
   pct_raw: number | null;
 };
 
+// Calendario fiscal 5-4-4: misma fórmula que semanaToMes() en lib/parse.ts.
+// Devuelve el código YYYY-MM correspondiente al mes fiscal de la semana.
+function weekToMonthCode(week: number, year: string): string {
+  const idx = Math.min(11, Math.max(0, Math.floor((week - 1) / 4.33)));
+  const monthNum = idx + 1;
+  return `${year}-${String(monthNum).padStart(2, "0")}`;
+}
+
 // Carga floor share desde Supabase y devuelve el mismo FloorShareDataset que
 // produce buildFloorShareDataset (Drive). Para preservar el comportamiento
 // actual del dashboard, solo trae filas mensuales (semana IS NULL).
@@ -51,7 +59,6 @@ export async function buildFloorShareDatasetFromSupabase(
 
   const dbRows = await supabaseSelectAll<FloorShareDB>("floor_share", {
     select: "periodo,semana,categoria,numero_tienda,nombre_tienda,marca,unidades,pct_raw",
-    semana: "is.null",
     order: "periodo.asc,categoria.asc",
   });
 
@@ -60,16 +67,30 @@ export async function buildFloorShareDatasetFromSupabase(
     const units = r.unidades ?? 0;
     if (units <= 0) continue;
     const periodo = (r.periodo || "").trim();
-    if (!/^\d{4}-\d{2}$/.test(periodo)) continue;
+    let month: string;
+    let semana: number | null;
+    if (/^\d{4}-\d{2}$/.test(periodo)) {
+      // Periodo mensual: "2026-04"
+      month = periodo;
+      semana = null;
+    } else if (/^\d{4}-W\d{1,2}$/i.test(periodo) && r.semana !== null) {
+      // Periodo semanal: "2026-W14" → derivamos el mes vía calendario fiscal.
+      const year = periodo.slice(0, 4);
+      month = weekToMonthCode(r.semana, year);
+      semana = r.semana;
+    } else {
+      continue;
+    }
     rawRows.push({
-      month: periodo,
-      monthLabel: monthLabelFromCode(periodo),
+      month,
+      monthLabel: monthLabelFromCode(month),
       category: (r.categoria || "").toLowerCase(),
       storeNumber: (r.numero_tienda || "").trim(),
       storeName: (r.nombre_tienda || "").trim(),
       brand: (r.marca || "").trim(),
       units,
       pctRaw: r.pct_raw,
+      semana,
     });
   }
 

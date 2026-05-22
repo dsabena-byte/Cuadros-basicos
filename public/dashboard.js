@@ -968,6 +968,10 @@ function fsTargetFor(cat) {
 
 let fsData = [];
 let fsCharts = [];
+// Selecciones del multi-select de Semana en Floor Share. Vacío = vista mensual
+// (filas con semana=null). Cuando hay alguna seleccionada, se muestran solo
+// las filas semanales que matcheen.
+let fsSelectedSemanas = new Set();
 
 function fsMonthLabel(code) {
   if (!code) return '';
@@ -996,6 +1000,7 @@ function fsDestroyCharts() {
 function fsGetFilters() {
   return {
     mes: document.getElementById('fsMes')?.value || '',
+    semana: [...fsSelectedSemanas], // vacío = vista mensual.
     cliente: document.getElementById('fsCliente')?.value || '',
     categoria: document.getElementById('fsCategoria')?.value || '',
     tienda: document.getElementById('fsTienda')?.value || '',
@@ -1007,7 +1012,16 @@ function fsGetFilters() {
 function fsApplyFilters(data, opts) {
   const f = fsGetFilters();
   const skip = opts || {};
+  const useWeekly = f.semana.length > 0;
   return data.filter(r => {
+    // Switch de fuente: si hay semana(s) seleccionada(s), solo filas semanales;
+    // sino solo filas mensuales. Así nunca se mezclan ni se duplican.
+    if (useWeekly) {
+      if (r.semana == null) return false;
+      if (!skip.semana && !f.semana.includes(String(r.semana))) return false;
+    } else {
+      if (r.semana != null) return false;
+    }
     if (!skip.mes && f.mes && r.month !== f.mes) return false;
     if (!skip.cliente && f.cliente && r.cliente !== f.cliente) return false;
     if (!skip.categoria && f.categoria && r.category !== f.categoria) return false;
@@ -1016,6 +1030,24 @@ function fsApplyFilters(data, opts) {
     if (!skip.promotor && f.promotor && r.promotor !== f.promotor) return false;
     return true;
   });
+}
+
+function fsFillSemanaMulti(items) {
+  const available = new Set(items.map(String));
+  for (const s of [...fsSelectedSemanas]) {
+    if (!available.has(s)) fsSelectedSemanas.delete(s);
+  }
+  const panel = document.getElementById('fsSemanaPanel');
+  const btn = document.getElementById('fsSemanaBtn');
+  if (!panel || !btn) return;
+  panel.innerHTML = items.map(i => {
+    const s = String(i);
+    const checked = fsSelectedSemanas.has(s) ? 'checked' : '';
+    return '<label><input type="checkbox" value="' + escapeHtml(s) + '" ' + checked + '> Semana ' + escapeHtml(s) + '</label>';
+  }).join('');
+  if (fsSelectedSemanas.size === 0) btn.textContent = 'Todas';
+  else if (fsSelectedSemanas.size === 1) btn.textContent = 'Semana ' + [...fsSelectedSemanas][0];
+  else btn.textContent = fsSelectedSemanas.size + ' seleccionadas';
 }
 
 function fsFillSelect(id, items, current, formatter) {
@@ -1034,12 +1066,22 @@ function fsFillSelect(id, items, current, formatter) {
 function fsPopulateFilters() {
   const f = fsGetFilters();
 
-  // Cascade in visual order: Mes → Categoría → Supervisor → Promotor → Cliente → Tienda
+  // Cascade in visual order: Mes → Semana → Categoría → Supervisor → Promotor → Cliente → Tienda
   const meses = [...new Set(fsData.map(r => r.month))].sort();
   fsFillSelect('fsMes', meses, f.mes, fsMonthLabel);
 
-  let pool = fsData;
-  if (f.mes) pool = pool.filter(r => r.month === f.mes);
+  // Semanas disponibles: filas semanales (semana != null), opcionalmente
+  // restringidas al mes elegido.
+  let semanasPool = fsData.filter(r => r.semana != null);
+  if (f.mes) semanasPool = semanasPool.filter(r => r.month === f.mes);
+  const semanas = [...new Set(semanasPool.map(r => r.semana))].sort((a, b) => a - b);
+  fsFillSemanaMulti(semanas);
+
+  // El cascade arranca con la pool filtrada por mes + semana (respetando el
+  // switch mensual/semanal). El resto de filtros se aplican manualmente abajo.
+  let pool = fsApplyFilters(fsData, {
+    categoria: true, supervisor: true, promotor: true, cliente: true, tienda: true,
+  });
 
   const cats = [...new Set(pool.map(r => r.category))].sort();
   fsFillSelect('fsCategoria', cats, f.categoria, fsTitleCase);
@@ -1608,6 +1650,30 @@ function initFSControls() {
   if (el) el.addEventListener('change', () => { fsPopulateFilters(); fsRender(); });
 });
 
+// Multi-select de Semana en Floor Share (replica fSemana del CB).
+const fsSemanaBtnEl = document.getElementById('fsSemanaBtn');
+const fsSemanaPanelEl = document.getElementById('fsSemanaPanel');
+if (fsSemanaBtnEl && fsSemanaPanelEl) {
+  fsSemanaBtnEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    fsSemanaPanelEl.hidden = !fsSemanaPanelEl.hidden;
+  });
+  fsSemanaPanelEl.addEventListener('change', (e) => {
+    const t = e.target;
+    if (!t || t.tagName !== 'INPUT') return;
+    if (t.checked) fsSelectedSemanas.add(t.value);
+    else fsSelectedSemanas.delete(t.value);
+    fsPopulateFilters();
+    fsRender();
+  });
+  document.addEventListener('click', (e) => {
+    if (fsSemanaPanelEl.hidden) return;
+    if (!fsSemanaPanelEl.contains(e.target) && e.target !== fsSemanaBtnEl) {
+      fsSemanaPanelEl.hidden = true;
+    }
+  });
+}
+
 const fsBtnReset = document.getElementById('fsBtnReset');
 if (fsBtnReset) {
   fsBtnReset.addEventListener('click', () => {
@@ -1615,6 +1681,7 @@ if (fsBtnReset) {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
+    fsSelectedSemanas.clear();
     fsPopulateFilters();
     fsRender();
   });
@@ -1688,6 +1755,7 @@ function buildShell() {
       <div class="card">
         <div class="filters filters-fs">
           <div><label>Mes</label><select id="fsMes"><option value="">Todos</option></select></div>
+          <div class="ms-wrap"><label>Semana</label><button type="button" class="ms-btn" id="fsSemanaBtn">Todas</button><div class="ms-panel" id="fsSemanaPanel" hidden></div></div>
           <div><label>Categoría</label><select id="fsCategoria"><option value="">Todas</option></select></div>
           <div><label>Supervisor</label><select id="fsSupervisor"><option value="">Todos</option></select></div>
           <div><label>Promotor</label><select id="fsPromotor"><option value="">Todos</option></select></div>
