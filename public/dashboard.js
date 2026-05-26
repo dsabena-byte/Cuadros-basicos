@@ -257,7 +257,10 @@ function fillMultiSelect(panelId, btnId, selectedSet, items, labelFn) {
   const panel = document.getElementById(panelId);
   const btn = document.getElementById(btnId);
   if (!panel || !btn) return;
-  panel.innerHTML = items.map(i => {
+  const clearBtn = selectedSet.size > 0
+    ? '<div class="ms-clear" data-action="clear">✕ Limpiar</div>'
+    : '';
+  panel.innerHTML = clearBtn + items.map(i => {
     const s = String(i);
     const checked = selectedSet.has(s) ? 'checked' : '';
     const label = labelFn ? labelFn(i) : escapeHtml(s);
@@ -289,6 +292,13 @@ function initMultiSelectListeners(btnId, panelId, selectedSet, onChange) {
   btn.addEventListener('click', (e) => {
     e.stopPropagation();
     panel.hidden = !panel.hidden;
+  });
+  panel.addEventListener('click', (e) => {
+    const t = e.target;
+    if (t && t.dataset && t.dataset.action === 'clear') {
+      selectedSet.clear();
+      onChange();
+    }
   });
   panel.addEventListener('change', (e) => {
     const t = e.target;
