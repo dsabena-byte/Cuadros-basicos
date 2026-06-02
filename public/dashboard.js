@@ -1387,7 +1387,8 @@ function fsBuildAggTable(opts) {
   const f = fsGetFilters();
   const months = [...new Set(data.map(r => r.month))].sort();
   let scopeLabel = '';
-  if (f.mes) scopeLabel = fsMonthLabel(f.mes);
+  if (f.mes.length === 1) scopeLabel = fsMonthLabel(f.mes[0]);
+  else if (f.mes.length > 1) scopeLabel = f.mes.length + ' meses';
   else if (months.length === 1) scopeLabel = fsMonthLabel(months[0]);
   else if (months.length > 1) scopeLabel = fsMonthLabel(months[0]) + ' — ' + fsMonthLabel(months[months.length - 1]);
 
