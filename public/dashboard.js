@@ -1233,11 +1233,11 @@ function fsRender() {
   html += '<div class="fs-charts">';
   html += '<div class="chart-box"><h3>📊 Ranking de marcas</h3><div class="chart-wrap tall"><canvas id="fsChRanking"></canvas></div></div>';
 
-  // Evolución mensual
-  const dataNoMes = fsApplyFilters(fsData, { mes: true });
-  const monthsInScope = [...new Set(dataNoMes.map(r => r.month))].sort();
-  if (monthsInScope.length > 1) {
-    html += '<div class="chart-box"><h3>📈 Evolución mensual — Drean vs Top marcas</h3><div class="chart-wrap"><canvas id="fsChEvol"></canvas></div></div>';
+  // Evolución semanal — todas las filas son semanales ahora.
+  const dataNoMes = fsApplyFilters(fsData, { mes: true, semana: true });
+  const weeksInScope = [...new Set(dataNoMes.map(r => r.semana).filter(s => s != null))].sort((a, b) => a - b);
+  if (weeksInScope.length > 1) {
+    html += '<div class="chart-box"><h3>📈 Evolución semanal — Drean vs Top marcas</h3><div class="chart-wrap"><canvas id="fsChEvol"></canvas></div></div>';
   }
   html += '</div>';
 
@@ -1280,7 +1280,7 @@ function fsRender() {
   cont.innerHTML = html;
 
   fsRenderRanking(data);
-  if (monthsInScope.length > 1) fsRenderEvolucion();
+  if (weeksInScope.length > 1) fsRenderEvolucion();
 }
 
 function fsRenderRanking(rows) {
@@ -1575,7 +1575,9 @@ const FS_BRAND_PALETTE = ['#3b82f6','#f59e0b','#10b981','#8b5cf6','#06b6d4','#f9
 function fsRenderEvolucion() {
   const ctx = document.getElementById('fsChEvol');
   if (!ctx) return;
-  const dataNoMes = fsApplyFilters(fsData, { mes: true });
+  // Ignoramos los filtros de Mes y Semana — queremos ver toda la evolución.
+  // El resto (categoría, supervisor, etc) sí aplica.
+  const dataNoMes = fsApplyFilters(fsData, { mes: true, semana: true });
 
   // Top 9 marcas (Drean siempre se muestra, total 10 series)
   const brandUnits = {};
@@ -1592,20 +1594,22 @@ function fsRenderEvolucion() {
     .slice(0, 9)
     .map(([b]) => b);
 
-  const byMonth = {};
+  const byWeek = {};
   dataNoMes.forEach(r => {
-    if (!byMonth[r.month]) byMonth[r.month] = [];
-    byMonth[r.month].push(r);
+    if (r.semana == null) return;
+    const k = String(r.semana);
+    if (!byWeek[k]) byWeek[k] = [];
+    byWeek[k].push(r);
   });
-  const months = Object.keys(byMonth).sort();
-  const labels = months.map(fsMonthLabel);
+  const weeks = Object.keys(byWeek).sort((a, b) => Number(a) - Number(b));
+  const labels = weeks.map(w => 'Sem ' + w);
 
   const datasets = [];
   // Drean en primer plano, destacado
   datasets.push({
     label: 'Drean',
-    data: months.map(m => {
-      const v = fsBrandShare(byMonth[m], FS_DREAN);
+    data: weeks.map(w => {
+      const v = fsBrandShare(byWeek[w], FS_DREAN);
       return v === null ? null : Math.round(v * 10) / 10;
     }),
     borderColor: FS_DREAN_COLOR,
@@ -1620,8 +1624,8 @@ function fsRenderEvolucion() {
   topBrands.forEach((brand, i) => {
     datasets.push({
       label: brand,
-      data: months.map(m => {
-        const v = fsBrandShare(byMonth[m], brand);
+      data: weeks.map(w => {
+        const v = fsBrandShare(byWeek[w], brand);
         return v === null ? null : Math.round(v * 10) / 10;
       }),
       borderColor: FS_BRAND_PALETTE[i % FS_BRAND_PALETTE.length],
