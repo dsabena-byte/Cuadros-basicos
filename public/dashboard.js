@@ -1043,14 +1043,11 @@ function fsGetFilters() {
 function fsApplyFilters(data, opts) {
   const f = fsGetFilters();
   const skip = opts || {};
-  const useWeekly = f.semana.length > 0;
   return data.filter(r => {
-    if (useWeekly) {
-      if (r.semana == null) return false;
-      if (!skip.semana && !f.semana.includes(String(r.semana))) return false;
-    } else {
-      if (r.semana != null) return false;
-    }
+    // Todas las filas ahora son semanales (el archivo mensual del origen
+    // se descontinuó). El mensual se deriva sumando las semanas que caen
+    // en el mes fiscal — eso lo hace el agrupador downstream usando r.month.
+    if (!skip.semana && f.semana.length > 0 && !f.semana.includes(String(r.semana))) return false;
     if (!skip.mes && f.mes.length > 0 && !f.mes.includes(r.month)) return false;
     if (!skip.cliente && f.cliente && r.cliente !== f.cliente) return false;
     if (!skip.categoria && f.categoria && r.category !== f.categoria) return false;

@@ -40,11 +40,12 @@ function weekToMonthCode(week: number, year: string): string {
   return `${year}-${String(monthNum).padStart(2, "0")}`;
 }
 
-// Carga floor share desde Supabase y devuelve el mismo FloorShareDataset que
-// produce buildFloorShareDataset (Drive). Para preservar el comportamiento
-// actual del dashboard, solo trae filas mensuales (semana IS NULL).
+// Carga floor share desde Supabase y devuelve el FloorShareDataset que usa
+// el dashboard. Solo procesa filas semanales — los archivos mensuales del
+// origen se discontinuaron, así que el "mes" se deriva desde el calendario
+// fiscal 5-4-4 sumando las semanas que pertenecen a cada mes.
 //
-// Aplica idéntica lógica de enrichment: applyManualContactos, lookup de
+// Aplica la misma lógica de enrichment: applyManualContactos, lookup de
 // contacto, inferencia de cliente desde el nombre, overrides de tienda,
 // exclusiones, y tracking de diagnóstico.
 export async function buildFloorShareDatasetFromSupabase(
@@ -57,8 +58,12 @@ export async function buildFloorShareDatasetFromSupabase(
   const cadenasByFirstWord = buildCadenasByFirstWord(mergedContactos);
   const contactosByName = buildContactosByName(mergedContactos);
 
+  // Solo filas semanales: el dashboard ya no consume el archivo mensual de
+  // origen (descontinuado). El mensual se calcula sumando las semanas del
+  // mes fiscal (5-4-4) en el cliente.
   const dbRows = await supabaseSelectAll<FloorShareDB>("floor_share", {
     select: "periodo,semana,categoria,numero_tienda,nombre_tienda,marca,unidades,pct_raw",
+    semana: "not.is.null",
     order: "periodo.asc,categoria.asc",
   });
 
@@ -67,20 +72,10 @@ export async function buildFloorShareDatasetFromSupabase(
     const units = r.unidades ?? 0;
     if (units <= 0) continue;
     const periodo = (r.periodo || "").trim();
-    let month: string;
-    let semana: number | null;
-    if (/^\d{4}-\d{2}$/.test(periodo)) {
-      // Periodo mensual: "2026-04"
-      month = periodo;
-      semana = null;
-    } else if (/^\d{4}-W\d{1,2}$/i.test(periodo) && r.semana !== null) {
-      // Periodo semanal: "2026-W14" → derivamos el mes vía calendario fiscal.
-      const year = periodo.slice(0, 4);
-      month = weekToMonthCode(r.semana, year);
-      semana = r.semana;
-    } else {
-      continue;
-    }
+    if (!/^\d{4}-W\d{1,2}$/i.test(periodo) || r.semana === null) continue;
+    // Derivamos el mes desde la semana vía calendario fiscal.
+    const year = periodo.slice(0, 4);
+    const month = weekToMonthCode(r.semana, year);
     rawRows.push({
       month,
       monthLabel: monthLabelFromCode(month),
@@ -90,7 +85,7 @@ export async function buildFloorShareDatasetFromSupabase(
       brand: (r.marca || "").trim(),
       units,
       pctRaw: r.pct_raw,
-      semana,
+      semana: r.semana,
     });
   }
 
