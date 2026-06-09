@@ -308,18 +308,23 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     const mesActual = new Date(ventas.generatedAt).getMonth() + 1;
     const mesesActivos = MESES.filter((m) => m.num <= mesActual);
     return mesesActivos.map((m) => {
-      const comprasHastaMes = ventas.rows.filter((c) => {
+      // Ventana móvil de 2 meses: incluye el mes M y el anterior (M-1).
+      // Para Enero (M=1) solo incluye Enero porque no hay mes 0.
+      // Más representativo que el acumulado desde Enero — refleja la
+      // performance reciente, no la historia entera.
+      const mesDesde = Math.max(1, m.num - 1);
+      const comprasVentana = ventas.rows.filter((c) => {
         // BO con fecha de entrega futura (c.mes > mesActual) cuentan como
         // si fueran del mes actual — sino el último punto del gráfico
         // subreporta vs los KPIs, que sí los incluyen.
         const mesEfectivo = Math.min(c.mes, mesActual);
-        if (mesEfectivo > m.num) return false;
+        if (mesEfectivo > m.num || mesEfectivo < mesDesde) return false;
         if (filters.vendedor !== "TODOS" && c.vendedor !== filters.vendedor) return false;
         return true;
       });
       const cumplido = (item: CuadroBasicoItem) => {
         let total = 0;
-        for (const c of comprasHastaMes) {
+        for (const c of comprasVentana) {
           if (matchesCB(c, item)) total += c.unidades;
         }
         return total > 0;
