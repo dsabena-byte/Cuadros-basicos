@@ -308,17 +308,27 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     const mesActual = new Date(ventas.generatedAt).getMonth() + 1;
     const mesesActivos = MESES.filter((m) => m.num <= mesActual);
     return mesesActivos.map((m) => {
-      // Ventana móvil de 2 meses: incluye el mes M y el anterior (M-1).
-      // Para Enero (M=1) solo incluye Enero porque no hay mes 0.
-      // Más representativo que el acumulado desde Enero — refleja la
-      // performance reciente, no la historia entera.
+      // FC y BO se cuentan con semánticas distintas — las MISMAS que usan
+      // los KPIs / card (ver `comprasFiltradas`), para que el punto del mes
+      // M coincida con el card cuando se filtra ese mismo período:
+      //   - FC: ventana móvil de 2 meses (mes M y el anterior M-1). Para
+      //     Enero (M=1) solo Enero. Refleja la facturación reciente.
+      //   - BO: ACUMULADO hasta M (todo BO con mes ≤ M, sin límite inferior).
+      //     Un back order pendiente de un mes previo sigue representando
+      //     demanda cubierta al cierre — antes se contaba solo dentro de la
+      //     ventana, por eso el card (BO acumulado) daba más que este punto.
       const mesDesde = Math.max(1, m.num - 1);
       const comprasVentana = ventas.rows.filter((c) => {
         // BO con fecha de entrega futura (c.mes > mesActual) cuentan como
         // si fueran del mes actual — sino el último punto del gráfico
         // subreporta vs los KPIs, que sí los incluyen.
         const mesEfectivo = Math.min(c.mes, mesActual);
-        if (mesEfectivo > m.num || mesEfectivo < mesDesde) return false;
+        if (c.tipo === "FC") {
+          if (mesEfectivo > m.num || mesEfectivo < mesDesde) return false;
+        } else {
+          // BO: acumulado hasta M (sin cota inferior).
+          if (mesEfectivo > m.num) return false;
+        }
         if (filters.vendedor !== "TODOS" && c.vendedor !== filters.vendedor) return false;
         return true;
       });
