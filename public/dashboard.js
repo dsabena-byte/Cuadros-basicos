@@ -1745,6 +1745,7 @@ function buildShell() {
     <div class="tabs" role="tablist">
       <button class="tab active" data-tab="cb" role="tab" aria-selected="true">Cumplimiento CB</button>
       <button class="tab" data-tab="floorshare" role="tab" aria-selected="false">Floor Share</button>
+      <button class="tab" data-tab="trade" role="tab" aria-selected="false">CB × Floor Share</button>
     </div>
 
     <section id="tab-cb" class="tab-panel active">
@@ -1790,7 +1791,21 @@ function buildShell() {
 
       <div id="fsContent"></div>
     </section>
+
+    <section id="tab-trade" class="tab-panel" hidden>
+      <iframe id="tradeFrame" title="CB Trade × Floor Share" style="width:100%;height:calc(100vh - 150px);min-height:600px;border:0;border-radius:12px;background:#f8fafc"></iframe>
+    </section>
   `;
+
+  // Carga diferida del iframe: solo al abrir el tab por primera vez (evita
+  // pegarle a /trade en cada render del shell).
+  const tradeBtn = root.querySelector('.tab[data-tab="trade"]');
+  if (tradeBtn) {
+    tradeBtn.addEventListener('click', () => {
+      const fr = document.getElementById('tradeFrame');
+      if (fr && !fr.src) fr.src = '/trade?embed=1';
+    }, { once: true });
+  }
 }
 
 function showLoader() {
