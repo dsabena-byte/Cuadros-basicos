@@ -6,7 +6,8 @@ import { BarChart3, Building2, Users, Trophy, ChevronRight, ChevronDown } from "
 const OBJETIVO = 80;
 
 export type SkuFaltante = { sku: string; cliente: string; categoria: string; tipo: string };
-export type SegHijo = { nombre: string; pctCB: number; faltan: number };
+export type CatPct = { categoria: string; pctCB: number; pctInf: number; pctEst: number };
+export type SegHijo = { nombre: string; pctCB: number; faltan: number; porCat: CatPct[] };
 
 export type SegAnalisis = {
   nombre: string;
@@ -37,11 +38,6 @@ function pctColor(pct: number): string {
   if (pct >= OBJETIVO) return "text-emerald-600";
   if (pct >= 70) return "text-amber-600";
   return "text-rose-600";
-}
-function barColor(pct: number): string {
-  if (pct >= OBJETIVO) return "bg-emerald-400";
-  if (pct >= 70) return "bg-amber-400";
-  return "bg-rose-400";
 }
 function debajo(segs: SegAnalisis[]): SegAnalisis[] {
   return segs.filter((s) => s.pctCB < OBJETIVO && s.faltan80 > 0).sort((a, b) => b.faltan80 - a.faltan80);
@@ -121,22 +117,41 @@ function ModelosDrill({ skus }: { skus?: SkuFaltante[] }) {
 }
 
 // ── Drill de HIJOS (Tipología → clientes, Gerencia → vendedores).
+// Debajo de cada nombre, el % de cumplimiento por categoría de producto,
+// desglosado en CB · Infaltables · Estratégico.
 function HijosDrill({ hijos, label }: { hijos?: SegHijo[]; label: string }) {
   if (!hijos || hijos.length === 0) return <div className="text-[11px] text-emerald-600 px-2 py-1.5">✓ Sin {label} por debajo del objetivo.</div>;
   return (
-    <div className="mt-1 mb-1 rounded border border-slate-200 bg-slate-50 p-2">
-      <div className="text-[10px] text-slate-400 mb-1.5">Principales {label} que suben el indicador:</div>
-      <div className="space-y-1">
-        {hijos.map((h) => (
-          <div key={h.nombre} className="flex items-center gap-2 text-[11px]">
-            <span className="w-40 shrink-0 truncate text-slate-700" title={h.nombre}>{h.nombre}</span>
-            <div className="flex-1 h-1.5 rounded bg-slate-200 overflow-hidden">
-              <div className={`h-1.5 rounded ${barColor(h.pctCB)}`} style={{ width: `${Math.min(100, h.pctCB)}%` }} />
-            </div>
-            <span className={`w-9 text-right tabular-nums font-semibold ${pctColor(h.pctCB)}`}>{h.pctCB}%</span>
+    <div className="mt-1 mb-1 rounded border border-slate-200 bg-slate-50 p-2 space-y-1.5">
+      <div className="text-[10px] text-slate-400">Principales {label} que suben el indicador — % cumplimiento por categoría:</div>
+      {hijos.map((h) => (
+        <div key={h.nombre} className="rounded border border-slate-200 bg-white px-2 py-1">
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="font-medium text-slate-800 truncate" title={h.nombre}>{h.nombre}</span>
+            <span className={`tabular-nums font-semibold ${pctColor(h.pctCB)}`}>{h.pctCB}% CB</span>
           </div>
-        ))}
-      </div>
+          <table className="w-full text-[10px] mt-0.5">
+            <thead>
+              <tr className="text-slate-400">
+                <th className="text-left font-normal"></th>
+                <th className="text-right font-normal w-10">CB</th>
+                <th className="text-right font-normal w-10">Inf</th>
+                <th className="text-right font-normal w-10">Est</th>
+              </tr>
+            </thead>
+            <tbody>
+              {h.porCat.map((pc) => (
+                <tr key={pc.categoria}>
+                  <td className="text-slate-500">{pc.categoria}</td>
+                  <td className={`text-right tabular-nums ${pctColor(pc.pctCB)}`}>{pc.pctCB}%</td>
+                  <td className={`text-right tabular-nums ${pctColor(pc.pctInf)}`}>{pc.pctInf}%</td>
+                  <td className={`text-right tabular-nums ${pctColor(pc.pctEst)}`}>{pc.pctEst}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
     </div>
   );
 }

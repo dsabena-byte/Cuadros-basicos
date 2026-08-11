@@ -395,6 +395,25 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       return { nombre, pctCB: p.pctCB, pctInf: p.pctInf, pctEst: p.pctEst, totalCB: p.totalCB, cumplidosCB: p.cumplidosCB, faltan80: faltan80(p.totalCB, p.cumplidosCB), extra, skusFaltantes: skuList(p.itemsFaltantes) };
     };
 
+    // % de cumplimiento por categoría de producto (CB · Inf · Est) de un set de items.
+    const catBreak: [string, string][] = [["LAVADO", "Lavado"], ["REFRIGERACION", "Refri"], ["COCCION", "Cocción"]];
+    const porCatDe = (items: CuadroBasicoItem[]) =>
+      catBreak
+        .map(([c, lbl]) => {
+          const its = items.filter((i) => i.categoria === c);
+          if (its.length === 0) return null;
+          const p = calcularPorcentajes(its);
+          return { categoria: lbl, pctCB: p.pctCB, pctInf: p.pctInf, pctEst: p.pctEst };
+        })
+        .filter((x): x is { categoria: string; pctCB: number; pctInf: number; pctEst: number } => x != null);
+    const itemsPorCliente = new Map<string, CuadroBasicoItem[]>();
+    const itemsPorVendedor = new Map<string, CuadroBasicoItem[]>();
+    for (const it of cbFiltrado) {
+      (itemsPorCliente.get(it.cliente) ?? itemsPorCliente.set(it.cliente, []).get(it.cliente)!).push(it);
+      const v = vendedorPorCliente.get(it.cliente);
+      if (v) (itemsPorVendedor.get(v) ?? itemsPorVendedor.set(v, []).get(v)!).push(it);
+    }
+
     const catLabel: Record<string, string> = { LAVADO: "Lavado", REFRIGERACION: "Refrigeración", COCCION: "Cocción" };
     const categoria = ["LAVADO", "REFRIGERACION", "COCCION"]
       .map((c) => seg(catLabel[c], cbFiltrado.filter((i) => i.categoria === c)))
@@ -417,7 +436,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       (clientesPorTip.get(t) ?? clientesPorTip.set(t, []).get(t)!).push({ nombre: c.nombre, pctCB: c.pctCB, faltan });
     }
     for (const arr of clientesPorTip.values()) arr.sort((a, b) => b.faltan - a.faltan);
-    const tipologia = [...tipMap.entries()].map(([t, items]) => ({ ...seg(tipLabel[t] ?? t, items), hijos: (clientesPorTip.get(t) ?? []).slice(0, 12) }));
+    const tipologia = [...tipMap.entries()].map(([t, items]) => ({ ...seg(tipLabel[t] ?? t, items), hijos: (clientesPorTip.get(t) ?? []).slice(0, 12).map((h) => ({ ...h, porCat: porCatDe(itemsPorCliente.get(h.nombre) ?? []) })) }));
 
     const gerMap = new Map<string, CuadroBasicoItem[]>();
     for (const it of cbFiltrado) {
@@ -434,7 +453,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       (vendedoresPorGer.get(v.gerente) ?? vendedoresPorGer.set(v.gerente, []).get(v.gerente)!).push({ nombre: v.nombre, pctCB: v.pctCB, faltan });
     }
     for (const arr of vendedoresPorGer.values()) arr.sort((a, b) => b.faltan - a.faltan);
-    const gerencia = [...gerMap.entries()].map(([g, items]) => ({ ...seg(g, items), hijos: (vendedoresPorGer.get(g) ?? []).slice(0, 12) }));
+    const gerencia = [...gerMap.entries()].map(([g, items]) => ({ ...seg(g, items), hijos: (vendedoresPorGer.get(g) ?? []).slice(0, 12).map((h) => ({ ...h, porCat: porCatDe(itemsPorVendedor.get(h.nombre) ?? []) })) }));
 
     const vendedor: SegAnalisis[] = cumplPorVendedor.map((v) => ({ nombre: v.nombre, pctCB: v.pctCB, pctInf: v.pctInf, pctEst: v.pctEst, totalCB: v.totalCB, cumplidosCB: v.cumplidosCB, faltan80: faltan80(v.totalCB, v.cumplidosCB), extra: v.gerente, skusFaltantes: skuList(v.itemsFaltantes) }));
     const cliente: SegAnalisis[] = cumplPorCliente.map((c) => ({ nombre: c.nombre, pctCB: c.pctCB, pctInf: c.pctInf, pctEst: c.pctEst, totalCB: c.totalCB, cumplidosCB: c.cumplidosCB, faltan80: faltan80(c.totalCB, c.cumplidosCB), extra: c.vendedor, skusFaltantes: skuList(c.itemsFaltantes) }));
