@@ -428,12 +428,12 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     const tipLabel: Record<string, string> = { "TOP 10": "Top 10", "GRANDES CUENTAS RESTO": "Grandes Cuentas Resto", HIPERMERCADOS: "Hipermercados", "SMALL RETAILERS": "Small Retailers" };
 
     // Hijos por tipología = clientes de esa tipología que arrastran el indicador.
-    const clientesPorTip = new Map<string, { nombre: string; pctCB: number; faltan: number }[]>();
+    const clientesPorTip = new Map<string, { nombre: string; pctCB: number; pctInf: number; pctEst: number; faltan: number }[]>();
     for (const c of cumplPorCliente) {
       const t = tipologiaPorCliente.get(c.nombre);
       const faltan = c.totalCB - c.cumplidosCB;
       if (!t || c.pctCB >= OBJETIVO || faltan <= 0) continue;
-      (clientesPorTip.get(t) ?? clientesPorTip.set(t, []).get(t)!).push({ nombre: c.nombre, pctCB: c.pctCB, faltan });
+      (clientesPorTip.get(t) ?? clientesPorTip.set(t, []).get(t)!).push({ nombre: c.nombre, pctCB: c.pctCB, pctInf: c.pctInf, pctEst: c.pctEst, faltan });
     }
     for (const arr of clientesPorTip.values()) arr.sort((a, b) => b.faltan - a.faltan);
     const tipologia = [...tipMap.entries()].map(([t, items]) => ({ ...seg(tipLabel[t] ?? t, items), hijos: (clientesPorTip.get(t) ?? []).slice(0, 12).map((h) => ({ ...h, porCat: porCatDe(itemsPorCliente.get(h.nombre) ?? []) })) }));
@@ -446,11 +446,11 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       (gerMap.get(g) ?? gerMap.set(g, []).get(g)!).push(it);
     }
     // Hijos por gerencia = vendedores de esa gerencia que arrastran el indicador.
-    const vendedoresPorGer = new Map<string, { nombre: string; pctCB: number; faltan: number }[]>();
+    const vendedoresPorGer = new Map<string, { nombre: string; pctCB: number; pctInf: number; pctEst: number; faltan: number }[]>();
     for (const v of cumplPorVendedor) {
       const faltan = v.totalCB - v.cumplidosCB;
       if (v.pctCB >= OBJETIVO || faltan <= 0) continue;
-      (vendedoresPorGer.get(v.gerente) ?? vendedoresPorGer.set(v.gerente, []).get(v.gerente)!).push({ nombre: v.nombre, pctCB: v.pctCB, faltan });
+      (vendedoresPorGer.get(v.gerente) ?? vendedoresPorGer.set(v.gerente, []).get(v.gerente)!).push({ nombre: v.nombre, pctCB: v.pctCB, pctInf: v.pctInf, pctEst: v.pctEst, faltan });
     }
     for (const arr of vendedoresPorGer.values()) arr.sort((a, b) => b.faltan - a.faltan);
     const gerencia = [...gerMap.entries()].map(([g, items]) => ({ ...seg(g, items), hijos: (vendedoresPorGer.get(g) ?? []).slice(0, 12).map((h) => ({ ...h, porCat: porCatDe(itemsPorVendedor.get(h.nombre) ?? []) })) }));
