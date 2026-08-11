@@ -14,6 +14,7 @@ import type {
   CuadroBasicoItem, ClasificacionCliente, VentaRow, VentasFile, Tipologia,
 } from "@/lib/types";
 import { matchesCB } from "@/lib/cb-match";
+import { AnalisisCB, type AnalisisData, type SegAnalisis } from "./AnalisisCB";
 
 const OBJETIVO = 80;
 
@@ -91,6 +92,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     cliente: "TODOS",
   });
   const [clienteSeleccionado, setClienteSeleccionado] = useState<string | null>(null);
+  const [vista, setVista] = useState<"dashboard" | "analisis">("dashboard");
 
   const updateFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
     const next = { ...filters, [key]: value };
@@ -361,6 +363,59 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     };
   }, [cbFiltrado, comprasFiltradas, vendedorPorCliente]);
 
+  // Datos para el tab "Análisis": brecha al 80% + SKUs a recuperar por segmento
+  // (la palanca accionable = cuántos cumplimientos faltan en cada segmento para
+  // que llegue al objetivo). Respeta los filtros activos.
+  const analisisData = useMemo<AnalisisData>(() => {
+    const faltan80 = (total: number, cumpl: number) => Math.max(0, Math.ceil(0.8 * total) - cumpl);
+    const seg = (nombre: string, items: CuadroBasicoItem[], extra?: string): SegAnalisis => {
+      const p = calcularPorcentajes(items);
+      return { nombre, pctCB: p.pctCB, totalCB: p.totalCB, cumplidosCB: p.cumplidosCB, faltan80: faltan80(p.totalCB, p.cumplidosCB), extra };
+    };
+
+    const catLabel: Record<string, string> = { LAVADO: "Lavado", REFRIGERACION: "Refrigeración", COCCION: "Cocción" };
+    const categoria = ["LAVADO", "REFRIGERACION", "COCCION"]
+      .map((c) => seg(catLabel[c], cbFiltrado.filter((i) => i.categoria === c)))
+      .filter((s) => s.totalCB > 0);
+
+    const tipMap = new Map<string, CuadroBasicoItem[]>();
+    for (const it of cbFiltrado) {
+      const t = tipologiaPorCliente.get(it.cliente);
+      if (!t) continue;
+      (tipMap.get(t) ?? tipMap.set(t, []).get(t)!).push(it);
+    }
+    const tipLabel: Record<string, string> = { "TOP 10": "Top 10", "GRANDES CUENTAS RESTO": "Grandes Cuentas Resto", HIPERMERCADOS: "Hipermercados", "SMALL RETAILERS": "Small Retailers" };
+    const tipologia = [...tipMap.entries()].map(([t, items]) => seg(tipLabel[t] ?? t, items));
+
+    const gerMap = new Map<string, CuadroBasicoItem[]>();
+    for (const it of cbFiltrado) {
+      const v = vendedorPorCliente.get(it.cliente);
+      const g = v ? gerentePorVendedor.get(v) : undefined;
+      if (!g) continue;
+      (gerMap.get(g) ?? gerMap.set(g, []).get(g)!).push(it);
+    }
+    const gerencia = [...gerMap.entries()].map(([g, items]) => seg(g, items));
+
+    const vendedor: SegAnalisis[] = cumplPorVendedor.map((v) => ({ nombre: v.nombre, pctCB: v.pctCB, totalCB: v.totalCB, cumplidosCB: v.cumplidosCB, faltan80: faltan80(v.totalCB, v.cumplidosCB), extra: v.gerente }));
+    const cliente: SegAnalisis[] = cumplPorCliente.map((c) => ({ nombre: c.nombre, pctCB: c.pctCB, totalCB: c.totalCB, cumplidosCB: c.cumplidosCB, faltan80: faltan80(c.totalCB, c.cumplidosCB), extra: c.vendedor }));
+
+    const puntos = evolucionMensual.map((e) => ({ mes: String(e.mes), pctCB: Number((e as Record<string, unknown>)["% CB"]) }));
+    const ultimo = puntos.length ? puntos[puntos.length - 1].pctCB : null;
+    const primero = puntos.length ? puntos[0].pctCB : null;
+    const prev = puntos.length > 1 ? puntos[puntos.length - 2].pctCB : null;
+
+    return {
+      global: { pctCB: kpisGlobales.pctCB, totalCB: kpisGlobales.totalCB, cumplidosCB: kpisGlobales.cumplidosCB, brechaPp: kpisGlobales.pctCB - OBJETIVO, faltan80: faltan80(kpisGlobales.totalCB, kpisGlobales.cumplidosCB) },
+      evolucion: {
+        puntos, ultimo, primero,
+        primerMes: puntos.length ? puntos[0].mes : null,
+        deltaMes: ultimo != null && prev != null ? ultimo - prev : null,
+        deltaDesdeInicio: ultimo != null && primero != null ? ultimo - primero : null,
+      },
+      dims: { categoria, tipologia, gerencia, vendedor, cliente },
+    };
+  }, [cbFiltrado, comprasFiltradas, cumplPorVendedor, cumplPorCliente, evolucionMensual, kpisGlobales, tipologiaPorCliente, vendedorPorCliente, gerentePorVendedor]);
+
   // Una fila por (sku, tipo). Para cada SKU agregamos a través de todos
   // los clientes filtrados: unidades FC, BO, y % cumplimiento (clientes
   // con al menos 1 unidad / clientes que tienen el SKU en su CB).
@@ -542,6 +597,15 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
           </div>
         ) : (
           <>
+            <div className="flex gap-1 border-b border-slate-200">
+              {([["dashboard", "Dashboard"], ["analisis", "📊 Análisis"]] as const).map(([v, l]) => (
+                <button key={v} onClick={() => setVista(v)} className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${vista === v ? "border-blue-600 text-blue-700" : "border-transparent text-slate-500 hover:text-slate-800"}`}>{l}</button>
+              ))}
+            </div>
+            {vista === "analisis" ? (
+              <AnalisisCB analisis={analisisData} />
+            ) : (
+            <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <KpiCard label="% Cuadro Básico" value={`${kpisGlobales.pctCB}%`} subtitle={`${kpisGlobales.cumplidosCB}/${kpisGlobales.totalCB} SKUs`} icon={<Target />} color="blue" pct={kpisGlobales.pctCB} objetivo={OBJETIVO} featured />
               <KpiCard label="% Infaltables" value={`${kpisGlobales.pctInf}%`} subtitle={`${kpisGlobales.cumplidosInf}/${kpisGlobales.totalInf} SKUs`} icon={<CheckCircle2 />} color="violet" pct={kpisGlobales.pctInf} objetivo={OBJETIVO} />
@@ -676,6 +740,8 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
             <Panel title="Detalle por SKU del Cuadro Básico" icon={<FileText className="w-4 h-4 text-slate-600" />}>
               <TablaSKUs rows={skusDetalle} mostrarClientes={filters.cliente === "TODOS"} comprasFiltradas={comprasFiltradas} cbClientesPorSku={cbClientesPorSku} />
             </Panel>
+            </>
+            )}
           </>
         )}
       </div>
