@@ -118,8 +118,8 @@ export function AnalisisTradeView({ analisis }: { analisis: AnalisisTrade }) {
         <div className="rounded-lg border border-slate-200 bg-white p-5">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400 flex items-center gap-1.5"><Store className="w-4 h-4" /> Cobertura</div>
           <div className="mt-2 text-sm text-slate-700 space-y-1">
-            <div><span className="font-bold text-lg text-slate-900">{global.tiendas}</span> tiendas en total</div>
-            <div className="text-slate-500 text-xs">{cobertura.tiendasAmbas} con CB <em>y</em> Floor Share · {cobertura.tiendasCB} con CB · {cobertura.tiendasFS} con FS</div>
+            <div><span className="font-bold text-lg text-slate-900">{global.tiendas}</span> tiendas del CB analizadas</div>
+            <div className="text-slate-500 text-xs">{cobertura.tiendasAmbas} con Floor Share medido · {cobertura.tiendasFS} tiendas con FS relevado en total</div>
           </div>
         </div>
       </div>

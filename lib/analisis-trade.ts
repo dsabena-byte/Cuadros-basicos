@@ -96,9 +96,15 @@ function nuevoCB(): CBAcc {
   return { targetCB: 0, realCB: 0, targetInf: 0, realInf: 0, faltantes: [], skusPresentes: 0 };
 }
 
-type FSAcc = { dreanUnits: number; totalUnits: number; porCat: Map<string, { drean: number; total: number }> };
+type FSCat = { drean: number; totalCol: number; allBrands: number };
+type FSAcc = { dreanUnits: number; totalCol: number; allBrands: number; porCat: Map<string, FSCat> };
 function nuevoFS(): FSAcc {
-  return { dreanUnits: 0, totalUnits: 0, porCat: new Map() };
+  return { dreanUnits: 0, totalCol: 0, allBrands: 0, porCat: new Map() };
+}
+// Denominador del share: la fila "Total" del CSV si viene; si no, la suma de
+// todas las marcas (mismo fallback `totalFromColumn || total` que el legacy).
+function fsTotal(a: { totalCol: number; allBrands: number }): number {
+  return a.totalCol || a.allBrands;
 }
 
 // Colapsa las filas CB de una tienda-sku a su semana más reciente (estado actual).
@@ -145,26 +151,30 @@ function acumularFS(acc: FSAcc, r: FloorShareEnrichedRow) {
   const u = r.units || 0;
   const ck = catKey(r.category);
   let c = acc.porCat.get(ck);
-  if (!c) { c = { drean: 0, total: 0 }; acc.porCat.set(ck, c); }
+  if (!c) { c = { drean: 0, totalCol: 0, allBrands: 0 }; acc.porCat.set(ck, c); }
   if ((r.brand || "").trim().toLowerCase() === "total") {
-    acc.totalUnits += u;
-    c.total += u;
-  } else {
-    if (r.brand === FS_DREAN) { acc.dreanUnits += u; c.drean += u; }
+    acc.totalCol += u;
+    c.totalCol += u;
+    return;
   }
+  acc.allBrands += u;
+  c.allBrands += u;
+  if (r.brand === FS_DREAN) { acc.dreanUnits += u; c.drean += u; }
 }
 
 // Share y objetivo ponderado de un acumulador FS. Si el CSV no traía fila
 // "Total", cae a la suma de todas las marcas (que acá no guardamos aparte),
 // por eso el total se toma de la fila "Total" — consistente con el legacy.
 function shareDe(fs: FSAcc): { share: number | null; target: number | null } {
-  if (fs.totalUnits <= 0) return { share: null, target: null };
-  const share = (fs.dreanUnits / fs.totalUnits) * 100;
+  const total = fsTotal(fs);
+  if (total <= 0) return { share: null, target: null };
+  const share = (fs.dreanUnits / total) * 100;
   // objetivo ponderado por unidades totales de cada categoría presente
   let tw = 0, w = 0;
   for (const [ck, v] of fs.porCat) {
     const t = fsTargetForCat(ck);
-    if (t != null && v.total > 0) { tw += t * v.total; w += v.total; }
+    const vt = fsTotal(v);
+    if (t != null && vt > 0) { tw += t * vt; w += vt; }
   }
   return { share, target: w > 0 ? tw / w : null };
 }
@@ -177,13 +187,14 @@ function pct(real: number, target: number): number {
 // Drean en góndola, con k = unidades Drean actuales / SKUs de CB presentes
 // (calibrado con la propia data de la tienda/segmento). Es una ESTIMACIÓN.
 function uplift(cb: CBAcc, fs: FSAcc): { upliftPp: number | null; proyectado: number | null } {
-  if (fs.totalUnits <= 0 || fs.dreanUnits <= 0 || cb.skusPresentes <= 0 || cb.faltantes.length === 0) {
+  const total = fsTotal(fs);
+  if (total <= 0 || fs.dreanUnits <= 0 || cb.skusPresentes <= 0 || cb.faltantes.length === 0) {
     return { upliftPp: null, proyectado: null };
   }
   const k = fs.dreanUnits / cb.skusPresentes;
   const add = k * cb.faltantes.length;
-  const shareActual = (fs.dreanUnits / fs.totalUnits) * 100;
-  const shareNuevo = ((fs.dreanUnits + add) / (fs.totalUnits + add)) * 100;
+  const shareActual = (fs.dreanUnits / total) * 100;
+  const shareNuevo = ((fs.dreanUnits + add) / (total + add)) * 100;
   return { upliftPp: Math.round((shareNuevo - shareActual) * 10) / 10, proyectado: Math.round(shareNuevo * 10) / 10 };
 }
 
@@ -225,7 +236,7 @@ function armarSegmento(
     fsShare: share == null ? null : Math.round(share * 10) / 10,
     fsTarget: target == null ? null : Math.round(target * 10) / 10,
     dreanUnits: Math.round(fs.dreanUnits),
-    totalUnits: Math.round(fs.totalUnits),
+    totalUnits: Math.round(fsTotal(fs)),
     cuadrante: clasificarCuadrante(pct(cb.realCB, cb.targetCB), share, target),
     skusFaltantes: cb.faltantes,
     upliftPp: up.upliftPp,
@@ -282,14 +293,17 @@ export function construirAnalisisTrade(
     acumularFS(a, r);
   }
 
-  const todasTiendas = new Set<string>([...cbPorTienda.keys(), ...fsPorTienda.keys()]);
+  // El cruce se hace sobre las tiendas del CB (donde "cerrar CB" es accionable);
+  // a cada una se le adjunta su Floor Share si existe. Las tiendas con FS pero
+  // sin CB no entran acá (no hay palanca de CB que accionar en ellas).
+  const todasTiendas = new Set<string>(cbPorTienda.keys());
 
   // Segmentos por tienda.
   const tiendasSeg: SegmentoTrade[] = [];
   for (const num of todasTiendas) {
     const cb = cbPorTienda.get(num) ?? nuevoCB();
     const fs = fsPorTienda.get(num) ?? nuevoFS();
-    if (cb.targetCB === 0 && fs.totalUnits === 0) continue;
+    if (cb.targetCB === 0) continue;
     tiendasSeg.push(
       armarSegmento(nombreTienda.get(num) || num, "tienda", cb, fs, 1, {
         cadena: cadenaPorTienda.get(num),
@@ -323,17 +337,17 @@ export function construirAnalisisTrade(
       }
       const fsT = fsPorTienda.get(num);
       if (fsT) {
-        fs.dreanUnits += fsT.dreanUnits; fs.totalUnits += fsT.totalUnits;
+        fs.dreanUnits += fsT.dreanUnits; fs.totalCol += fsT.totalCol; fs.allBrands += fsT.allBrands;
         for (const [ck, v] of fsT.porCat) {
-          let c = fs.porCat.get(ck); if (!c) { c = { drean: 0, total: 0 }; fs.porCat.set(ck, c); }
-          c.drean += v.drean; c.total += v.total;
+          let c = fs.porCat.get(ck); if (!c) { c = { drean: 0, totalCol: 0, allBrands: 0 }; fs.porCat.set(ck, c); }
+          c.drean += v.drean; c.totalCol += v.totalCol; c.allBrands += v.allBrands;
         }
       }
     }
     const out: SegmentoTrade[] = [];
     for (const key of cbG.keys()) {
       const cb = cbG.get(key)!; const fs = fsG.get(key)!;
-      if (cb.targetCB === 0 && fs.totalUnits === 0) continue;
+      if (cb.targetCB === 0 && fsTotal(fs) === 0) continue;
       out.push(armarSegmento(key, tipo, cb, fs, setTiendas.get(key)?.size ?? 0));
     }
     return out;
@@ -351,11 +365,13 @@ export function construirAnalisisTrade(
     cbGlobal.targetInf += a.targetInf; cbGlobal.realInf += a.realInf;
     cbGlobal.skusPresentes += a.skusPresentes; cbGlobal.faltantes.push(...a.faltantes);
   }
-  for (const a of fsPorTienda.values()) {
-    fsGlobal.dreanUnits += a.dreanUnits; fsGlobal.totalUnits += a.totalUnits;
+  for (const num of todasTiendas) {
+    const a = fsPorTienda.get(num);
+    if (!a) continue;
+    fsGlobal.dreanUnits += a.dreanUnits; fsGlobal.totalCol += a.totalCol; fsGlobal.allBrands += a.allBrands;
     for (const [ck, v] of a.porCat) {
-      let c = fsGlobal.porCat.get(ck); if (!c) { c = { drean: 0, total: 0 }; fsGlobal.porCat.set(ck, c); }
-      c.drean += v.drean; c.total += v.total;
+      let c = fsGlobal.porCat.get(ck); if (!c) { c = { drean: 0, totalCol: 0, allBrands: 0 }; fsGlobal.porCat.set(ck, c); }
+      c.drean += v.drean; c.totalCol += v.totalCol; c.allBrands += v.allBrands;
     }
   }
   const gShare = shareDe(fsGlobal);
@@ -370,13 +386,14 @@ export function construirAnalisisTrade(
   const categorias = [...fsGlobal.porCat.keys()].map((ck) => {
     const v = fsGlobal.porCat.get(ck)!;
     const cbc = cbPorCat.get(ck);
+    const vt = fsTotal(v);
     return {
       categoria: ck,
-      fsShare: v.total > 0 ? Math.round((v.drean / v.total) * 1000) / 10 : null,
+      fsShare: vt > 0 ? Math.round((v.drean / vt) * 1000) / 10 : null,
       fsTarget: fsTargetForCat(ck),
       pctCB: cbc ? pct(cbc.real, cbc.target) : 0,
       dreanUnits: Math.round(v.drean),
-      totalUnits: Math.round(v.total),
+      totalUnits: Math.round(vt),
     };
   });
 
@@ -397,9 +414,9 @@ export function construirAnalisisTrade(
       fsShare: gShare.share == null ? null : Math.round(gShare.share * 10) / 10,
       fsTarget: gShare.target == null ? null : Math.round(gShare.target * 10) / 10,
       dreanUnits: Math.round(fsGlobal.dreanUnits),
-      totalUnits: Math.round(fsGlobal.totalUnits),
+      totalUnits: Math.round(fsTotal(fsGlobal)),
       tiendas: todasTiendas.size,
-      tiendasConFS: tiendasFS,
+      tiendasConFS: tiendasAmbas,
     },
     matriz,
     cadenas,
