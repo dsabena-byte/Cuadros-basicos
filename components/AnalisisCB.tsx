@@ -125,31 +125,24 @@ function HijosDrill({ hijos, label }: { hijos?: SegHijo[]; label: string }) {
     <div className="mt-1 mb-1 rounded border border-slate-200 bg-slate-50 p-2 space-y-1.5">
       <div className="text-[10px] text-slate-400">Principales {label} que suben el indicador — % cumplimiento por categoría:</div>
       {hijos.map((h) => (
-        <div key={h.nombre} className="rounded border border-slate-200 bg-white px-2 py-1">
-          <div className="flex items-center justify-between text-[11px]">
-            <span className="font-medium text-slate-800 truncate" title={h.nombre}>{h.nombre}</span>
-            <span className={`tabular-nums font-semibold ${pctColor(h.pctCB)}`}>{h.pctCB}% CB</span>
+        <div key={h.nombre} className="rounded border border-slate-200 bg-white px-2 py-1.5">
+          <div className="flex items-center gap-2 text-[11px] mb-1">
+            <span className="font-medium text-slate-800 truncate flex-1" title={h.nombre}>{h.nombre}</span>
           </div>
-          <table className="w-full text-[10px] mt-0.5">
-            <thead>
-              <tr className="text-slate-400">
-                <th className="text-left font-normal"></th>
-                <th className="text-right font-normal w-10">CB</th>
-                <th className="text-right font-normal w-10">Inf</th>
-                <th className="text-right font-normal w-10">Est</th>
-              </tr>
-            </thead>
-            <tbody>
-              {h.porCat.map((pc) => (
-                <tr key={pc.categoria}>
-                  <td className="text-slate-500">{pc.categoria}</td>
-                  <td className={`text-right tabular-nums ${pctColor(pc.pctCB)}`}>{pc.pctCB}%</td>
-                  <td className={`text-right tabular-nums ${pctColor(pc.pctInf)}`}>{pc.pctInf}%</td>
-                  <td className={`text-right tabular-nums ${pctColor(pc.pctEst)}`}>{pc.pctEst}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div className="flex items-center gap-1 text-[9px] uppercase tracking-wide text-slate-400">
+            <span className="flex-1" />
+            <span className="w-9 text-right">CB</span>
+            <span className="w-9 text-right">Inf</span>
+            <span className="w-9 text-right">Est</span>
+          </div>
+          {h.porCat.map((pc) => (
+            <div key={pc.categoria} className="flex items-center gap-1 text-[10px] py-0.5 border-t border-slate-50">
+              <span className="flex-1 text-slate-500 truncate">{pc.categoria}</span>
+              <span className={`w-9 text-right tabular-nums ${pctColor(pc.pctCB)}`}>{pc.pctCB}%</span>
+              <span className={`w-9 text-right tabular-nums ${pctColor(pc.pctInf)}`}>{pc.pctInf}%</span>
+              <span className={`w-9 text-right tabular-nums ${pctColor(pc.pctEst)}`}>{pc.pctEst}%</span>
+            </div>
+          ))}
         </div>
       ))}
     </div>
