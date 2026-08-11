@@ -167,11 +167,12 @@ function clasificar(pctCB: number, share: number | null, obj: number | null): Cu
   return "fragil";
 }
 
-// Estimación conservadora del FS al reponer los SKUs de CB faltantes de ESA
-// categoría. Supuesto: cada SKU repuesto suma las unidades PROMEDIO de un SKU
-// del cuadro básico en esa góndola — repartiendo las unidades Drean actuales
-// sobre TODOS los SKUs del CB (presentes + faltantes), no solo los presentes.
-// Así no sobreestima cuando el cumplimiento es bajo.
+// Estimación del FS al reponer los SKUs de CB faltantes de ESA categoría.
+// Supuestos:
+//  · cada SKU repuesto suma las unidades PROMEDIO de un SKU del cuadro básico
+//    (unidades Drean repartidas sobre TODOS los SKUs del CB, presentes+faltantes);
+//  · Drean DESPLAZA a la competencia: el total de góndola queda fijo, así que
+//    esas unidades se restan de los competidores (no agrandan el anaquel).
 function uplift(cb: CBAcc, fs: FSAcc): { upliftPp: number | null; proyectado: number | null } {
   const total = fsTotal(fs);
   const slots = cb.skusPresentes + cb.faltantes.length; // SKUs del CB de la categoría
@@ -181,7 +182,8 @@ function uplift(cb: CBAcc, fs: FSAcc): { upliftPp: number | null; proyectado: nu
   const porSku = fs.dreanUnits / slots;          // unidades promedio por SKU del CB
   const add = porSku * cb.faltantes.length;
   const actual = (fs.dreanUnits / total) * 100;
-  const nuevo = ((fs.dreanUnits + add) / (total + add)) * 100;
+  const nuevaDrean = Math.min(fs.dreanUnits + add, total); // no puede superar el total
+  const nuevo = (nuevaDrean / total) * 100;                // total FIJO (desplaza competencia)
   return { upliftPp: r1(nuevo - actual), proyectado: r1(nuevo) };
 }
 
@@ -249,9 +251,13 @@ export function construirAnalisisTrade(
   floorShare: FSDataset | null,
   semanas?: Set<number>,
 ): AnalisisTrade {
-  const enPeriodo = (sem: number | null | undefined) => !semanas || (sem != null && semanas.has(sem));
-  const cbRows = latestCB(rows.filter((r) => (r.targetCB || 0) > 0 && enPeriodo(r.semana)));
-  const fsRows = latestFS((floorShare?.rows ?? []).filter((r) => enPeriodo(r.semana ?? undefined)));
+  // "Estado al cierre del período": para cada tienda/SKU tomamos el ÚLTIMO
+  // relevamiento con semana ≤ al cierre del período elegido. Así el FS (y el CB)
+  // no se caen cuando la tienda se relevó en otra semana — el relevamiento es
+  // por rotación, no todas las semanas. Por eso antes muchas quedaban "sin FS".
+  const cierre = semanas && semanas.size ? Math.max(...semanas) : Infinity;
+  const cbRows = latestCB(rows.filter((r) => (r.targetCB || 0) > 0 && (r.semana ?? Infinity) <= cierre));
+  const fsRows = latestFS((floorShare?.rows ?? []).filter((r) => (r.semana ?? -1) <= cierre));
 
   const cadenaPorTienda = new Map<string, string>();
   const nombreTienda = new Map<string, string>();

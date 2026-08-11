@@ -5,13 +5,14 @@ import { ChevronRight, ChevronDown, TrendingUp, Info } from "lucide-react";
 import type { AnalisisTrade, NodoTrade, CategoriaAnalisis, Cuadrante } from "@/lib/analisis-trade";
 import { CB_OBJETIVO } from "@/lib/analisis-trade";
 
-const CUAD: Record<Cuadrante, { label: string; badge: string; dot: string }> = {
-  surtido:   { label: "Falta surtido",     badge: "bg-rose-50 text-rose-700 border-rose-200", dot: "bg-rose-500" },
-  ejecucion: { label: "Ejecución góndola", badge: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" },
-  sostener:  { label: "Sostener",          badge: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
-  fragil:    { label: "Frágil",            badge: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500" },
-  sinFS:     { label: "Sin FS",            badge: "bg-slate-100 text-slate-500 border-slate-200", dot: "bg-slate-400" },
+const CUAD: Record<Cuadrante, { label: string; desc: string; badge: string; dot: string }> = {
+  surtido:   { label: "Falta surtido",     desc: "CB bajo + FS bajo: no tiene los SKUs del cuadro básico ni ocupa góndola. Reponer surtido es la palanca más directa para subir el share.", badge: "bg-rose-50 text-rose-700 border-rose-200", dot: "bg-rose-500" },
+  ejecucion: { label: "Ejecución góndola", desc: "CB alto + FS bajo: SÍ tiene los SKUs del CB pero ocupa poca góndola. El problema no es de compra sino de exhibición — el promotor tiene que ganar espacio y bloque. Reponer más CB casi no ayuda acá.", badge: "bg-amber-50 text-amber-700 border-amber-200", dot: "bg-amber-500" },
+  sostener:  { label: "Sostener",          desc: "CB alto + FS alto: tiene los SKUs y buena góndola. Mantener.", badge: "bg-emerald-50 text-emerald-700 border-emerald-200", dot: "bg-emerald-500" },
+  fragil:    { label: "Frágil",            desc: "CB bajo + FS alto: buena góndola apoyada en pocos SKUs del CB. Share frágil — riesgoso si entra competencia o se discontinúa un modelo.", badge: "bg-blue-50 text-blue-700 border-blue-200", dot: "bg-blue-500" },
+  sinFS:     { label: "Sin FS",            desc: "Sin datos de góndola para esa tienda/categoría.", badge: "bg-slate-100 text-slate-500 border-slate-200", dot: "bg-slate-400" },
 };
+const CUAD_ORDEN: Cuadrante[] = ["surtido", "ejecucion", "sostener", "fragil"];
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -152,7 +153,6 @@ export function AnalisisTradeView({ periodos }: { periodos: Periodo[] }) {
 
   if (!periodo || !cat) return <div className="text-sm text-slate-500">Sin datos para analizar en este período.</div>;
 
-  const semMin = Math.min(...periodo.semanas);
   const semMax = Math.max(...periodo.semanas);
 
   return (
@@ -163,15 +163,25 @@ export function AnalisisTradeView({ periodos }: { periodos: Periodo[] }) {
         {periodos.map((p, i) => (
           <button key={p.mes} onClick={() => setPIdx(i)} className={`px-2.5 py-1 rounded text-xs capitalize ${i === pIdx ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{p.mes}</button>
         ))}
-        <span className="text-[11px] text-slate-400">· mes fiscal (semanas {semMin}–{semMax})</span>
+        <span className="text-[11px] text-slate-400">· estado al cierre del mes (hasta semana {semMax})</span>
       </div>
 
       {/* Leyenda */}
       <div className="flex items-start gap-2 text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-lg p-3">
         <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
         <div>
-          <strong>Cómo leerlo:</strong> el análisis es <strong>por categoría</strong> (nunca promediado). <strong>Desv. CB</strong> = %CB − {CB_OBJETIVO}% (¿la tienda tiene los SKUs del cuadro básico?). <strong>Desv. FS</strong> = share − objetivo de góndola de la categoría (¿cuánta góndola ocupa Drean?). <strong>INF</strong> = Infaltable · <strong>EST</strong> = Estratégico. Los SKUs listados son los que <strong>faltan</strong> en la tienda (a reponer). <strong>FS si reponés</strong> = share estimado de la categoría si el cliente repone esos SKUs (estimación conservadora, no medición) — es la conexión CB→góndola. Los datos son del <strong>período</strong> elegido arriba (mes fiscal).
+          <strong>Cómo leerlo:</strong> el análisis es <strong>por categoría</strong> (nunca promediado). <strong>Desv. CB</strong> = %CB − {CB_OBJETIVO}% (¿la tienda tiene los SKUs del cuadro básico?). <strong>Desv. FS</strong> = share − objetivo de góndola de la categoría (¿cuánta góndola ocupa Drean?). <strong>INF</strong> = Infaltable · <strong>EST</strong> = Estratégico. Los SKUs listados son los que <strong>faltan</strong> en la tienda (a reponer). <strong>FS si reponés</strong> = share estimado de la categoría si el cliente repone esos SKUs (estimación conservadora, no medición) — es la conexión CB→góndola. Los datos son el <strong>estado al cierre</strong> del período elegido arriba (último relevamiento de cada tienda hasta ese mes).
         </div>
+      </div>
+
+      {/* Qué significa cada cuadrante */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {CUAD_ORDEN.map((q) => (
+          <div key={q} className="flex items-start gap-2 text-[11px] text-slate-600 border border-slate-200 rounded-lg p-2 bg-white">
+            <span className={`w-2 h-2 rounded-full mt-1 shrink-0 ${CUAD[q].dot}`} />
+            <div><span className="font-semibold text-slate-800">{CUAD[q].label}.</span> {CUAD[q].desc}</div>
+          </div>
+        ))}
       </div>
 
       {/* Cards por categoría (y selector) */}
