@@ -201,15 +201,34 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     [cuadroBasico, filters, vendedorPorCliente, gerentePorVendedor],
   );
 
+  // Ventana de FACTURACIÓN a MES CERRADO por tipología: Small Retailers mira los
+  // últimos 3 meses cerrados; el resto (Top 10, Grandes Cuentas Resto,
+  // Hipermercados) mira los últimos 2. El BO cuenta acumulado como siempre.
+  // Si hay filtro de MES activo, manda el filtro (comprasFiltradas ya lo acotó).
+  const mesEnCurso = new Date(ventas.generatedAt).getMonth() + 1;
+  const hayFiltroMes = filters.mes.length > 0;
+  const ventanaFC = (tip: Tipologia): Set<number> => {
+    const n = tip === "SMALL RETAILERS" ? 3 : 2;
+    const s = new Set<number>();
+    for (let k = 1; k <= n; k++) {
+      const m = mesEnCurso - k;
+      if (m >= 1) s.add(m);
+    }
+    return s;
+  };
+  const enVentana = (c: VentaRow, tip: Tipologia): boolean => {
+    if (hayFiltroMes) return true;    // el filtro de MES ya acotó las compras
+    if (c.tipo === "BO") return true; // BO acumulado, como estaba
+    return ventanaFC(tip).has(c.mes); // FC: solo los meses cerrados de la tipología
+  };
+
   const calcularPorcentajes = (items: CuadroBasicoItem[]) => {
-    // "Cumplido" = la suma de unidades (FC + BO) del par (cliente, sku) es
-    // > 0 en el universo filtrado. Mismo criterio que TablaSKUs — antes
-    // se usaba `some(...)` que daba true para filas con 0 unidades
-    // (ajustes/cancelaciones), inflando el % vs lo que veías en la tabla.
+    // "Cumplido" = la suma de unidades (FC + BO) del par (cliente, sku), dentro de
+    // la ventana a mes cerrado de la tipología, es > 0. Mismo criterio que TablaSKUs.
     const cumplido = (item: CuadroBasicoItem) => {
       let total = 0;
       for (const c of comprasFiltradas) {
-        if (matchesCB(c, item)) total += c.unidades;
+        if (matchesCB(c, item) && enVentana(c, item.tipologia)) total += c.unidades;
       }
       return total > 0;
     };
@@ -226,6 +245,8 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       totalCB, cumplidosCB,
       totalInf: inf.length, cumplidosInf,
       totalEst: est.length, cumplidosEst,
+      // Items del CB NO cumplidos (para desplegar los SKUs a recuperar).
+      itemsFaltantes: items.filter((i) => !cumplido(i)),
     };
   };
 
@@ -368,9 +389,10 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
   // que llegue al objetivo). Respeta los filtros activos.
   const analisisData = useMemo<AnalisisData>(() => {
     const faltan80 = (total: number, cumpl: number) => Math.max(0, Math.ceil(0.8 * total) - cumpl);
+    const skuList = (its: CuadroBasicoItem[]) => its.map((i) => ({ sku: i.sku, cliente: i.cliente, categoria: i.categoria, tipo: i.tipo }));
     const seg = (nombre: string, items: CuadroBasicoItem[], extra?: string): SegAnalisis => {
       const p = calcularPorcentajes(items);
-      return { nombre, pctCB: p.pctCB, totalCB: p.totalCB, cumplidosCB: p.cumplidosCB, faltan80: faltan80(p.totalCB, p.cumplidosCB), extra };
+      return { nombre, pctCB: p.pctCB, totalCB: p.totalCB, cumplidosCB: p.cumplidosCB, faltan80: faltan80(p.totalCB, p.cumplidosCB), extra, skusFaltantes: skuList(p.itemsFaltantes) };
     };
 
     const catLabel: Record<string, string> = { LAVADO: "Lavado", REFRIGERACION: "Refrigeración", COCCION: "Cocción" };
@@ -396,8 +418,8 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     }
     const gerencia = [...gerMap.entries()].map(([g, items]) => seg(g, items));
 
-    const vendedor: SegAnalisis[] = cumplPorVendedor.map((v) => ({ nombre: v.nombre, pctCB: v.pctCB, totalCB: v.totalCB, cumplidosCB: v.cumplidosCB, faltan80: faltan80(v.totalCB, v.cumplidosCB), extra: v.gerente }));
-    const cliente: SegAnalisis[] = cumplPorCliente.map((c) => ({ nombre: c.nombre, pctCB: c.pctCB, totalCB: c.totalCB, cumplidosCB: c.cumplidosCB, faltan80: faltan80(c.totalCB, c.cumplidosCB), extra: c.vendedor }));
+    const vendedor: SegAnalisis[] = cumplPorVendedor.map((v) => ({ nombre: v.nombre, pctCB: v.pctCB, totalCB: v.totalCB, cumplidosCB: v.cumplidosCB, faltan80: faltan80(v.totalCB, v.cumplidosCB), extra: v.gerente, skusFaltantes: skuList(v.itemsFaltantes) }));
+    const cliente: SegAnalisis[] = cumplPorCliente.map((c) => ({ nombre: c.nombre, pctCB: c.pctCB, totalCB: c.totalCB, cumplidosCB: c.cumplidosCB, faltan80: faltan80(c.totalCB, c.cumplidosCB), extra: c.vendedor, skusFaltantes: skuList(c.itemsFaltantes) }));
 
     const puntos = evolucionMensual.map((e) => ({ mes: String(e.mes), pctCB: Number((e as Record<string, unknown>)["% CB"]) }));
     const ultimo = puntos.length ? puntos[puntos.length - 1].pctCB : null;
