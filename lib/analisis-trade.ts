@@ -15,7 +15,7 @@
 //   Objetivos FS: Lavado 32 · Refrigeracion 25 · Coccion 23.
 
 import type { DataRow } from "./parse";
-import { normalizeStoreNumber } from "./parse";
+import { normalizeStoreNumber, semanaToMes } from "./parse";
 import type { FloorShareDataset as FSDataset, FloorShareEnrichedRow as FSRow } from "./dataset-floorshare";
 
 export const CB_OBJETIVO = 80;
@@ -167,14 +167,19 @@ function clasificar(pctCB: number, share: number | null, obj: number | null): Cu
   return "fragil";
 }
 
-// Uplift de FS al reponer los SKUs de CB faltantes de ESA categoría. Cada SKU
-// que pasa a presente suma ~k unidades Drean (k = uds Drean / SKUs presentes).
+// Estimación conservadora del FS al reponer los SKUs de CB faltantes de ESA
+// categoría. Supuesto: cada SKU repuesto suma las unidades PROMEDIO de un SKU
+// del cuadro básico en esa góndola — repartiendo las unidades Drean actuales
+// sobre TODOS los SKUs del CB (presentes + faltantes), no solo los presentes.
+// Así no sobreestima cuando el cumplimiento es bajo.
 function uplift(cb: CBAcc, fs: FSAcc): { upliftPp: number | null; proyectado: number | null } {
   const total = fsTotal(fs);
-  if (total <= 0 || fs.dreanUnits <= 0 || cb.skusPresentes <= 0 || cb.faltantes.length === 0) {
+  const slots = cb.skusPresentes + cb.faltantes.length; // SKUs del CB de la categoría
+  if (total <= 0 || fs.dreanUnits <= 0 || cb.skusPresentes <= 0 || cb.faltantes.length === 0 || slots <= 0) {
     return { upliftPp: null, proyectado: null };
   }
-  const add = (fs.dreanUnits / cb.skusPresentes) * cb.faltantes.length;
+  const porSku = fs.dreanUnits / slots;          // unidades promedio por SKU del CB
+  const add = porSku * cb.faltantes.length;
   const actual = (fs.dreanUnits / total) * 100;
   const nuevo = ((fs.dreanUnits + add) / (total + add)) * 100;
   return { upliftPp: r1(nuevo - actual), proyectado: r1(nuevo) };
@@ -218,9 +223,35 @@ function deep<T>(tree: Map<string, Map<string, Map<string, T>>>, a: string, b: s
 
 // ── entrada principal ──────────────────────────────────────────────────────
 
-export function construirAnalisisTrade(rows: DataRow[], floorShare: FSDataset | null): AnalisisTrade {
-  const cbRows = latestCB(rows.filter((r) => (r.targetCB || 0) > 0));
-  const fsRows = latestFS(floorShare?.rows ?? []);
+// Meses fiscales disponibles (derivados de las semanas presentes en CB o FS),
+// del más viejo al más nuevo. El último es el período por defecto.
+export function periodosDisponibles(
+  rows: DataRow[],
+  floorShare: FSDataset | null,
+): { mes: string; semanas: number[]; semanaMax: number }[] {
+  const porMes = new Map<string, Set<number>>();
+  const add = (sem: number | null | undefined) => {
+    if (sem == null || !Number.isFinite(sem)) return;
+    const mes = semanaToMes(sem);
+    let s = porMes.get(mes);
+    if (!s) { s = new Set(); porMes.set(mes, s); }
+    s.add(sem);
+  };
+  for (const r of rows) if ((r.targetCB || 0) > 0) add(r.semana);
+  for (const r of floorShare?.rows ?? []) add(r.semana ?? undefined);
+  return [...porMes.entries()]
+    .map(([mes, set]) => ({ mes, semanas: [...set].sort((a, b) => a - b), semanaMax: Math.max(...set) }))
+    .sort((a, b) => a.semanaMax - b.semanaMax);
+}
+
+export function construirAnalisisTrade(
+  rows: DataRow[],
+  floorShare: FSDataset | null,
+  semanas?: Set<number>,
+): AnalisisTrade {
+  const enPeriodo = (sem: number | null | undefined) => !semanas || (sem != null && semanas.has(sem));
+  const cbRows = latestCB(rows.filter((r) => (r.targetCB || 0) > 0 && enPeriodo(r.semana)));
+  const fsRows = latestFS((floorShare?.rows ?? []).filter((r) => enPeriodo(r.semana ?? undefined)));
 
   const cadenaPorTienda = new Map<string, string>();
   const nombreTienda = new Map<string, string>();

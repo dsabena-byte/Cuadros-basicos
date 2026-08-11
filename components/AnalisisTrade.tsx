@@ -130,9 +130,15 @@ function CategoriaCard({ c, activa, onClick }: { c: CategoriaAnalisis; activa: b
   );
 }
 
-export function AnalisisTradeView({ analisis }: { analisis: AnalisisTrade }) {
-  const { categorias, cobertura } = analisis;
-  // Default: la categoría con mayor déficit de Floor Share (mayor oportunidad).
+type Periodo = { mes: string; semanas: number[]; analisis: AnalisisTrade };
+
+export function AnalisisTradeView({ periodos }: { periodos: Periodo[] }) {
+  const [pIdx, setPIdx] = useState(Math.max(0, periodos.length - 1));
+  const [sel, setSel] = useState<string | undefined>(undefined);
+  const periodo = periodos[pIdx];
+  const categorias = periodo?.analisis.categorias ?? [];
+  const cobertura = periodo?.analisis.cobertura ?? { tiendasCB: 0, tiendasFS: 0, tiendasAmbas: 0 };
+  // Default de categoría: la de mayor déficit de Floor Share (mayor oportunidad).
   const peor = useMemo(() => {
     let best = categorias[0]?.categoria;
     let worst = Infinity;
@@ -142,18 +148,29 @@ export function AnalisisTradeView({ analisis }: { analisis: AnalisisTrade }) {
     }
     return best;
   }, [categorias]);
-  const [sel, setSel] = useState<string | undefined>(peor);
-  const cat = categorias.find((c) => c.categoria === sel) ?? categorias[0];
+  const cat = categorias.find((c) => c.categoria === (sel ?? peor)) ?? categorias[0];
 
-  if (!cat) return <div className="text-sm text-slate-500">Sin datos para analizar.</div>;
+  if (!periodo || !cat) return <div className="text-sm text-slate-500">Sin datos para analizar en este período.</div>;
+
+  const semMin = Math.min(...periodo.semanas);
+  const semMax = Math.max(...periodo.semanas);
 
   return (
     <div className="space-y-4 sm:space-y-5">
+      {/* Selector de período */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-xs font-semibold text-slate-500">Período:</span>
+        {periodos.map((p, i) => (
+          <button key={p.mes} onClick={() => setPIdx(i)} className={`px-2.5 py-1 rounded text-xs capitalize ${i === pIdx ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{p.mes}</button>
+        ))}
+        <span className="text-[11px] text-slate-400">· mes fiscal (semanas {semMin}–{semMax})</span>
+      </div>
+
       {/* Leyenda */}
       <div className="flex items-start gap-2 text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-lg p-3">
         <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
         <div>
-          <strong>Cómo leerlo:</strong> el análisis es <strong>por categoría</strong> (nunca promediado). <strong>Desv. CB</strong> = %CB − {CB_OBJETIVO}% (¿la tienda tiene los SKUs del cuadro básico?). <strong>Desv. FS</strong> = share − objetivo de góndola de la categoría (¿cuánta góndola ocupa Drean?). <strong>INF</strong> = Infaltable · <strong>EST</strong> = Estratégico. Los SKUs listados son los que <strong>faltan</strong> en la tienda (a reponer); reponerlos es lo que sube el Floor Share.
+          <strong>Cómo leerlo:</strong> el análisis es <strong>por categoría</strong> (nunca promediado). <strong>Desv. CB</strong> = %CB − {CB_OBJETIVO}% (¿la tienda tiene los SKUs del cuadro básico?). <strong>Desv. FS</strong> = share − objetivo de góndola de la categoría (¿cuánta góndola ocupa Drean?). <strong>INF</strong> = Infaltable · <strong>EST</strong> = Estratégico. Los SKUs listados son los que <strong>faltan</strong> en la tienda (a reponer). <strong>FS si reponés</strong> = share estimado de la categoría si el cliente repone esos SKUs (estimación conservadora, no medición) — es la conexión CB→góndola. Los datos son del <strong>período</strong> elegido arriba (mes fiscal).
         </div>
       </div>
 
@@ -173,7 +190,7 @@ export function AnalisisTradeView({ analisis }: { analisis: AnalisisTrade }) {
         </div>
         <p className="text-xs text-slate-500 mb-3">
           {cat.nTiendas} tiendas · CB {cat.pctCB}% (<Desvio v={cat.desvCB} />) · FS {cat.fsShare == null ? "s/d" : `${cat.fsShare}%`} (<Desvio v={cat.desvFS} />) · {cat.faltanTotal} SKUs faltantes en total.
-          Ordenado por <strong>uplift de FS al reponer los SKUs de CB faltantes</strong>. Tocá un cliente → tienda → SKUs.
+          Ordenado por <strong>cuánto sube el Floor Share al reponer los SKUs de CB faltantes</strong> (estimado). Tocá un cliente → tienda → SKUs.
         </p>
 
         <div className="bg-white rounded-lg border border-slate-200 divide-y divide-slate-100">
@@ -185,7 +202,7 @@ export function AnalisisTradeView({ analisis }: { analisis: AnalisisTrade }) {
             <span className="w-24 text-right">Cuadro Básico</span>
             <span className="w-24 text-right">Floor Share</span>
             <span className="w-16 text-right">Faltan</span>
-            <span className="w-28 text-right">Uplift FS</span>
+            <span className="w-28 text-right">FS si reponés</span>
           </div>
           {cat.clientes.map((n) => <FilaCliente key={n.nombre} n={n} />)}
           {cat.clientes.length === 0 && <div className="p-4 text-sm text-slate-500">Sin clientes en esta categoría.</div>}

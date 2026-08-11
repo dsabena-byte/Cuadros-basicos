@@ -1,5 +1,5 @@
 import { getDataset } from "@/lib/data-source";
-import { construirAnalisisTrade } from "@/lib/analisis-trade";
+import { construirAnalisisTrade, periodosDisponibles } from "@/lib/analisis-trade";
 import { AnalisisTradeView } from "@/components/AnalisisTrade";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,12 @@ export const revalidate = 0;
 
 export default async function Page({ searchParams }: { searchParams?: { embed?: string } }) {
   const dataset = await getDataset();
-  const analisis = construirAnalisisTrade(dataset.rows, dataset.floorShare);
+  // Un análisis por mes fiscal (el último es el default en la vista).
+  const periodos = periodosDisponibles(dataset.rows, dataset.floorShare).map((p) => ({
+    mes: p.mes,
+    semanas: p.semanas,
+    analisis: construirAnalisisTrade(dataset.rows, dataset.floorShare, new Set(p.semanas)),
+  }));
   const embed = searchParams?.embed === "1";
 
   return (
@@ -20,7 +25,7 @@ export default async function Page({ searchParams }: { searchParams?: { embed?: 
             <p className="text-sm text-slate-500">Cómo cerrar el Cuadro Básico en cada tienda impacta el share de góndola de Drean.</p>
           </header>
         )}
-        <AnalisisTradeView analisis={analisis} />
+        <AnalisisTradeView periodos={periodos} />
       </div>
     </main>
   );
