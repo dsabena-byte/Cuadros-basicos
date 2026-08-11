@@ -7,7 +7,7 @@ const OBJETIVO = 80;
 
 export type SkuFaltante = { sku: string; cliente: string; categoria: string; tipo: string };
 export type CatPct = { categoria: string; pctCB: number; pctInf: number; pctEst: number };
-export type SegHijo = { nombre: string; pctCB: number; faltan: number; porCat: CatPct[] };
+export type SegHijo = { nombre: string; pctCB: number; pctInf: number; pctEst: number; faltan: number; porCat: CatPct[] };
 
 export type SegAnalisis = {
   nombre: string;
@@ -135,6 +135,12 @@ function HijosDrill({ hijos, label }: { hijos?: SegHijo[]; label: string }) {
             <span className="w-9 text-right">Inf</span>
             <span className="w-9 text-right">Est</span>
           </div>
+          <div className="flex items-center gap-1 text-[10px] py-0.5 font-semibold border-b border-slate-200">
+            <span className="flex-1 text-slate-700">General</span>
+            <span className={`w-9 text-right tabular-nums ${pctColor(h.pctCB)}`}>{h.pctCB}%</span>
+            <span className={`w-9 text-right tabular-nums ${pctColor(h.pctInf)}`}>{h.pctInf}%</span>
+            <span className={`w-9 text-right tabular-nums ${pctColor(h.pctEst)}`}>{h.pctEst}%</span>
+          </div>
           {h.porCat.map((pc) => (
             <div key={pc.categoria} className="flex items-center gap-1 text-[10px] py-0.5 border-t border-slate-50">
               <span className="flex-1 text-slate-500 truncate">{pc.categoria}</span>
@@ -225,12 +231,12 @@ function TablaAnalisis({ titulo, icon, segs, prefix, abiertos, toggle, soloUnCli
       <div className="flex items-center gap-2 mb-3">{icon}<h4 className="text-sm font-bold text-slate-900">{titulo}</h4></div>
       <p className="text-xs text-slate-600 mb-3">{enObj} de {segs.length} en objetivo · <strong className="text-rose-700">{bajo.length}</strong> por debajo del 80%. Columnas: % CB · Infaltables · Estratégico. Tocá una fila para el detalle.</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-rose-600 mb-1">🎯 Mayor impacto</div>
+        <div className="rounded-lg border border-rose-200 bg-rose-50/40 p-3">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-rose-600 mb-1.5">🎯 Mayor impacto</div>
           {focos.length === 0 ? <p className="text-xs text-emerald-600 py-1">Todos en objetivo 🎉</p> : <><Header />{focos.map((s) => <Fila key={s.nombre} s={s} kprefix="foco" />)}</>}
         </div>
-        <div>
-          <div className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 mb-1">⚡ Quick wins (a un paso del 80%)</div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3">
+          <div className="text-[11px] font-semibold uppercase tracking-wide text-amber-600 mb-1.5">⚡ Quick wins (a un paso del 80%)</div>
           {quickWins.length === 0 ? <p className="text-xs text-slate-500 py-1">No hay segmentos entre 70% y 80%.</p> : <><Header />{quickWins.map((s) => <Fila key={s.nombre} s={s} kprefix="qw" />)}</>}
         </div>
       </div>
