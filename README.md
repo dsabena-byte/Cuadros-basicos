@@ -53,7 +53,9 @@ app/
   ventas/                     Cumplimiento CB Ventas (Next.js + React + Recharts)
     layout.tsx
     page.tsx
+  trade/                      CB Trade × Floor Share (Next.js + React)
   api/
+    chat/route.ts             Copiloto de datos: function-calling sobre las tools del dashboard
     data/route.ts             Dataset Trade MKT (JSON crudo desde Drive)
     refresh/route.ts          Invalida caches de ambos dashboards
     ventas/route.ts           POST: recibe FC+BO del Office Script; GET: metadata
@@ -61,8 +63,16 @@ app/
 
 components/
   Dashboard.tsx               Componente React del dashboard de Ventas
+  DataChat.tsx                Copiloto "Preguntá a tus datos" (botón flotante + drawer)
+  DataChatTabs.tsx            Monta el copiloto en / siguiendo la tab activa
+  DynamicChart.tsx            Renderer de los gráficos que devuelve el copiloto
 
 lib/
+  chat/                       Copiloto de datos: registry + tools por dashboard
+    registry.ts               dashboard id → contexto + tools (agregar tableros acá)
+    dashboards.ts             Metadata client-safe (ids, títulos, sugerencias)
+    tools-*.ts                Un archivo de tools por dashboard
+  sellin-metrics.ts           Fórmulas de cumplimiento Sell-in (las usan /ventas y el copiloto)
   drive.ts                    Cliente Google Drive (service account)
   parse.ts                    Parser CSV + normalización + clasificación SKU (Trade MKT)
   parse-floorshare.ts         Parser de Floor Share
@@ -181,6 +191,55 @@ Ver [docs/office-scripts.md](docs/office-scripts.md) para instalar el Office Scr
 
 ---
 
+## Copiloto de datos — "Preguntá a tus datos"
+
+Botón flotante abajo a la derecha en los cuatro tableros. Abre un drawer donde
+se le pregunta en lenguaje natural y contesta con los números reales del
+tablero; si se le pide un gráfico, lo dibuja inline.
+
+Mismo motor que el dashboard de Marketing: loop de function-calling contra
+OpenAI, donde cada dashboard aporta solo su set de *tools*. El modelo **no ve
+las filas crudas** — llama a tools que devuelven agregados ya calculados, así
+que no puede inventar ni filtrar mal.
+
+### Tableros habilitados
+
+| `dashboard` | Dónde aparece | Qué puede responder |
+|---|---|---|
+| `cb-trade` | `/` · tab **Cumplimiento CB** | % CB / Infaltables / Estratégico, evolución semanal, ranking por cliente-tienda-promotor-supervisor-división, brechas |
+| `floor-share` | `/` · tab **Floor Share** | share de Drean total y por categoría vs objetivo, share por marca, ranking, evolución |
+| `sell-in` | `/ventas` | cumplimiento desde la compra (FC+BO), corte por categoría/tipología, ranking por cliente-vendedor-gerencia, SKUs faltantes |
+| `trade-cruce` | `/trade` | cuadrantes surtido vs ejecución, uplift de share proyectado al cerrar el CB |
+
+En `/` el copiloto sigue la tab activa: `public/dashboard.js` emite el evento
+`cb:tabchange` y `<DataChatTabs>` cambia el set de tools. Cambiar de tab
+arranca un hilo nuevo.
+
+### Seguridad
+
+`sell-in` exige la misma cookie de sesión que `/ventas` (401 sin ella) y, si el
+usuario tiene rol `vendedor`, **toda** la data se acota a sus clientes antes de
+calcular — igual que hace el server component. El scope de la sesión pisa
+cualquier filtro que pida el modelo: un vendedor no puede consultar los números
+de otro.
+
+Los otros tres tableros son públicos, igual que las páginas que los alojan.
+`/api/chat` tiene un throttle best-effort de 20 requests/minuto por IP para
+cortar loops accidentales; no es un rate limit real (en serverless la memoria
+es por instancia).
+
+### Agregar un dashboard nuevo
+
+1. Crear `lib/chat/tools-<dash>.ts` exportando un `ChatTool[]`. Cada tool
+   devuelve **agregados**, nunca filas crudas.
+2. Sumar la entrada en `lib/chat/registry.ts` (contexto + tools) y en
+   `lib/chat/dashboards.ts` (id, título, sugerencias).
+3. Montar `<DataChat dashboard="<dash>" />` en la página.
+
+El motor (`/api/chat`) y la UI (`<DataChat>`) no se tocan.
+
+---
+
 ## Setup técnico (común a ambos dashboards)
 
 ### 1. Service account de Google Cloud
@@ -202,6 +261,9 @@ Ver [docs/office-scripts.md](docs/office-scripts.md) para instalar el Office Scr
 | `REFRESH_SECRET` | Webhook que invalida cache (lo usa Apps Script y manualmente) | random string |
 | `REFRESH_SECRET1` | Auth para POST `/api/ventas` (Office Script). **Distinto** del anterior por razones históricas | random string |
 | `BLOB_READ_WRITE_TOKEN` | Vercel Blob (lo provee Vercel automáticamente al crear el blob store) | (auto) |
+| `JWT_SECRET` | Firma la sesión de `/ventas` (login + copiloto de Sell-in) | random string |
+| `OPENAI_API_KEY` | Copiloto "Preguntá a tus datos". Sin esto el botón aparece pero `/api/chat` da 500 | `sk-...` |
+| `OPENAI_CHAT_MODEL` | (opcional) Modelo del copiloto. Default `gpt-4o-mini` | `gpt-4o-mini` |
 
 ### 3. Apps Script (refresh automático de Trade MKT)
 
@@ -232,6 +294,7 @@ Ver [docs/office-scripts.md](docs/office-scripts.md). Setup ~10 min en el Excel 
 | POST | `/api/ventas` | `x-refresh-secret: $REFRESH_SECRET1` | Office Script POSTea aquí el payload FC+BO |
 | GET | `/api/ventas` | `x-refresh-secret: $REFRESH_SECRET1` | Metadata de la última sync (debug) |
 | GET | `/api/cb-pairs` | `?secret=$REFRESH_SECRET1` | Lista de `cliente|sku` del CB. La consume el Office Script para pre-filtrar |
+| POST | `/api/chat` | cookie de sesión (solo `sell-in`) | Copiloto de datos. Body: `{ dashboard, messages }` |
 
 ## Desarrollo local
 

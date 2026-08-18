@@ -14,6 +14,12 @@ import type {
   CuadroBasicoItem, ClasificacionCliente, VentaRow, VentasFile, Tipologia,
 } from "@/lib/types";
 import { matchesCB } from "@/lib/cb-match";
+import {
+  calcularPorcentajes as calcPorcentajes,
+  filtrarCompras,
+  mesEnCursoDe,
+  type VentanaCtx,
+} from "@/lib/sellin-metrics";
 import { AnalisisCB, type AnalisisData, type SegAnalisis } from "./AnalisisCB";
 
 const OBJETIVO = 80;
@@ -165,27 +171,16 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     [clientesEnAlcance, tipologiaPorCliente, filters.tipologia],
   );
 
-  const comprasFiltradas = useMemo(() => {
-    // FC y BO se filtran por mes con semánticas distintas:
-    //   - FC: por mes EXACTO. Una factura de marzo solo cuenta en marzo.
-    //   - BO: ACUMULADO hasta el último mes seleccionado. Una BO de enero
-    //     sigue pendiente en marzo si no se facturó antes — para una vista
-    //     "estado al cierre del mes X", todos los BOs con mes ≤ X cuentan.
-    const mesesSel = new Set(filters.mes.map(Number));
-    const maxMesSel = mesesSel.size > 0 ? Math.max(...mesesSel) : null;
-    return ventas.rows.filter((c) => {
-      if (mesesSel.size > 0) {
-        if (c.tipo === "FC") {
-          if (!mesesSel.has(c.mes)) return false;
-        } else {
-          // tipo === "BO": acumulado hasta el último mes elegido.
-          if (maxMesSel !== null && c.mes > maxMesSel) return false;
-        }
-      }
-      if (filters.vendedor !== "TODOS" && c.vendedor !== filters.vendedor) return false;
-      return true;
-    });
-  }, [ventas.rows, filters.mes, filters.vendedor]);
+  // FC y BO se filtran por mes con semánticas distintas (ver filtrarCompras en
+  // lib/sellin-metrics.ts): FC por mes exacto, BO acumulado hasta el último mes.
+  const comprasFiltradas = useMemo(
+    () =>
+      filtrarCompras(ventas.rows, {
+        meses: filters.mes.map(Number),
+        vendedor: filters.vendedor !== "TODOS" ? filters.vendedor : null,
+      }),
+    [ventas.rows, filters.mes, filters.vendedor],
+  );
 
   const cbFiltrado = useMemo(
     () =>
@@ -201,54 +196,17 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     [cuadroBasico, filters, vendedorPorCliente, gerentePorVendedor],
   );
 
-  // Ventana de FACTURACIÓN a MES CERRADO por tipología: Small Retailers mira los
-  // últimos 3 meses cerrados; el resto (Top 10, Grandes Cuentas Resto,
-  // Hipermercados) mira los últimos 2. El BO cuenta acumulado como siempre.
+  // Ventana de FACTURACIÓN a MES CERRADO por tipología y criterio de "cumplido":
+  // ambos viven en lib/sellin-metrics.ts para que el copiloto de datos
+  // (/api/chat) calcule con las mismas fórmulas que esta pantalla.
   // Si hay filtro de MES activo, manda el filtro (comprasFiltradas ya lo acotó).
-  const mesEnCurso = new Date(ventas.generatedAt).getMonth() + 1;
-  const hayFiltroMes = filters.mes.length > 0;
-  const ventanaFC = (tip: Tipologia): Set<number> => {
-    const n = tip === "SMALL RETAILERS" ? 3 : 2;
-    const s = new Set<number>();
-    for (let k = 1; k <= n; k++) {
-      const m = mesEnCurso - k;
-      if (m >= 1) s.add(m);
-    }
-    return s;
-  };
-  const enVentana = (c: VentaRow, tip: Tipologia): boolean => {
-    if (hayFiltroMes) return true;    // el filtro de MES ya acotó las compras
-    if (c.tipo === "BO") return true; // BO acumulado, como estaba
-    return ventanaFC(tip).has(c.mes); // FC: solo los meses cerrados de la tipología
+  const ventanaCtx: VentanaCtx = {
+    hayFiltroMes: filters.mes.length > 0,
+    mesEnCurso: mesEnCursoDe(ventas.generatedAt),
   };
 
-  const calcularPorcentajes = (items: CuadroBasicoItem[]) => {
-    // "Cumplido" = la suma de unidades (FC + BO) del par (cliente, sku), dentro de
-    // la ventana a mes cerrado de la tipología, es > 0. Mismo criterio que TablaSKUs.
-    const cumplido = (item: CuadroBasicoItem) => {
-      let total = 0;
-      for (const c of comprasFiltradas) {
-        if (matchesCB(c, item) && enVentana(c, item.tipologia)) total += c.unidades;
-      }
-      return total > 0;
-    };
-    const totalCB = items.length;
-    const cumplidosCB = items.filter(cumplido).length;
-    const inf = items.filter((i) => i.tipo === "INFALTABLE");
-    const est = items.filter((i) => i.tipo === "ESTRATEGICO");
-    const cumplidosInf = inf.filter(cumplido).length;
-    const cumplidosEst = est.filter(cumplido).length;
-    return {
-      pctCB: totalCB > 0 ? Math.round((cumplidosCB / totalCB) * 100) : 0,
-      pctInf: inf.length > 0 ? Math.round((cumplidosInf / inf.length) * 100) : 0,
-      pctEst: est.length > 0 ? Math.round((cumplidosEst / est.length) * 100) : 0,
-      totalCB, cumplidosCB,
-      totalInf: inf.length, cumplidosInf,
-      totalEst: est.length, cumplidosEst,
-      // Items del CB NO cumplidos (para desplegar los SKUs a recuperar).
-      itemsFaltantes: items.filter((i) => !cumplido(i)),
-    };
-  };
+  const calcularPorcentajes = (items: CuadroBasicoItem[]) =>
+    calcPorcentajes(items, comprasFiltradas, ventanaCtx);
 
   const cumplPorVendedor = useMemo(() => {
     const vs = [...new Set(cbFiltrado.map((c) => vendedorPorCliente.get(c.cliente)).filter(Boolean) as string[])];

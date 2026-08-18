@@ -1683,6 +1683,14 @@ fsRender();
 }
 
 // ============= TABS =============
+// Avisa al copiloto de datos (<DataChatTabs>) cuál es la tab activa, para que
+// pregunte contra las tools del tablero que el usuario está mirando.
+function emitTabChange(tab) {
+  try {
+    window.dispatchEvent(new CustomEvent('cb:tabchange', { detail: tab }));
+  } catch (e) {}
+}
+
 function initTabs() {
   // === EMBED MODE ===
   // Si la URL trae ?embed=cb o ?embed=floorshare:
@@ -1713,6 +1721,7 @@ function initTabs() {
     if (subtitle && subtitle.textContent.includes('Floor Share')) {
       subtitle.style.display = 'none';
     }
+    emitTabChange(embedTab);
     return; // No registramos listeners de tabs si está en modo embed
   }
 
@@ -1731,8 +1740,12 @@ function initTabs() {
         if (active) p.removeAttribute('hidden');
         else p.setAttribute('hidden', '');
       });
+      emitTabChange(target);
     });
   });
+
+  const inicial = document.querySelector('.tab.active');
+  emitTabChange(inicial ? inicial.dataset.tab : 'cb');
 }
 // ============= SHELL HTML =============
 function buildShell() {
@@ -1821,6 +1834,9 @@ async function boot() {
       floorShare: window.__PRELOADED_FLOORSHARE__ || null,
     });
     buildShell();
+    // Se emite acá y no solo en initTabs() para que el copiloto aparezca
+    // aunque el render de los gráficos falle más abajo.
+    emitTabChange('cb');
     initCBControls();
     initFSControls();
     initTabs();
@@ -1850,6 +1866,7 @@ async function boot() {
   }
 
   buildShell();
+  emitTabChange('cb');
   initCBControls();
   initFSControls();
   initTabs();

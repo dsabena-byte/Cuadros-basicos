@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Dashboard from "@/components/Dashboard";
+import { DataChat } from "@/components/DataChat";
 import { loadCuadroBasico, loadClasificacion, loadVentas } from "@/lib/data";
 import { verifySessionToken, SESSION_COOKIE } from "@/lib/users";
 
@@ -42,11 +43,14 @@ export default async function Page() {
   }
 
   return (
-    <Dashboard
-      cuadroBasico={filteredCuadroBasico}
-      clasificacion={filteredClasificacion}
-      ventas={filteredVentas}
-      user={session}
-    />
+    <>
+      <Dashboard
+        cuadroBasico={filteredCuadroBasico}
+        clasificacion={filteredClasificacion}
+        ventas={filteredVentas}
+        user={session}
+      />
+      <DataChat dashboard="sell-in" />
+    </>
   );
 }
