@@ -16,6 +16,7 @@ import type {
 import { matchesCB } from "@/lib/cb-match";
 import {
   calcularPorcentajes as calcPorcentajes,
+  evolucionMensualCB,
   filtrarCompras,
   mesEnCursoDe,
   type VentanaCtx,
@@ -285,53 +286,21 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       .sort((a, b) => order.indexOf(a._key) - order.indexOf(b._key));
   }, [cbFiltrado, comprasFiltradas]);
 
-  const evolucionMensual = useMemo(() => {
-    const mesActual = new Date(ventas.generatedAt).getMonth() + 1;
-    const mesesActivos = MESES.filter((m) => m.num <= mesActual);
-    return mesesActivos.map((m) => {
-      // FC y BO se cuentan con semánticas distintas — las MISMAS que usan
-      // los KPIs / card (ver `comprasFiltradas`), para que el punto del mes
-      // M coincida con el card cuando se filtra ese mismo período:
-      //   - FC: ventana móvil de 2 meses (mes M y el anterior M-1). Para
-      //     Enero (M=1) solo Enero. Refleja la facturación reciente.
-      //   - BO: ACUMULADO hasta M (todo BO con mes ≤ M, sin límite inferior).
-      //     Un back order pendiente de un mes previo sigue representando
-      //     demanda cubierta al cierre — antes se contaba solo dentro de la
-      //     ventana, por eso el card (BO acumulado) daba más que este punto.
-      const mesDesde = Math.max(1, m.num - 1);
-      const comprasVentana = ventas.rows.filter((c) => {
-        // BO con fecha de entrega futura (c.mes > mesActual) cuentan como
-        // si fueran del mes actual — sino el último punto del gráfico
-        // subreporta vs los KPIs, que sí los incluyen.
-        const mesEfectivo = Math.min(c.mes, mesActual);
-        if (c.tipo === "FC") {
-          if (mesEfectivo > m.num || mesEfectivo < mesDesde) return false;
-        } else {
-          // BO: acumulado hasta M (sin cota inferior).
-          if (mesEfectivo > m.num) return false;
-        }
-        if (filters.vendedor !== "TODOS" && c.vendedor !== filters.vendedor) return false;
-        return true;
-      });
-      const cumplido = (item: CuadroBasicoItem) => {
-        let total = 0;
-        for (const c of comprasVentana) {
-          if (matchesCB(c, item)) total += c.unidades;
-        }
-        return total > 0;
-      };
-      const totalCB = cbFiltrado.length;
-      const cumplidosCB = cbFiltrado.filter(cumplido).length;
-      const inf = cbFiltrado.filter((i) => i.tipo === "INFALTABLE");
-      const est = cbFiltrado.filter((i) => i.tipo === "ESTRATEGICO");
-      return {
-        mes: m.label.slice(0, 3),
-        "% CB": totalCB > 0 ? Math.round((cumplidosCB / totalCB) * 100) : 0,
-        "% Infaltables": inf.length > 0 ? Math.round((inf.filter(cumplido).length / inf.length) * 100) : 0,
-        "% Estratégico": est.length > 0 ? Math.round((est.filter(cumplido).length / est.length) * 100) : 0,
-      };
-    });
-  }, [cbFiltrado, filters.vendedor, ventas]);
+  // Serie del gráfico "Evolución mensual". La fórmula vive en
+  // lib/sellin-metrics.ts para que el copiloto grafique exactamente lo mismo.
+  const evolucionMensual = useMemo(
+    () =>
+      evolucionMensualCB(cbFiltrado, ventas.rows, {
+        generatedAt: ventas.generatedAt,
+        vendedor: filters.vendedor !== "TODOS" ? filters.vendedor : null,
+      }).map((p) => ({
+        mes: p.mesLabel.slice(0, 3),
+        "% CB": p.pctCB,
+        "% Infaltables": p.pctInf,
+        "% Estratégico": p.pctEst,
+      })),
+    [cbFiltrado, filters.vendedor, ventas],
+  );
 
   const kpisGlobales = useMemo(() => {
     const p = calcularPorcentajes(cbFiltrado);
