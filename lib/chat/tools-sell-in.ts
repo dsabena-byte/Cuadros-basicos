@@ -20,6 +20,7 @@ import {
   norm,
   numList,
   resolveValues,
+  marcarMuestraChica,
   strList,
 } from "./filters";
 
@@ -46,6 +47,8 @@ type Scope = {
   /** Qué interpretó de lo que pidió el modelo, y qué no pudo resolver. */
   filtros: Record<string, string[]>;
   noResueltos: Record<string, { pedido: string; candidatos: string[] }[]>;
+  /** Supuestos que hubo que hacer y la respuesta TIENE que explicitar. */
+  interpretaciones: { pedido: string; usado: string; motivo: string }[];
 };
 
 /** Carga CB + clasificación + ventas, acotado al vendedor de la sesión. */
@@ -90,6 +93,7 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
 
   const filtros: Record<string, string[]> = {};
   const noResueltos: Scope["noResueltos"] = {};
+  const interpretaciones: Scope["interpretaciones"] = [];
 
   // Resuelve lo que pidió el modelo contra los valores que EXISTEN en la data
   // ("Pombo" → "POMBO MARCELO", "Fravega" → "FRAVEGA S A C I E I").
@@ -97,6 +101,7 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
     const uni = [...universo];
     const r = resolveValues(strList(pedido), uni);
     if (r.matched.length > 0) filtros[campo] = r.matched;
+    if (r.interpretaciones.length > 0) interpretaciones.push(...r.interpretaciones);
     if (r.unmatched.length > 0) {
       noResueltos[campo] = r.unmatched.map((p) => ({
         pedido: p,
@@ -146,6 +151,7 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
     gerentePorVendedor,
     filtros,
     noResueltos,
+    interpretaciones,
   };
 }
 
@@ -153,6 +159,10 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
 function meta(s: Scope) {
   const out: Record<string, unknown> = { generado: s.ventas.generatedAt };
   if (Object.keys(s.filtros).length > 0) out.filtros_aplicados = s.filtros;
+  if (s.interpretaciones.length > 0) {
+    out.interpretaciones = s.interpretaciones;
+    out.aclarar = "Decile al usuario qué asumiste, con estas mismas palabras, antes de dar el número.";
+  }
   if (Object.keys(s.noResueltos).length > 0) {
     out.sin_coincidencias = s.noResueltos;
     out.como_seguir =
@@ -301,11 +311,22 @@ export const sellInTools: ChatTool[] = [
           : {}),
       }));
       list.sort((a, b) => (args.orden === "peores" ? a.pctCB - b.pctCB : b.pctCB - a.pctCB));
+      // % CB es un cociente: un cliente con 2 items da 0% o 100%. No se
+      // reordena ni se oculta; se rotula para poder aclarar cuántos items son.
+      const { filas, umbral, cuantas } = marcarMuestraChica(list, (x) => x.totalCB, 3);
+      const limit = limitOf(args.limit, 15, 60);
       return {
         ...meta(s),
         dimension: dim,
-        total_grupos: list.length,
-        ranking: list.slice(0, limitOf(args.limit, 15, 60)),
+        total_grupos: filas.length,
+        ranking: filas.slice(0, limit),
+        ...(cuantas > 0
+          ? {
+              nota_muestra_chica:
+                `Las filas con muestra_chica tienen menos de ${umbral} items de CB: su % es extremo por el poco volumen. ` +
+                "Si alguna encabeza el ranking, dala igual pero aclarando cuántos items son.",
+            }
+          : {}),
       };
     },
   },

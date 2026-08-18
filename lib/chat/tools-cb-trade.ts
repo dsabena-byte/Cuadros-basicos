@@ -12,6 +12,7 @@ import {
   numList,
   resolveValues,
   round1,
+  marcarMuestraChica,
   strList,
 } from "./filters";
 
@@ -33,6 +34,8 @@ type CbFilters = {
   /** Qué se interpretó de lo que pidió el modelo, y qué no pudo resolverse. */
   filtros: Record<string, string[]>;
   noResueltos: Record<string, { pedido: string; candidatos: string[] }[]>;
+  /** Supuestos que hubo que hacer y la respuesta TIENE que explicitar. */
+  interpretaciones: { pedido: string; usado: string; motivo: string }[];
 };
 
 /**
@@ -43,10 +46,12 @@ type CbFilters = {
 function readFilters(args: Record<string, unknown>, rows: DataRow[]): CbFilters {
   const filtros: Record<string, string[]> = {};
   const noResueltos: CbFilters["noResueltos"] = {};
+  const interpretaciones: CbFilters["interpretaciones"] = [];
   const resolver = (campo: string, pedido: unknown, universo: Set<string>) => {
     const uni = [...universo];
     const r = resolveValues(strList(pedido), uni);
     if (r.matched.length > 0) filtros[campo] = r.matched;
+    if (r.interpretaciones.length > 0) interpretaciones.push(...r.interpretaciones);
     if (r.unmatched.length > 0) {
       noResueltos[campo] = r.unmatched.map((q) => ({
         pedido: q,
@@ -68,6 +73,7 @@ function readFilters(args: Record<string, unknown>, rows: DataRow[]): CbFilters 
     supervisores: resolver("supervisores", args.supervisores, new Set(rows.map((r) => r.supervisor))),
     filtros,
     noResueltos,
+    interpretaciones,
   };
 }
 
@@ -88,6 +94,10 @@ function applyFilters(rows: DataRow[], f: CbFilters): DataRow[] {
 function meta(f: CbFilters) {
   const out: Record<string, unknown> = {};
   if (Object.keys(f.filtros).length > 0) out.filtros_aplicados = f.filtros;
+  if (f.interpretaciones.length > 0) {
+    out.interpretaciones = f.interpretaciones;
+    out.aclarar = "Decile al usuario qué asumiste, con estas mismas palabras, antes de dar el número.";
+  }
   if (Object.keys(f.noResueltos).length > 0) {
     out.sin_coincidencias = f.noResueltos;
     out.como_seguir =
@@ -259,7 +269,22 @@ export const cbTradeTools: ChatTool[] = [
           ? (a.pctCB ?? 0) - (b.pctCB ?? 0)
           : (b.pctCB ?? 0) - (a.pctCB ?? 0),
       );
-      return { ...meta(f), dimension: args.dimension, total_grupos: list.length, ranking: list.slice(0, limit) };
+      // % CB es un cociente: con targetCB chico da valores extremos. No se
+      // reordena ni se oculta nada; se rotula para poder aclarar el volumen.
+      const { filas, umbral, cuantas } = marcarMuestraChica(list, (x) => x.targetCB, 5);
+      return {
+        ...meta(f),
+        dimension: args.dimension,
+        total_grupos: filas.length,
+        ranking: filas.slice(0, limit),
+        ...(cuantas > 0
+          ? {
+              nota_muestra_chica:
+                `Las filas con muestra_chica tienen menos de ${umbral} unidades de CB target: su % es extremo por el poco volumen. ` +
+                "Si alguna encabeza el ranking, dala igual pero aclarando sobre cuántas unidades.",
+            }
+          : {}),
+      };
     },
   },
   {
