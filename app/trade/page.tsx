@@ -1,6 +1,7 @@
 import { getDataset } from "@/lib/data-source";
 import { construirAnalisisTrade } from "@/lib/analisis-trade";
 import { AnalisisTradeView } from "@/components/AnalisisTrade";
+import { DataChat } from "@/components/DataChat";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -18,6 +19,7 @@ export default async function Page() {
         </header>
         <AnalisisTradeView analisis={analisis} />
       </div>
+      <DataChat dashboard="trade-cruce" />
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import Script from "next/script";
+import { DataChatTabs } from "@/components/DataChatTabs";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -19,6 +20,8 @@ export default function Page() {
         strategy="beforeInteractive"
       />
       <Script src="/dashboard.js" strategy="afterInteractive" />
+
+      <DataChatTabs />
     </>
   );
 }
