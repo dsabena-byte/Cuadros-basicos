@@ -245,33 +245,20 @@ export function faltanParaObjetivo(
 }
 
 /**
- * Marca los grupos cuyo cociente se apoya en poco volumen.
+ * Formato tabular para devolver tablas completas sin recortarlas.
  *
- * Todos estos tableros rankean por un cociente (share de góndola, % de CB) y un
- * grupo con denominador chico da valores extremos: un cliente con 24 unidades
- * donde todo el piso es Drean da 100% de share. El número es correcto y puede
- * ser la respuesta que se busca, así que NO se lo saca ni se lo reordena — solo
- * se lo rotula, para que la respuesta pueda decir "100%, sobre 24 unidades".
- *
- * El umbral se ancla a la propia data (20% de la mediana) con un piso absoluto,
- * así escala solo entre categorías grandes y chicas.
+ * Las tools `get_*_por` entregan TODAS las filas para que el modelo pueda
+ * cruzar columnas por su cuenta; con un objeto por fila, los nombres de las
+ * columnas se repiten en cada una y una tabla de 275 clientes se va a ~20k
+ * tokens. Con la cabecera una sola vez baja a ~6k, sin perder ni una fila ni
+ * una columna.
  */
-export type ConMuestra<T> = T & { muestra_chica?: true };
-
-export function marcarMuestraChica<T extends object>(
+export function aTabla<T extends Record<string, unknown>>(
   filas: T[],
-  pesoDe: (fila: T) => number,
-  minAbsoluto: number,
-): { filas: ConMuestra<T>[]; umbral: number; cuantas: number } {
-  const pesos = filas.map(pesoDe).filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
-  if (pesos.length === 0) return { filas: filas as ConMuestra<T>[], umbral: 0, cuantas: 0 };
-  const mediana = pesos[Math.floor(pesos.length / 2)];
-  const umbral = Math.max(minAbsoluto, Math.round(mediana * 0.2));
-  let cuantas = 0;
-  const out: ConMuestra<T>[] = filas.map((f) => {
-    if (pesoDe(f) >= umbral) return f;
-    cuantas++;
-    return { ...f, muestra_chica: true as const };
-  });
-  return { filas: out, umbral, cuantas };
+  columnas: (keyof T & string)[],
+): { columnas: string[]; filas: unknown[][] } {
+  return {
+    columnas,
+    filas: filas.map((f) => columnas.map((c) => f[c] ?? null)),
+  };
 }

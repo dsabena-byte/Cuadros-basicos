@@ -13,6 +13,7 @@ import {
 } from "@/lib/sellin-metrics";
 import type { ChatTool, ChatToolCtx } from "./types";
 import {
+  aTabla,
   candidatosCercanos,
   faltanParaObjetivo,
   inSet,
@@ -20,7 +21,6 @@ import {
   norm,
   numList,
   resolveValues,
-  marcarMuestraChica,
   strList,
 } from "./filters";
 
@@ -268,16 +268,17 @@ export const sellInTools: ChatTool[] = [
     },
   },
   {
-    name: "get_sellin_ranking",
+    name: "get_sellin_por",
     description:
-      "Ranking de cumplimiento CB Sell-in por dimensión (cliente, vendedor, gerencia, tipologia o categoria): % CB / Infaltables / Estratégico, items cumplidos vs totales, desvío vs el objetivo de 80% y cuántos items faltan para alcanzarlo. Usala también para responder '¿qué le falta a X para llegar al 80%?' filtrando por ese X.",
+      "TABLA COMPLETA de cumplimiento de CB Sell-in agrupada por la dimensión que pidas (cliente, vendedor, gerencia, tipologia o categoria). " +
+      "Devuelve TODOS los grupos, sin recortar ni preseleccionar, cada uno con: % CB, % Infaltables, % Estratégico, items cumplidos y totales, desvío vs el objetivo de 80% y cuántos items faltan para alcanzarlo. " +
+      "Combiná, filtrá, ordená y contá vos sobre esa tabla según lo que pregunten, incluso cruzando varias columnas a la vez. " +
+      "Como recibís el universo completo, NUNCA concluyas que algo no existe: si no aparece una fila que cumpla, es que realmente no la hay.",
     parameters: {
       type: "object",
       required: ["dimension"],
       properties: {
         dimension: { type: "string", enum: [...DIMS] },
-        orden: { type: "string", enum: ["mejores", "peores"], description: "default: mejores" },
-        limit: { type: "number", description: "default 15, máx 60" },
         ...FILTER_PROPS,
       },
     },
@@ -303,30 +304,31 @@ export const sellInTools: ChatTool[] = [
         arr.push(item);
         groups.set(k, arr);
       }
-      const list = [...groups.entries()].map(([nombre, items]) => ({
-        nombre,
-        ...resumen(items, s),
-        ...(dim === "cliente"
-          ? { vendedor: s.vendedorPorCliente.get(nombre) ?? "", tipologia: items[0]?.tipologia }
-          : {}),
-      }));
-      list.sort((a, b) => (args.orden === "peores" ? a.pctCB - b.pctCB : b.pctCB - a.pctCB));
-      // % CB es un cociente: un cliente con 2 items da 0% o 100%. No se
-      // reordena ni se oculta; se rotula para poder aclarar cuántos items son.
-      const { filas, umbral, cuantas } = marcarMuestraChica(list, (x) => x.totalCB, 3);
-      const limit = limitOf(args.limit, 15, 60);
+      const filas = [...groups.entries()]
+        .map(([nombre, items]) => ({
+          nombre,
+          ...resumen(items, s),
+          ...(dim === "cliente"
+            ? { vendedor: s.vendedorPorCliente.get(nombre) ?? "", tipologia: items[0]?.tipologia }
+            : {}),
+        }))
+        .sort((a, b) => b.pctCB - a.pctCB);
+      const columnas = [
+        "nombre", "pctCB", "pctInf", "pctEst", "totalCB", "cumplidosCB", "totalInf",
+        "cumplidosInf", "totalEst", "cumplidosEst", "delta_vs_objetivo",
+        "faltan_para_objetivo", "skus_no_cumplidos",
+        ...(dim === "cliente" ? ["vendedor", "tipologia"] : []),
+      ];
       return {
         ...meta(s),
         dimension: dim,
+        objetivo: OBJETIVO_SELLIN,
         total_grupos: filas.length,
-        ranking: filas.slice(0, limit),
-        ...(cuantas > 0
-          ? {
-              nota_muestra_chica:
-                `Las filas con muestra_chica tienen menos de ${umbral} items de CB: su % es extremo por el poco volumen. ` +
-                "Si alguna encabeza el ranking, dala igual pero aclarando cuántos items son.",
-            }
-          : {}),
+        formato: "Tabla: `columnas` nombra los campos y cada fila es un array en ese mismo orden.",
+        nota:
+          "Tabla COMPLETA, ordenada por % CB sólo por comodidad de lectura. Reordenala, filtrala o cruzá columnas como necesites. " +
+          "Un 100% sobre pocos items de CB es real pero frágil: mirá totalCB antes de llamarlo el mejor.",
+        ...aTabla(filas as unknown as Record<string, unknown>[], columnas),
       };
     },
   },

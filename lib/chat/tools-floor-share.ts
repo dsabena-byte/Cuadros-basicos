@@ -5,15 +5,14 @@ import { FS_DREAN, FS_TARGETS, fsTargetForCat } from "@/lib/analisis-trade";
 import { monthLabelFromCode } from "@/lib/parse-floorshare";
 import type { ChatTool } from "./types";
 import {
+  aTabla,
   candidatosCercanos,
   inSet,
-  limitOf,
   matchesNum,
   norm,
   numList,
   resolveValues,
   round1,
-  marcarMuestraChica,
   strList,
 } from "./filters";
 
@@ -333,24 +332,18 @@ export const floorShareTools: ChatTool[] = [
     },
   },
   {
-    name: "get_fs_ranking",
+    name: "get_fs_por",
     description:
-      "Ranking de Floor Share de Drean por dimensión (cliente, tienda, promotor, supervisor o categoría), con share, unidades, cantidad de tiendas y desvío vs el objetivo ponderado. " +
-      "Para cruzar condiciones usá min_tiendas / min_unidades (ej. '¿qué cliente con más de 10 tiendas tiene el mejor share?' → min_tiendas 11) en vez de filtrar vos el top: el ranking viene recortado y sacar conclusiones de ahí da respuestas falsas.",
+      "TABLA COMPLETA de Floor Share agrupada por la dimensión que pidas (cliente, tienda, promotor, supervisor o categoría). " +
+      "Devuelve TODOS los grupos, sin recortar ni preseleccionar, cada uno con: share de Drean, unidades Drean, unidades totales de piso, cantidad de tiendas, objetivo, desvío vs objetivo, unidades que faltan para el objetivo y peso en el piso total. " +
+      "Combiná, filtrá, ordená y contá vos sobre esa tabla según lo que pregunten — incluso cruzando varias columnas a la vez " +
+      "(ej. 'el cliente con más de 10 tiendas que mejor share tiene': mirá todas las filas con tiendas > 10 y quedate con la de mayor share). " +
+      "Como recibís el universo completo, NUNCA concluyas que algo no existe: si no aparece una fila que cumpla, es que realmente no la hay.",
     parameters: {
       type: "object",
       required: ["dimension"],
       properties: {
         dimension: { type: "string", enum: ["cliente", "tienda", "promotor", "supervisor", "categoria"] },
-        orden: { type: "string", enum: ["mejores", "peores"], description: "default: mejores" },
-        ordenar_por: {
-          type: "string",
-          enum: ["share", "unidades", "tiendas"],
-          description: "criterio de orden. default: share",
-        },
-        min_tiendas: { type: "number", description: "solo grupos con al menos N tiendas (ej. 'clientes con más de 10 tiendas' → 11)" },
-        min_unidades: { type: "number", description: "solo grupos con al menos N unidades de piso medidas" },
-        limit: { type: "number", description: "default 15, máx 60" },
         ...FILTER_PROPS,
       },
     },
@@ -359,97 +352,44 @@ export const floorShareTools: ChatTool[] = [
       if (!keyFn) return { error: "dimension inválida", validas: Object.keys(DIMENSIONS) };
       const { data, f } = await scope(args);
       if (data.length === 0) return { ...meta(f), sin_datos: true };
-      const limit = limitOf(args.limit, 15, 60);
+
       const list = [...groupShare(data, keyFn).entries()]
         .map(([nombre, g]) => {
-          const s = shareOf(g.acc);
+          const sh = shareOf(g.acc);
           const target = targetPonderado(g.rows);
           return {
             nombre,
-            ...s,
+            ...sh,
             tiendas: new Set(g.rows.map((r) => r.storeName)).size,
             objetivo: target,
-            delta_vs_objetivo: target === null || s.share === null ? null : round1(s.share - target),
-            unidades_para_objetivo: unidadesParaObjetivo(s.dreanUnits, s.totalUnits, target),
+            delta_vs_objetivo: target === null || sh.share === null ? null : round1(sh.share - target),
+            unidades_para_objetivo: unidadesParaObjetivo(sh.dreanUnits, sh.totalUnits, target),
           };
         })
         .filter((x) => x.totalUnits > 0);
-      list.sort((a, b) =>
-        args.orden === "peores" ? (a.share ?? 0) - (b.share ?? 0) : (b.share ?? 0) - (a.share ?? 0),
-      );
 
-      // El share es un cociente: un grupo con poco piso medido da valores
-      // extremos. El orden NO se toca — el máximo real sigue primero — pero
-      // cada fila lleva su volumen y el rótulo, para poder decir
-      // "100%, sobre 24 unidades".
+      // Peso de cada grupo sobre el piso medido: deja leer si un share alto se
+      // apoya en mucho o en poco volumen.
       const pisoTotal = list.reduce((acc, x) => acc + x.totalUnits, 0);
-      const conPeso = list.map((x) => ({
-        ...x,
-        peso_del_piso_pct: round1(pisoTotal > 0 ? (x.totalUnits / pisoTotal) * 100 : null),
-      }));
-      const { filas, umbral, cuantas } = marcarMuestraChica(conPeso, (x) => x.totalUnits, 10);
-
-      // Condiciones secundarias: el modelo no puede filtrarlas por su cuenta
-      // sobre un ranking recortado sin sacar conclusiones falsas.
-      const minTiendas = Number(args.min_tiendas);
-      const minUnidades = Number(args.min_unidades);
-      const cumplen = filas.filter(
-        (x) =>
-          (!Number.isFinite(minTiendas) || x.tiendas >= minTiendas) &&
-          (!Number.isFinite(minUnidades) || x.totalUnits >= minUnidades),
-      );
-
-      if (cumplen.length === 0 && (Number.isFinite(minTiendas) || Number.isFinite(minUnidades))) {
-        // Sin coincidencias: devolvemos los máximos reales para que la
-        // respuesta sea útil en vez de un "no hay".
-        const maxTiendas = Math.max(0, ...filas.map((x) => x.tiendas));
-        const maxUnidades = Math.max(0, ...filas.map((x) => x.totalUnits));
-        return {
-          ...meta(f),
-          dimension: args.dimension,
-          total_grupos: filas.length,
-          ranking: [],
-          ningun_grupo_cumple: {
-            min_tiendas: Number.isFinite(minTiendas) ? minTiendas : null,
-            min_unidades: Number.isFinite(minUnidades) ? minUnidades : null,
-            max_tiendas_disponible: maxTiendas,
-            max_unidades_disponible: maxUnidades,
-            top_por_tiendas: [...filas].sort((a, b) => b.tiendas - a.tiendas).slice(0, 5),
-          },
-          como_seguir:
-            "Ningún grupo llega a ese mínimo. Decilo con el máximo real que sí existe y ofrecé el mejor de `top_por_tiendas`; no digas que no hay data.",
-        };
-      }
-
-      const criterio = String(args.ordenar_por ?? "share");
-      const valorDe = (x: (typeof cumplen)[number]) =>
-        criterio === "unidades" ? x.totalUnits : criterio === "tiendas" ? x.tiendas : (x.share ?? 0);
-      cumplen.sort((a, b) =>
-        args.orden === "peores" ? valorDe(a) - valorDe(b) : valorDe(b) - valorDe(a),
-      );
+      const filas = list
+        .map((x) => ({
+          ...x,
+          peso_del_piso_pct: round1(pisoTotal > 0 ? (x.totalUnits / pisoTotal) * 100 : null),
+        }))
+        .sort((a, b) => (b.share ?? 0) - (a.share ?? 0));
 
       return {
         ...meta(f),
         dimension: args.dimension,
-        ordenado_por: criterio,
-        total_grupos: cumplen.length,
-        mostrados: Math.min(cumplen.length, limit),
-        ...(cumplen.length > limit
-          ? {
-              aviso_recorte:
-                `Se muestran ${limit} de ${cumplen.length} grupos. NO concluyas que algo "no existe" mirando solo estos: ` +
-                "usá min_tiendas / min_unidades / ordenar_por para que el filtro lo haga la tool.",
-            }
-          : {}),
-        ranking: cumplen.slice(0, limit),
-        ...(cuantas > 0
-          ? {
-              nota_muestra_chica:
-                `Las filas con muestra_chica tienen menos de ${umbral} unidades de piso medidas: ` +
-                "su share es extremo por el poco volumen, no porque dominen la góndola. " +
-                "Si una de esas encabeza el ranking, dala igual como respuesta pero aclarando sobre cuántas unidades y qué peso tiene en el piso total.",
-            }
-          : {}),
+        total_grupos: filas.length,
+        formato: "Tabla: `columnas` nombra los campos y cada fila es un array en ese mismo orden.",
+        nota:
+          "Tabla COMPLETA, ordenada por share sólo por comodidad de lectura. Reordenala, filtrala o cruzá columnas como necesites. " +
+          "Un share de 100% sobre pocas unidades es real pero se apoya en poco piso: mirá totalUnits y tiendas antes de llamarlo el mejor.",
+        ...aTabla(filas, [
+          "nombre", "share", "dreanUnits", "totalUnits", "tiendas",
+          "objetivo", "delta_vs_objetivo", "unidades_para_objetivo", "peso_del_piso_pct",
+        ]),
       };
     },
   },
