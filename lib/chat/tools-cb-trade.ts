@@ -3,7 +3,17 @@ import { getDataset } from "@/lib/data-source";
 import type { DataRow } from "@/lib/parse";
 import { CB_OBJETIVO } from "@/lib/analisis-trade";
 import type { ChatTool } from "./types";
-import { limitOf, matches, matchesNum, numList, round1, strList } from "./filters";
+import {
+  candidatosCercanos,
+  faltanParaObjetivo,
+  inSet,
+  limitOf,
+  matchesNum,
+  numList,
+  resolveValues,
+  round1,
+  strList,
+} from "./filters";
 
 // ============================================================================
 // Tools del dashboard "Cuadro Básico Trade" (tab Cumplimiento CB de /).
@@ -20,17 +30,44 @@ type CbFilters = {
   tiendas?: Set<string>;
   promotores?: Set<string>;
   supervisores?: Set<string>;
+  /** Qué se interpretó de lo que pidió el modelo, y qué no pudo resolverse. */
+  filtros: Record<string, string[]>;
+  noResueltos: Record<string, { pedido: string; candidatos: string[] }[]>;
 };
 
-function readFilters(args: Record<string, unknown>): CbFilters {
+/**
+ * Resuelve lo que pidió el modelo contra los valores que EXISTEN en la data:
+ * el usuario escribe "Frávega" o "Pombo" y en el CSV puede figurar como
+ * "Frávega Once Ciudad" o "POMBO MARCELO".
+ */
+function readFilters(args: Record<string, unknown>, rows: DataRow[]): CbFilters {
+  const filtros: Record<string, string[]> = {};
+  const noResueltos: CbFilters["noResueltos"] = {};
+  const resolver = (campo: string, pedido: unknown, universo: Set<string>) => {
+    const uni = [...universo];
+    const r = resolveValues(strList(pedido), uni);
+    if (r.matched.length > 0) filtros[campo] = r.matched;
+    if (r.unmatched.length > 0) {
+      noResueltos[campo] = r.unmatched.map((q) => ({
+        pedido: q,
+        candidatos: candidatosCercanos(q, uni),
+        total_disponibles: uni.length,
+      }));
+    }
+    return r.set;
+  };
+  const semanas = numList(args.semanas);
+  if (semanas) filtros.semanas = [...semanas].map(String);
   return {
-    semanas: numList(args.semanas),
-    meses: strList(args.meses),
-    divisiones: strList(args.divisiones),
-    clientes: strList(args.clientes),
-    tiendas: strList(args.tiendas),
-    promotores: strList(args.promotores),
-    supervisores: strList(args.supervisores),
+    semanas,
+    meses: resolver("meses", args.meses, new Set(rows.map((r) => r.mes))),
+    divisiones: resolver("divisiones", args.divisiones, new Set(rows.map((r) => r.division))),
+    clientes: resolver("clientes", args.clientes, new Set(rows.map((r) => r.cliente))),
+    tiendas: resolver("tiendas", args.tiendas, new Set(rows.map((r) => r.tienda))),
+    promotores: resolver("promotores", args.promotores, new Set(rows.map((r) => r.promotor))),
+    supervisores: resolver("supervisores", args.supervisores, new Set(rows.map((r) => r.supervisor))),
+    filtros,
+    noResueltos,
   };
 }
 
@@ -38,13 +75,25 @@ function applyFilters(rows: DataRow[], f: CbFilters): DataRow[] {
   return rows.filter(
     (r) =>
       matchesNum(f.semanas, r.semana) &&
-      matches(f.meses, r.mes) &&
-      matches(f.divisiones, r.division) &&
-      matches(f.clientes, r.cliente) &&
-      matches(f.tiendas, r.tienda) &&
-      matches(f.promotores, r.promotor) &&
-      matches(f.supervisores, r.supervisor),
+      inSet(f.meses, r.mes) &&
+      inSet(f.divisiones, r.division) &&
+      inSet(f.clientes, r.cliente) &&
+      inSet(f.tiendas, r.tienda) &&
+      inSet(f.promotores, r.promotor) &&
+      inSet(f.supervisores, r.supervisor),
   );
+}
+
+/** Encabezado común: qué se interpretó y qué no se pudo resolver. */
+function meta(f: CbFilters) {
+  const out: Record<string, unknown> = {};
+  if (Object.keys(f.filtros).length > 0) out.filtros_aplicados = f.filtros;
+  if (Object.keys(f.noResueltos).length > 0) {
+    out.sin_coincidencias = f.noResueltos;
+    out.como_seguir =
+      "Esos valores no existen en la data. Reintentá con alguno de los candidatos, o preguntale al usuario cuál quiso decir. NO respondas que no hay datos sin ofrecer los candidatos.";
+  }
+  return out;
 }
 
 type Acc = { tCB: number; rCB: number; tInf: number; rInf: number };
@@ -73,6 +122,9 @@ function pcts(a: Acc) {
     realInf: a.rInf,
     targetEst: tEst,
     realEst: rEst,
+    delta_vs_objetivo: round1(a.tCB > 0 ? (a.rCB / a.tCB) * 100 - CB_OBJETIVO : null),
+    // Unidades de CB que faltan cumplir para llegar al objetivo.
+    faltan_para_objetivo: faltanParaObjetivo(a.tCB, a.rCB, CB_OBJETIVO),
   };
 }
 
@@ -115,19 +167,20 @@ function groupBy(rows: DataRow[], key: keyof DataRow) {
   return map;
 }
 
-async function rows(f: CbFilters): Promise<DataRow[]> {
+async function scope(args: Record<string, unknown>): Promise<{ data: DataRow[]; f: CbFilters }> {
   const ds = await getDataset();
-  return applyFilters(ds.rows, f);
+  const f = readFilters(args, ds.rows);
+  return { data: applyFilters(ds.rows, f), f };
 }
 
 const FILTER_PROPS = {
   semanas: { type: "array", items: { type: "number" }, description: "números de semana (opcional)" },
   meses: { type: "array", items: { type: "string" }, description: "meses por nombre, ej. 'Abril' (opcional)" },
   divisiones: { type: "array", items: { type: "string" }, description: "LAVADO / REFRIGERACION / COCCION (opcional)" },
-  clientes: { type: "array", items: { type: "string" }, description: "cadenas, ej. 'Frávega' (opcional)" },
-  tiendas: { type: "array", items: { type: "string" }, description: "nombre completo de tienda (opcional)" },
-  promotores: { type: "array", items: { type: "string" }, description: "promotores (opcional)" },
-  supervisores: { type: "array", items: { type: "string" }, description: "supervisores (opcional)" },
+  clientes: { type: "array", items: { type: "string" }, description: "cadena; alcanza con parte del nombre, ej. 'Frávega' (opcional)" },
+  tiendas: { type: "array", items: { type: "string" }, description: "tienda; alcanza con parte del nombre, ej. 'Once' (opcional)" },
+  promotores: { type: "array", items: { type: "string" }, description: "promotor; alcanza con el apellido (opcional)" },
+  supervisores: { type: "array", items: { type: "string" }, description: "supervisor; alcanza con el apellido (opcional)" },
 } as const;
 
 export const cbTradeTools: ChatTool[] = [
@@ -161,15 +214,15 @@ export const cbTradeTools: ChatTool[] = [
       "Cumplimiento de Cuadro Básico Trade: % CB, % Infaltables, % Estratégico (objetivo 80%), unidades target/real, cantidad de tiendas y SKUs, más la evolución semanal y el corte por división. Acepta filtros opcionales.",
     parameters: { type: "object", properties: { ...FILTER_PROPS } },
     run: async (args) => {
-      const data = await rows(readFilters(args));
-      if (data.length === 0) return { sin_datos: true, filas: 0 };
+      const { data, f } = await scope(args);
+      if (data.length === 0) return { ...meta(f), sin_datos: true, filas: 0 };
       const evolucion = [...groupBy(data, "semana").entries()]
         .map(([semana, g]) => ({ semana: Number(semana), ...pcts(g.acc) }))
         .sort((a, b) => a.semana - b.semana);
       const porDivision = [...groupBy(data, "division").entries()]
         .map(([division, g]) => ({ division, tiendas: g.tiendas.size, ...pcts(g.acc) }))
         .sort((a, b) => (b.pctCB ?? 0) - (a.pctCB ?? 0));
-      return { totales: kpis(data), evolucion_semanal: evolucion, por_division: porDivision };
+      return { ...meta(f), totales: kpis(data), evolucion_semanal: evolucion, por_division: porDivision };
     },
   },
   {
@@ -191,27 +244,22 @@ export const cbTradeTools: ChatTool[] = [
     },
     run: async (args) => {
       const key = DIMENSIONS[String(args.dimension ?? "")];
-      if (!key) return { error: "dimension inválida" };
-      const data = await rows(readFilters(args));
-      if (data.length === 0) return { sin_datos: true };
+      if (!key) return { error: "dimension inválida", validas: Object.keys(DIMENSIONS) };
+      const { data, f } = await scope(args);
+      if (data.length === 0) return { ...meta(f), sin_datos: true };
       const limit = limitOf(args.limit, 15, 60);
       const list = [...groupBy(data, key).entries()]
         .filter(([name, g]) => g.acc.tCB > 0 && name && name !== "Sin asignar")
         .map(([name, g]) => {
           const p = pcts(g.acc);
-          return {
-            nombre: name,
-            tiendas: g.tiendas.size,
-            ...p,
-            delta_vs_objetivo: round1((p.pctCB ?? 0) - CB_OBJETIVO),
-          };
+          return { nombre: name, tiendas: g.tiendas.size, ...p };
         });
       list.sort((a, b) =>
         args.orden === "peores"
           ? (a.pctCB ?? 0) - (b.pctCB ?? 0)
           : (b.pctCB ?? 0) - (a.pctCB ?? 0),
       );
-      return { dimension: args.dimension, total_grupos: list.length, ranking: list.slice(0, limit) };
+      return { ...meta(f), dimension: args.dimension, total_grupos: list.length, ranking: list.slice(0, limit) };
     },
   },
   {
@@ -228,8 +276,8 @@ export const cbTradeTools: ChatTool[] = [
     },
     run: async (args) => {
       const key = DIMENSIONS[String(args.dimension ?? "tienda")] ?? "tienda";
-      const data = await rows(readFilters(args));
-      if (data.length === 0) return { sin_datos: true };
+      const { data, f } = await scope(args);
+      if (data.length === 0) return { ...meta(f), sin_datos: true };
       const limit = limitOf(args.limit, 15, 60);
       const list = [...groupBy(data, key).entries()]
         .map(([name, g]) => ({
@@ -241,6 +289,7 @@ export const cbTradeTools: ChatTool[] = [
         .filter((x) => x.gap_cb > 0)
         .sort((a, b) => b.gap_cb - a.gap_cb);
       return {
+        ...meta(f),
         dimension: args.dimension ?? "tienda",
         gap_total: list.reduce((s, x) => s + x.gap_cb, 0),
         top: list.slice(0, limit),

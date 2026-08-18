@@ -135,3 +135,78 @@ export function mapasClasificacion(clasificacion: ClasificacionCliente[]) {
   }
   return { vendedorPorCliente, gerentePorVendedor };
 }
+
+export type PuntoEvolucion = {
+  mes: number;
+  mesLabel: string;
+  pctCB: number;
+  pctInf: number;
+  pctEst: number;
+  totalCB: number;
+  cumplidosCB: number;
+};
+
+export const MESES_LABEL = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
+
+/**
+ * Evolución mensual del cumplimiento — la serie del gráfico "Evolución mensual"
+ * de /ventas. FC y BO se cuentan con semánticas distintas, las MISMAS que usan
+ * los KPIs, para que el punto del mes M coincida con el card al filtrar ese
+ * período:
+ *   - FC: ventana móvil de 2 meses (mes M y el anterior M-1). Para Enero solo
+ *     Enero. Refleja la facturación reciente.
+ *   - BO: ACUMULADO hasta M (todo BO con mes ≤ M, sin límite inferior). Un back
+ *     order pendiente de un mes previo sigue representando demanda cubierta al
+ *     cierre.
+ * Los BO con entrega futura (mes > mes actual) cuentan como del mes actual;
+ * sino el último punto subreporta contra los KPIs, que sí los incluyen.
+ *
+ * Solo devuelve meses hasta el mes en curso — nunca meses sin data.
+ */
+export function evolucionMensualCB(
+  items: CuadroBasicoItem[],
+  ventasRows: VentaRow[],
+  opts: { generatedAt: string; vendedor?: string | null },
+): PuntoEvolucion[] {
+  const mesActual = mesEnCursoDe(opts.generatedAt);
+  const vendedor = opts.vendedor ?? null;
+  const out: PuntoEvolucion[] = [];
+
+  for (let mes = 1; mes <= mesActual; mes++) {
+    const mesDesde = Math.max(1, mes - 1);
+    const comprasVentana = ventasRows.filter((c) => {
+      const mesEfectivo = Math.min(c.mes, mesActual);
+      if (c.tipo === "FC") {
+        if (mesEfectivo > mes || mesEfectivo < mesDesde) return false;
+      } else if (mesEfectivo > mes) {
+        return false;
+      }
+      if (vendedor && c.vendedor !== vendedor) return false;
+      return true;
+    });
+    const cumplido = (item: CuadroBasicoItem) => {
+      let total = 0;
+      for (const c of comprasVentana) {
+        if (matchesCB(c, item)) total += c.unidades;
+      }
+      return total > 0;
+    };
+    const totalCB = items.length;
+    const cumplidosCB = items.filter(cumplido).length;
+    const inf = items.filter((i) => i.tipo === "INFALTABLE");
+    const est = items.filter((i) => i.tipo === "ESTRATEGICO");
+    out.push({
+      mes,
+      mesLabel: MESES_LABEL[mes - 1],
+      pctCB: totalCB > 0 ? Math.round((cumplidosCB / totalCB) * 100) : 0,
+      pctInf: inf.length > 0 ? Math.round((inf.filter(cumplido).length / inf.length) * 100) : 0,
+      pctEst: est.length > 0 ? Math.round((est.filter(cumplido).length / est.length) * 100) : 0,
+      totalCB,
+      cumplidosCB,
+    });
+  }
+  return out;
+}
