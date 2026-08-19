@@ -30,8 +30,14 @@ en el detalle vienen sumadas de todos los pedidos.
 POST https://<tu-app>.vercel.app/api/ventas
 Headers:
   Content-Type: application/json
-  x-refresh-secret: <REFRESH_SECRET1>     ← variable de entorno en Vercel
+  x-refresh-secret: <REFRESH_SECRET1>          ← env var en Vercel
+  x-vercel-protection-bypass: <BYPASS_TOKEN>   ← Settings → Deployment Protection
+                                                → Protection Bypass for Automation
 ```
+
+El segundo header (`x-vercel-protection-bypass`) hace falta porque el
+proyecto tiene Vercel Authentication activada. Sin él, Vercel intercepta
+el request antes de que llegue a mi código y devuelve HTML de login.
 
 ### Body
 
@@ -125,7 +131,8 @@ Notas:
    }
    ```
 
-5. **HTTP** action (POST) al endpoint con el header `x-refresh-secret`.
+5. **HTTP** action (POST) al endpoint con los headers
+   `x-refresh-secret` y `x-vercel-protection-bypass`.
 6. (Opcional) **Condition** sobre el status code para mandar mail si
    falla.
 
@@ -135,6 +142,11 @@ Notas:
 |---------------------------|--------------------------------------------------|
 | `REFRESH_SECRET1`         | Secret compartido con Power Automate (header `x-refresh-secret`). El "1" es porque `REFRESH_SECRET` ya estaba ocupado en este proyecto Vercel. |
 | `BLOB_READ_WRITE_TOKEN`   | Token de Vercel Blob (lo crea Vercel automáticamente cuando agregás un Blob store al proyecto) |
+
+Además, en **Settings → Deployment Protection → Protection Bypass for
+Automation** hay que crear un secret con nota descriptiva ("Power Automate
+- SharePoint FC+BO ventas") y usarlo como valor del header
+`x-vercel-protection-bypass`.
 
 ## Probar localmente
 
