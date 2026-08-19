@@ -5,10 +5,11 @@ import { FS_DREAN, FS_TARGETS, fsTargetForCat } from "@/lib/analisis-trade";
 import { monthLabelFromCode } from "@/lib/parse-floorshare";
 import type { ChatTool } from "./types";
 import {
+  aTabla,
   candidatosCercanos,
   inSet,
-  limitOf,
   matchesNum,
+  norm,
   numList,
   resolveValues,
   round1,
@@ -34,6 +35,8 @@ type FsFilters = {
   /** Qué se interpretó de lo que pidió el modelo, y qué no pudo resolverse. */
   filtros: Record<string, string[]>;
   noResueltos: Record<string, { pedido: string; candidatos: string[] }[]>;
+  /** Supuestos que hubo que hacer y la respuesta TIENE que explicitar. */
+  interpretaciones: { pedido: string; usado: string; motivo: string }[];
 };
 
 /**
@@ -44,9 +47,25 @@ type FsFilters = {
 function readFilters(args: Record<string, unknown>, rows: FloorShareEnrichedRow[]): FsFilters {
   const filtros: Record<string, string[]> = {};
   const noResueltos: FsFilters["noResueltos"] = {};
+  const interpretaciones: FsFilters["interpretaciones"] = [];
+  const resolverSet = (campo: string, pedido: Set<string> | undefined, universo: Set<string>) => {
+    const uni = [...universo];
+    const r = resolveValues(pedido, uni);
+    if (r.matched.length > 0) filtros[campo] = r.matched;
+    if (r.interpretaciones.length > 0) interpretaciones.push(...r.interpretaciones);
+    if (r.unmatched.length > 0) {
+      noResueltos[campo] = r.unmatched.map((q) => ({
+        pedido: q,
+        candidatos: candidatosCercanos(q, uni),
+        total_disponibles: uni.length,
+      }));
+    }
+    return r.set;
+  };
   const resolver = (campo: string, pedido: unknown, universo: Set<string>) => {
     const uni = [...universo];
     const r = resolveValues(strList(pedido), uni);
+    if (r.interpretaciones.length > 0) interpretaciones.push(...r.interpretaciones);
     if (r.matched.length > 0) filtros[campo] = r.matched;
     if (r.unmatched.length > 0) {
       noResueltos[campo] = r.unmatched.map((q) => ({
@@ -59,15 +78,21 @@ function readFilters(args: Record<string, unknown>, rows: FloorShareEnrichedRow[
   };
   const semanas = numList(args.semanas);
   if (semanas) filtros.semanas = [...semanas].map(String);
-  // Los meses se aceptan como código ("2026-04") o etiqueta ("Abril 2026").
-  const universoMeses = new Set<string>();
-  for (const r of rows) {
-    universoMeses.add(r.month);
-    universoMeses.add(monthLabelFromCode(r.month));
-  }
+  // Un solo formato de mes de cara al modelo: la etiqueta ("Abril 2026").
+  // Tener código y etiqueta a la vez duplicaba cada mes en los candidatos.
+  // Si el filtro llega como "2026-04", se traduce antes de resolver.
+  const universoMeses = new Set(rows.map((r) => monthLabelFromCode(r.month)));
+  const mesesPedidos = strList(args.meses);
+  const mesesNormalizados = mesesPedidos
+    ? new Set(
+        [...mesesPedidos].map((m) =>
+          /^\d{4}-\d{2}$/.test(m) ? norm(monthLabelFromCode(m)) : m,
+        ),
+      )
+    : undefined;
   return {
     semanas,
-    meses: resolver("meses", args.meses, universoMeses),
+    meses: resolverSet("meses", mesesNormalizados, universoMeses),
     categorias: resolver("categorias", args.categorias, new Set(rows.map((r) => r.category))),
     clientes: resolver("clientes", args.clientes, new Set(rows.map((r) => r.cliente))),
     tiendas: resolver("tiendas", args.tiendas, new Set(rows.map((r) => r.storeName))),
@@ -75,13 +100,14 @@ function readFilters(args: Record<string, unknown>, rows: FloorShareEnrichedRow[
     supervisores: resolver("supervisores", args.supervisores, new Set(rows.map((r) => r.supervisor))),
     filtros,
     noResueltos,
+    interpretaciones,
   };
 }
 
-/** El mes resuelto puede haber quedado como código o como etiqueta. */
+/** Los meses ya resueltos están siempre en formato etiqueta ("Abril 2026"). */
 function mesMatches(set: Set<string> | undefined, r: FloorShareEnrichedRow): boolean {
   if (!set) return true;
-  return set.has(r.month) || set.has(monthLabelFromCode(r.month));
+  return set.has(monthLabelFromCode(r.month));
 }
 
 function applyFilters(rows: FloorShareEnrichedRow[], f: FsFilters): FloorShareEnrichedRow[] {
@@ -101,6 +127,11 @@ function applyFilters(rows: FloorShareEnrichedRow[], f: FsFilters): FloorShareEn
 function meta(f: FsFilters) {
   const out: Record<string, unknown> = {};
   if (Object.keys(f.filtros).length > 0) out.filtros_aplicados = f.filtros;
+  if (f.interpretaciones.length > 0) {
+    out.interpretaciones = f.interpretaciones;
+    out.aclarar =
+      "Decile al usuario qué asumiste, con estas mismas palabras, antes de dar el número.";
+  }
   if (Object.keys(f.noResueltos).length > 0) {
     out.sin_coincidencias = f.noResueltos;
     out.como_seguir =
@@ -301,16 +332,18 @@ export const floorShareTools: ChatTool[] = [
     },
   },
   {
-    name: "get_fs_ranking",
+    name: "get_fs_por",
     description:
-      "Ranking de Floor Share de Drean por dimensión (cliente, tienda, promotor, supervisor o categoría), con share, unidades y desvío vs el objetivo ponderado del grupo.",
+      "TABLA COMPLETA de Floor Share agrupada por la dimensión que pidas (cliente, tienda, promotor, supervisor o categoría). " +
+      "Devuelve TODOS los grupos, sin recortar ni preseleccionar, cada uno con: share de Drean, unidades Drean, unidades totales de piso, cantidad de tiendas, objetivo, desvío vs objetivo, unidades que faltan para el objetivo y peso en el piso total. " +
+      "Combiná, filtrá, ordená y contá vos sobre esa tabla según lo que pregunten — incluso cruzando varias columnas a la vez " +
+      "(ej. 'el cliente con más de 10 tiendas que mejor share tiene': mirá todas las filas con tiendas > 10 y quedate con la de mayor share). " +
+      "Como recibís el universo completo, NUNCA concluyas que algo no existe: si no aparece una fila que cumpla, es que realmente no la hay.",
     parameters: {
       type: "object",
       required: ["dimension"],
       properties: {
         dimension: { type: "string", enum: ["cliente", "tienda", "promotor", "supervisor", "categoria"] },
-        orden: { type: "string", enum: ["mejores", "peores"], description: "default: mejores" },
-        limit: { type: "number", description: "default 15, máx 60" },
         ...FILTER_PROPS,
       },
     },
@@ -319,25 +352,45 @@ export const floorShareTools: ChatTool[] = [
       if (!keyFn) return { error: "dimension inválida", validas: Object.keys(DIMENSIONS) };
       const { data, f } = await scope(args);
       if (data.length === 0) return { ...meta(f), sin_datos: true };
-      const limit = limitOf(args.limit, 15, 60);
+
       const list = [...groupShare(data, keyFn).entries()]
         .map(([nombre, g]) => {
-          const s = shareOf(g.acc);
+          const sh = shareOf(g.acc);
           const target = targetPonderado(g.rows);
           return {
             nombre,
-            ...s,
+            ...sh,
             tiendas: new Set(g.rows.map((r) => r.storeName)).size,
             objetivo: target,
-            delta_vs_objetivo: target === null || s.share === null ? null : round1(s.share - target),
-            unidades_para_objetivo: unidadesParaObjetivo(s.dreanUnits, s.totalUnits, target),
+            delta_vs_objetivo: target === null || sh.share === null ? null : round1(sh.share - target),
+            unidades_para_objetivo: unidadesParaObjetivo(sh.dreanUnits, sh.totalUnits, target),
           };
         })
         .filter((x) => x.totalUnits > 0);
-      list.sort((a, b) =>
-        args.orden === "peores" ? (a.share ?? 0) - (b.share ?? 0) : (b.share ?? 0) - (a.share ?? 0),
-      );
-      return { ...meta(f), dimension: args.dimension, total_grupos: list.length, ranking: list.slice(0, limit) };
+
+      // Peso de cada grupo sobre el piso medido: deja leer si un share alto se
+      // apoya en mucho o en poco volumen.
+      const pisoTotal = list.reduce((acc, x) => acc + x.totalUnits, 0);
+      const filas = list
+        .map((x) => ({
+          ...x,
+          peso_del_piso_pct: round1(pisoTotal > 0 ? (x.totalUnits / pisoTotal) * 100 : null),
+        }))
+        .sort((a, b) => (b.share ?? 0) - (a.share ?? 0));
+
+      return {
+        ...meta(f),
+        dimension: args.dimension,
+        total_grupos: filas.length,
+        formato: "Tabla: `columnas` nombra los campos y cada fila es un array en ese mismo orden.",
+        nota:
+          "Tabla COMPLETA, ordenada por share sólo por comodidad de lectura. Reordenala, filtrala o cruzá columnas como necesites. " +
+          "Un share de 100% sobre pocas unidades es real pero se apoya en poco piso: mirá totalUnits y tiendas antes de llamarlo el mejor.",
+        ...aTabla(filas, [
+          "nombre", "share", "dreanUnits", "totalUnits", "tiendas",
+          "objetivo", "delta_vs_objetivo", "unidades_para_objetivo", "peso_del_piso_pct",
+        ]),
+      };
     },
   },
   {

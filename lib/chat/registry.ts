@@ -26,6 +26,13 @@ const BASE =
   "Si una tool te da UN agregado, es UN número — no lo presentes como si fuera una serie temporal ni le pongas un período que no vino en la respuesta. " +
   "Nunca nombres meses, semanas ni períodos que no aparezcan en lo que devolvió una tool. " +
   "Si te falta una tool para responder lo que preguntaron, decí qué parte no podés responder en vez de aproximar. " +
+  // Las tools get_*_por devuelven la tabla ENTERA: el trabajo de cruzar es tuyo.
+  "Las tools `get_*_por` te devuelven la TABLA COMPLETA de una dimensión, sin recortar: todas las filas con todas sus columnas. " +
+  "Cuando la pregunta mezcle condiciones (ej. 'el cliente con más de 10 tiendas que mejor share tiene', 'los vendedores por debajo del 80% con más de 50 items'), traé esa tabla y resolvelo vos sobre TODAS las filas: filtrá por una columna, ordená por otra, contá, comparive. No pidas rankings sueltos ni saques conclusiones de los primeros resultados. " +
+  "Como recibís el universo completo, NUNCA digas que algo 'no existe' o que 'no encontraste' sin haber recorrido la tabla entera: si ninguna fila cumple, decilo indicando cuál es el máximo que sí se alcanza (ej. 'ningún cliente llega a 10 tiendas; el que más tiene es X con 7'). " +
+  "JAMÁS reportes una métrica que no exista en las tools de este tablero, ni le pongas a un número la etiqueta de otra métrica. " +
+  "Antes de dar un número, chequeá que salga de una respuesta de tool que ya tenés en el turno. " +
+  "Al graficar: `data` va en formato ancho, UNA fila por punto del eje X con todas las series en esa fila. Nunca concatenes un array por serie ni agregues meses sin datos. Si render_chart devuelve `ok:false`, corregí el spec o explicá por qué no podés graficarlo — no lo describas como si se hubiera dibujado. " +
   // --- Nunca contestar 'no hay datos' sin agotar la búsqueda ---
   "Los nombres en la data no coinciden con el habla: un cliente puede figurar como razón social ('FRAVEGA S A C I E I') y un vendedor con apellido y nombre ('POMBO MARCELO'). Las tools resuelven coincidencias parciales solas: pasá el filtro tal como lo dijo el usuario. " +
   "Si una tool devuelve `sin_coincidencias`, NO respondas que no hay datos: mirá los `candidatos` que trae y volvé a llamarla con el valor correcto en el mismo turno. Si ninguno sirve, mostrale los candidatos al usuario y preguntale a cuál se refería. " +
@@ -44,8 +51,10 @@ const REGISTRY: Record<string, DashboardChat> = {
       "Dashboard Cuadro Básico Trade: presencia en piso de los SKUs de Drean medida por los promotores, semana a semana y tienda a tienda. " +
       "% CB = unidades reales / unidades target; Infaltables y Estratégico son los dos tipos de SKU (Estratégico = CB − Infaltable). Objetivo: 80% en las tres métricas. " +
       "Las dimensiones son cliente/cadena, tienda, promotor, supervisor y división (Lavado/Refrigeración/Cocción). " +
-      "La evolución semanal viene dentro de get_cb_resumen (`evolucion_semanal`). Para '¿cuánto falta para el 80%?' mirá `faltan_para_objetivo` (unidades de CB).",
-    tools: cbTradeTools,
+      "La evolución semanal viene dentro de get_cb_resumen (`evolucion_semanal`); el detalle por cliente/tienda/promotor/supervisor/división/SKU, en get_cb_por. Para '¿cuánto falta para el 80%?' mirá `faltan_para_objetivo` (unidades de CB). " +
+      "También tenés las tools de Floor Share (get_fs_*), porque es la otra pestaña de esta misma pantalla: podés cruzar presencia de CB con share de góndola. " +
+      "NO tenés el CB de Sell-in (el de /ventas, que mide la COMPRA del cliente): si preguntan por facturación, backorder o cumplimiento de compra, aclarales que eso está en el tablero de Sell-in.",
+    tools: [...cbTradeTools, ...floorShareTools],
   },
   "floor-share": {
     context:
@@ -54,8 +63,9 @@ const REGISTRY: Record<string, DashboardChat> = {
       "Objetivos por categoría: Lavado 32%, Refrigeración 25%, Cocción 23%. " +
       "El share se calcula sobre unidades exhibidas; el dato es semanal y el mes se deriva del calendario fiscal 5-4-4. " +
       "Para evolución / tendencia usá get_fs_evolucion. Para '¿cuánto falta para el objetivo?' mirá `unidades_para_objetivo` (unidades Drean a sumar en piso). " +
+      "También tenés las tools de Cuadro Básico Trade (get_cb_*), porque es la otra pestaña de esta misma pantalla. Ahí '% CB' es PRESENCIA de los SKUs de Drean en piso, no share. " +
       "OJO: la data está agregada por categoría — no hay apertura por modelo, tecnología (cíclica/no frost) ni ancho de cocina. Si preguntan por eso, decí que no se puede medir con la data actual.",
-    tools: floorShareTools,
+    tools: [...floorShareTools, ...cbTradeTools],
   },
   "sell-in": {
     context:
@@ -65,8 +75,14 @@ const REGISTRY: Record<string, DashboardChat> = {
       "Sin filtro de mes, la facturación se mira a MES CERRADO: últimos 3 meses para SMALL RETAILERS y últimos 2 para el resto de las tipologías; el BO cuenta acumulado. " +
       "Las dimensiones son cliente, vendedor, gerencia (Cuentas Clave / Interior / Buenos Aires), tipología y categoría. " +
       "Para evolución / tendencia / 'mes a mes' usá get_sellin_evolucion, que devuelve la serie mensual real; el resumen NO es una serie. " +
-      "Para '¿qué le falta a X para el 80%?' filtrá por X y mirá `faltan_para_objetivo` (cuántos items de CB más hay que cumplir) y get_sellin_faltantes (cuáles).",
-    tools: sellInTools,
+      "Para '¿qué le falta a X para el 80%?' filtrá por X y mirá `faltan_para_objetivo` (cuántos items de CB más hay que cumplir) y get_sellin_faltantes (cuáles). " +
+      "También tenés las tools de Floor Share (get_fs_*), que miden algo DISTINTO: el % de exhibición de Drean en el piso de la tienda. " +
+      "No las confundas — '% CB' acá es cumplimiento de COMPRA del cliente; el share de góndola sale solo de get_fs_*. Si graficás las dos, aclará qué es cada serie. " +
+      "El Floor Share es por tienda y no distingue vendedor, así que no lo presentes como si estuviera acotado al vendedor.",
+    // Sell-in + Floor Share: son métricas distintas (compra vs góndola) y se
+    // preguntan juntas todo el tiempo. FS ya es pública en /, así que sumarla
+    // no expone nada nuevo.
+    tools: [...sellInTools, ...floorShareTools],
     requiereSesion: true,
   },
   "trade-cruce": {
@@ -74,7 +90,7 @@ const REGISTRY: Record<string, DashboardChat> = {
       BASE +
       "Dashboard CB Trade × Floor Share: cruza por tienda la PRESENCIA de los SKUs de Drean (CB Trade, objetivo 80%) con el SHARE de góndola (Floor Share, objetivos Lavado 32 / Refri 25 / Cocción 23). " +
       "Los cuadrantes separan problema de compra (surtido) de problema de ejecución. El uplift proyecta cuántos puntos de share subiría el segmento si se cerraran los SKUs de CB faltantes.",
-    tools: tradeCruceTools,
+    tools: [...tradeCruceTools, ...cbTradeTools, ...floorShareTools],
   },
 };
 

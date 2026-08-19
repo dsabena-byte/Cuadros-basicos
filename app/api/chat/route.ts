@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getDashboardChat } from "@/lib/chat/registry";
 import type { ChartSpec, ChatToolCtx } from "@/lib/chat/types";
+import { normalizarChartSpec, recolectarNumeros } from "@/lib/chat/chart";
 import { SESSION_COOKIE, verifySessionToken } from "@/lib/users";
 
 // ============================================================================
@@ -44,7 +45,11 @@ const RENDER_CHART_TOOL = {
   function: {
     name: "render_chart",
     description:
-      "Renderiza un gráfico para el usuario. Llamalo cuando pida graficar/visualizar. Armá el spec con la data que ya obtuviste de las otras tools; no inventes valores.",
+      "Renderiza un gráfico. Llamalo cuando pidan graficar/visualizar, DESPUÉS de traer la data con las otras tools. " +
+      "`data` va en formato ancho: UNA fila por punto del eje X con TODAS las series en esa misma fila " +
+      "(ej. [{mes:'Julio', cb:76, share:24}, {mes:'Agosto', cb:78, share:25}]). NO concatenes un array por serie: " +
+      "eso duplica las categorías del eje. Incluí solo puntos con datos reales y solo valores que haya devuelto una tool " +
+      "de ESTE tablero — los que no se puedan verificar hacen que el gráfico se rechace.",
     parameters: {
       type: "object",
       required: ["type", "data", "xKey", "series"],
@@ -130,6 +135,9 @@ export async function POST(req: Request) {
 
   const messages: OAIMessage[] = [{ role: "system", content: dash.context }, ...historia];
   const charts: ChartSpec[] = [];
+  // Números que devolvieron las tools en este turno: sirven para verificar que
+  // el gráfico no invente valores ni traiga métricas de otro tablero.
+  const numerosDeTools = new Set<string>();
 
   for (let step = 0; step < MAX_STEPS; step++) {
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -151,7 +159,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ text: msg.content ?? "", charts });
     }
 
-    for (const call of calls) {
+    // Los gráficos se resuelven al final de cada tanda: si el modelo pidió la
+    // data y el gráfico en la misma vuelta, los valores de las tools ya están
+    // recolectados cuando se verifica el spec.
+    const ordenadas = [...calls].sort((a, b) => {
+      const chart = (c: OAIToolCall) => (c.function?.name === "render_chart" ? 1 : 0);
+      return chart(a) - chart(b);
+    });
+
+    // El protocolo exige responder los tool_calls en el mismo orden en que
+    // llegaron, así que las respuestas se indexan por id.
+    const respuestas = new Map<string, unknown>();
+
+    for (const call of ordenadas) {
       const name = call.function?.name;
       let args: Record<string, unknown> = {};
       try {
@@ -161,8 +181,13 @@ export async function POST(req: Request) {
       }
       let result: unknown;
       if (name === "render_chart") {
-        charts.push(args as unknown as ChartSpec);
-        result = { ok: true };
+        const r = normalizarChartSpec(args, numerosDeTools);
+        if (r.ok) {
+          charts.push(r.spec);
+          result = r.notas.length > 0 ? { ok: true, ajustes: r.notas } : { ok: true };
+        } else {
+          result = { ok: false, error: r.error };
+        }
       } else {
         const tool = toolMap.get(name);
         if (!tool) {
@@ -170,13 +195,22 @@ export async function POST(req: Request) {
         } else {
           try {
             result = await tool.run(args, toolCtx);
+            recolectarNumeros(result, numerosDeTools);
           } catch (err) {
             console.error(`[chat] tool ${name} falló:`, err);
             result = { error: "la tool falló al consultar los datos" };
           }
         }
       }
-      messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(result) });
+      respuestas.set(call.id, result);
+    }
+
+    for (const call of calls) {
+      messages.push({
+        role: "tool",
+        tool_call_id: call.id,
+        content: JSON.stringify(respuestas.get(call.id) ?? { error: "sin respuesta" }),
+      });
     }
   }
 

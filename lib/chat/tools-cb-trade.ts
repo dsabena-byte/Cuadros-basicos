@@ -4,6 +4,7 @@ import type { DataRow } from "@/lib/parse";
 import { CB_OBJETIVO } from "@/lib/analisis-trade";
 import type { ChatTool } from "./types";
 import {
+  aTabla,
   candidatosCercanos,
   faltanParaObjetivo,
   inSet,
@@ -33,6 +34,8 @@ type CbFilters = {
   /** Qué se interpretó de lo que pidió el modelo, y qué no pudo resolverse. */
   filtros: Record<string, string[]>;
   noResueltos: Record<string, { pedido: string; candidatos: string[] }[]>;
+  /** Supuestos que hubo que hacer y la respuesta TIENE que explicitar. */
+  interpretaciones: { pedido: string; usado: string; motivo: string }[];
 };
 
 /**
@@ -43,10 +46,12 @@ type CbFilters = {
 function readFilters(args: Record<string, unknown>, rows: DataRow[]): CbFilters {
   const filtros: Record<string, string[]> = {};
   const noResueltos: CbFilters["noResueltos"] = {};
+  const interpretaciones: CbFilters["interpretaciones"] = [];
   const resolver = (campo: string, pedido: unknown, universo: Set<string>) => {
     const uni = [...universo];
     const r = resolveValues(strList(pedido), uni);
     if (r.matched.length > 0) filtros[campo] = r.matched;
+    if (r.interpretaciones.length > 0) interpretaciones.push(...r.interpretaciones);
     if (r.unmatched.length > 0) {
       noResueltos[campo] = r.unmatched.map((q) => ({
         pedido: q,
@@ -68,6 +73,7 @@ function readFilters(args: Record<string, unknown>, rows: DataRow[]): CbFilters 
     supervisores: resolver("supervisores", args.supervisores, new Set(rows.map((r) => r.supervisor))),
     filtros,
     noResueltos,
+    interpretaciones,
   };
 }
 
@@ -88,6 +94,10 @@ function applyFilters(rows: DataRow[], f: CbFilters): DataRow[] {
 function meta(f: CbFilters) {
   const out: Record<string, unknown> = {};
   if (Object.keys(f.filtros).length > 0) out.filtros_aplicados = f.filtros;
+  if (f.interpretaciones.length > 0) {
+    out.interpretaciones = f.interpretaciones;
+    out.aclarar = "Decile al usuario qué asumiste, con estas mismas palabras, antes de dar el número.";
+  }
   if (Object.keys(f.noResueltos).length > 0) {
     out.sin_coincidencias = f.noResueltos;
     out.como_seguir =
@@ -226,9 +236,12 @@ export const cbTradeTools: ChatTool[] = [
     },
   },
   {
-    name: "get_cb_ranking",
+    name: "get_cb_por",
     description:
-      "Ranking de cumplimiento CB por dimensión (cliente, tienda, promotor, supervisor, division o sku), con % CB / Infaltables / Estratégico y el desvío vs el objetivo de 80%. Ordena de mejor a peor salvo que pidas 'peores'.",
+      "TABLA COMPLETA de cumplimiento de CB Trade agrupada por la dimensión que pidas (cliente, tienda, promotor, supervisor, division o sku). " +
+      "Devuelve TODOS los grupos, sin recortar ni preseleccionar, cada uno con: % CB, % Infaltables, % Estratégico, unidades target y reales, cantidad de tiendas, desvío vs el objetivo de 80% y cuántas unidades faltan para alcanzarlo. " +
+      "Combiná, filtrá, ordená y contá vos sobre esa tabla según lo que pregunten, incluso cruzando varias columnas a la vez. " +
+      "Como recibís el universo completo, NUNCA concluyas que algo no existe: si no aparece una fila que cumpla, es que realmente no la hay.",
     parameters: {
       type: "object",
       required: ["dimension"],
@@ -237,8 +250,6 @@ export const cbTradeTools: ChatTool[] = [
           type: "string",
           enum: ["cliente", "tienda", "promotor", "supervisor", "division", "sku"],
         },
-        orden: { type: "string", enum: ["mejores", "peores"], description: "default: mejores" },
-        limit: { type: "number", description: "default 15, máx 60" },
         ...FILTER_PROPS,
       },
     },
@@ -247,19 +258,24 @@ export const cbTradeTools: ChatTool[] = [
       if (!key) return { error: "dimension inválida", validas: Object.keys(DIMENSIONS) };
       const { data, f } = await scope(args);
       if (data.length === 0) return { ...meta(f), sin_datos: true };
-      const limit = limitOf(args.limit, 15, 60);
-      const list = [...groupBy(data, key).entries()]
+      const filas = [...groupBy(data, key).entries()]
         .filter(([name, g]) => g.acc.tCB > 0 && name && name !== "Sin asignar")
-        .map(([name, g]) => {
-          const p = pcts(g.acc);
-          return { nombre: name, tiendas: g.tiendas.size, ...p };
-        });
-      list.sort((a, b) =>
-        args.orden === "peores"
-          ? (a.pctCB ?? 0) - (b.pctCB ?? 0)
-          : (b.pctCB ?? 0) - (a.pctCB ?? 0),
-      );
-      return { ...meta(f), dimension: args.dimension, total_grupos: list.length, ranking: list.slice(0, limit) };
+        .map(([nombre, g]) => ({ nombre, tiendas: g.tiendas.size, ...pcts(g.acc) }))
+        .sort((a, b) => (b.pctCB ?? 0) - (a.pctCB ?? 0));
+      return {
+        ...meta(f),
+        dimension: args.dimension,
+        objetivo: CB_OBJETIVO,
+        total_grupos: filas.length,
+        formato: "Tabla: `columnas` nombra los campos y cada fila es un array en ese mismo orden.",
+        nota:
+          "Tabla COMPLETA, ordenada por % CB sólo por comodidad de lectura. Reordenala, filtrala o cruzá columnas como necesites. " +
+          "Un 100% sobre pocas unidades target es real pero frágil: mirá targetCB y tiendas antes de llamarlo el mejor.",
+        ...aTabla(filas, [
+          "nombre", "pctCB", "pctInf", "pctEst", "targetCB", "realCB", "targetInf", "realInf",
+          "tiendas", "delta_vs_objetivo", "faltan_para_objetivo",
+        ]),
+      };
     },
   },
   {

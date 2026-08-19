@@ -13,6 +13,7 @@ import {
 } from "@/lib/sellin-metrics";
 import type { ChatTool, ChatToolCtx } from "./types";
 import {
+  aTabla,
   candidatosCercanos,
   faltanParaObjetivo,
   inSet,
@@ -46,6 +47,8 @@ type Scope = {
   /** Qué interpretó de lo que pidió el modelo, y qué no pudo resolver. */
   filtros: Record<string, string[]>;
   noResueltos: Record<string, { pedido: string; candidatos: string[] }[]>;
+  /** Supuestos que hubo que hacer y la respuesta TIENE que explicitar. */
+  interpretaciones: { pedido: string; usado: string; motivo: string }[];
 };
 
 /** Carga CB + clasificación + ventas, acotado al vendedor de la sesión. */
@@ -90,6 +93,7 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
 
   const filtros: Record<string, string[]> = {};
   const noResueltos: Scope["noResueltos"] = {};
+  const interpretaciones: Scope["interpretaciones"] = [];
 
   // Resuelve lo que pidió el modelo contra los valores que EXISTEN en la data
   // ("Pombo" → "POMBO MARCELO", "Fravega" → "FRAVEGA S A C I E I").
@@ -97,6 +101,7 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
     const uni = [...universo];
     const r = resolveValues(strList(pedido), uni);
     if (r.matched.length > 0) filtros[campo] = r.matched;
+    if (r.interpretaciones.length > 0) interpretaciones.push(...r.interpretaciones);
     if (r.unmatched.length > 0) {
       noResueltos[campo] = r.unmatched.map((p) => ({
         pedido: p,
@@ -146,6 +151,7 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
     gerentePorVendedor,
     filtros,
     noResueltos,
+    interpretaciones,
   };
 }
 
@@ -153,6 +159,10 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
 function meta(s: Scope) {
   const out: Record<string, unknown> = { generado: s.ventas.generatedAt };
   if (Object.keys(s.filtros).length > 0) out.filtros_aplicados = s.filtros;
+  if (s.interpretaciones.length > 0) {
+    out.interpretaciones = s.interpretaciones;
+    out.aclarar = "Decile al usuario qué asumiste, con estas mismas palabras, antes de dar el número.";
+  }
   if (Object.keys(s.noResueltos).length > 0) {
     out.sin_coincidencias = s.noResueltos;
     out.como_seguir =
@@ -258,16 +268,17 @@ export const sellInTools: ChatTool[] = [
     },
   },
   {
-    name: "get_sellin_ranking",
+    name: "get_sellin_por",
     description:
-      "Ranking de cumplimiento CB Sell-in por dimensión (cliente, vendedor, gerencia, tipologia o categoria): % CB / Infaltables / Estratégico, items cumplidos vs totales, desvío vs el objetivo de 80% y cuántos items faltan para alcanzarlo. Usala también para responder '¿qué le falta a X para llegar al 80%?' filtrando por ese X.",
+      "TABLA COMPLETA de cumplimiento de CB Sell-in agrupada por la dimensión que pidas (cliente, vendedor, gerencia, tipologia o categoria). " +
+      "Devuelve TODOS los grupos, sin recortar ni preseleccionar, cada uno con: % CB, % Infaltables, % Estratégico, items cumplidos y totales, desvío vs el objetivo de 80% y cuántos items faltan para alcanzarlo. " +
+      "Combiná, filtrá, ordená y contá vos sobre esa tabla según lo que pregunten, incluso cruzando varias columnas a la vez. " +
+      "Como recibís el universo completo, NUNCA concluyas que algo no existe: si no aparece una fila que cumpla, es que realmente no la hay.",
     parameters: {
       type: "object",
       required: ["dimension"],
       properties: {
         dimension: { type: "string", enum: [...DIMS] },
-        orden: { type: "string", enum: ["mejores", "peores"], description: "default: mejores" },
-        limit: { type: "number", description: "default 15, máx 60" },
         ...FILTER_PROPS,
       },
     },
@@ -293,19 +304,31 @@ export const sellInTools: ChatTool[] = [
         arr.push(item);
         groups.set(k, arr);
       }
-      const list = [...groups.entries()].map(([nombre, items]) => ({
-        nombre,
-        ...resumen(items, s),
-        ...(dim === "cliente"
-          ? { vendedor: s.vendedorPorCliente.get(nombre) ?? "", tipologia: items[0]?.tipologia }
-          : {}),
-      }));
-      list.sort((a, b) => (args.orden === "peores" ? a.pctCB - b.pctCB : b.pctCB - a.pctCB));
+      const filas = [...groups.entries()]
+        .map(([nombre, items]) => ({
+          nombre,
+          ...resumen(items, s),
+          ...(dim === "cliente"
+            ? { vendedor: s.vendedorPorCliente.get(nombre) ?? "", tipologia: items[0]?.tipologia }
+            : {}),
+        }))
+        .sort((a, b) => b.pctCB - a.pctCB);
+      const columnas = [
+        "nombre", "pctCB", "pctInf", "pctEst", "totalCB", "cumplidosCB", "totalInf",
+        "cumplidosInf", "totalEst", "cumplidosEst", "delta_vs_objetivo",
+        "faltan_para_objetivo", "skus_no_cumplidos",
+        ...(dim === "cliente" ? ["vendedor", "tipologia"] : []),
+      ];
       return {
         ...meta(s),
         dimension: dim,
-        total_grupos: list.length,
-        ranking: list.slice(0, limitOf(args.limit, 15, 60)),
+        objetivo: OBJETIVO_SELLIN,
+        total_grupos: filas.length,
+        formato: "Tabla: `columnas` nombra los campos y cada fila es un array en ese mismo orden.",
+        nota:
+          "Tabla COMPLETA, ordenada por % CB sólo por comodidad de lectura. Reordenala, filtrala o cruzá columnas como necesites. " +
+          "Un 100% sobre pocos items de CB es real pero frágil: mirá totalCB antes de llamarlo el mejor.",
+        ...aTabla(filas as unknown as Record<string, unknown>[], columnas),
       };
     },
   },
