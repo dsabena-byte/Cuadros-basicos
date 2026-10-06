@@ -179,8 +179,9 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       filtrarCompras(ventas.rows, {
         meses: filters.mes.map(Number),
         vendedor: filters.vendedor !== "TODOS" ? filters.vendedor : null,
+        vendedorPorCliente,
       }),
-    [ventas.rows, filters.mes, filters.vendedor],
+    [ventas.rows, filters.mes, filters.vendedor, vendedorPorCliente],
   );
 
   const cbFiltrado = useMemo(
@@ -293,13 +294,14 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       evolucionMensualCB(cbFiltrado, ventas.rows, {
         generatedAt: ventas.generatedAt,
         vendedor: filters.vendedor !== "TODOS" ? filters.vendedor : null,
+        vendedorPorCliente,
       }).map((p) => ({
         mes: p.mesLabel.slice(0, 3),
         "% CB": p.pctCB,
         "% Infaltables": p.pctInf,
         "% Estratégico": p.pctEst,
       })),
-    [cbFiltrado, filters.vendedor, ventas],
+    [cbFiltrado, filters.vendedor, ventas, vendedorPorCliente],
   );
 
   const kpisGlobales = useMemo(() => {

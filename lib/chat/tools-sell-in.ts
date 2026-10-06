@@ -138,7 +138,7 @@ async function buildScope(args: Record<string, unknown>, ctx: ChatToolCtx): Prom
   // (igual que el dashboard); con varios, se filtra solo el CB.
   const vendedorUnico =
     ctx.vendedor ?? (vendedores && vendedores.size === 1 ? [...vendedores][0] : null);
-  const compras = filtrarCompras(ventas.rows, { meses, vendedor: vendedorUnico });
+  const compras = filtrarCompras(ventas.rows, { meses, vendedor: vendedorUnico, vendedorPorCliente });
 
   return {
     cb,
@@ -258,6 +258,7 @@ export const sellInTools: ChatTool[] = [
       const serie = evolucionMensualCB(s.cb, s.ventas.rows, {
         generatedAt: s.ventas.generatedAt,
         vendedor: s.vendedorUnico,
+        vendedorPorCliente: s.vendedorPorCliente,
       });
       return {
         ...meta(s),
