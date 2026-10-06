@@ -410,6 +410,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
   type FilaSKU = {
     sku: string;        // primary (Modelo)
     skus: string[];     // primary + homólogos deduplicados (todos los SKUs involucrados)
+    fobSkus: string[];  // SKUs de `skus` que tuvieron al menos una compra FOB
     categoria: string;
     tipo: "INFALTABLE" | "ESTRATEGICO";
     clientesEnCB: number;
@@ -422,6 +423,7 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
     type Acc = FilaSKU & {
       _declared: Set<string>;       // primary + homólogos declarados en el CB
       _unitsBySku: Map<string, number>; // unidades reales (FC+BO) por SKU
+      _fobBySku: Set<string>;       // SKUs con al menos una compra canal=FOB
     };
     const byKey = new Map<string, Acc>();
     for (const item of cbFiltrado) {
@@ -431,8 +433,10 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
         row = {
           sku: item.sku,
           skus: [],
+          fobSkus: [],
           _declared: new Set<string>([item.sku]),
           _unitsBySku: new Map<string, number>(),
+          _fobBySku: new Set<string>(),
           categoria: item.categoria,
           tipo: item.tipo,
           clientesEnCB: 0,
@@ -453,19 +457,22 @@ export default function Dashboard({ cuadroBasico, clasificacion, ventas, user }:
       if (fc + bo > 0) row.clientesCumplidos += 1;
       for (const c of compras) {
         row._unitsBySku.set(c.sku, (row._unitsBySku.get(c.sku) ?? 0) + c.unidades);
+        if (c.canal === "FOB") row._fobBySku.add(c.sku);
       }
     }
     return [...byKey.values()]
-      .map(({ _declared, _unitsBySku, ...r }) => {
+      .map(({ _declared, _unitsBySku, _fobBySku, ...r }) => {
         // Mostramos el primary siempre + solo los homólogos que tuvieron
         // facturación o back order. Si el primary no tuvo ventas pero los
         // homólogos sí, queda el primary como referencia del target del CB.
         const aliasesConVentas = [..._declared]
           .filter((s) => s !== r.sku && (_unitsBySku.get(s) ?? 0) > 0)
           .sort();
+        const skus = [r.sku, ...aliasesConVentas];
         return {
           ...r,
-          skus: [r.sku, ...aliasesConVentas],
+          skus,
+          fobSkus: skus.filter((s) => _fobBySku.has(s)),
           pct: r.clientesEnCB > 0 ? Math.round((r.clientesCumplidos / r.clientesEnCB) * 100) : 0,
         };
       })
@@ -1034,6 +1041,7 @@ function TablaSKUs({ rows, mostrarClientes, comprasFiltradas, cbClientesPorSku }
   rows: Array<{
     sku: string;
     skus: string[];
+    fobSkus: string[];
     categoria: string;
     tipo: "INFALTABLE" | "ESTRATEGICO";
     clientesEnCB: number;
@@ -1148,6 +1156,7 @@ function FilaSKU({ r, mostrarClientes, totalCols, expanded, onToggle, comprasFil
   r: {
     sku: string;
     skus: string[];
+    fobSkus: string[];
     categoria: string;
     tipo: "INFALTABLE" | "ESTRATEGICO";
     clientesEnCB: number;
@@ -1181,15 +1190,30 @@ function FilaSKU({ r, mostrarClientes, totalCols, expanded, onToggle, comprasFil
           {r.categoria}
         </td>
         <td className="p-3 font-mono text-slate-900">
-          {r.skus.length > 1 ? (
-            <div className="flex flex-col gap-0.5">
-              {r.skus.map((s, i) => (
-                <span key={s} className={i === 0 ? "" : "text-xs text-slate-500"}>{s}</span>
-              ))}
-            </div>
-          ) : (
-            r.sku
-          )}
+          {(() => {
+            const fobSet = new Set(r.fobSkus);
+            const skuWithFobBadge = (s: string, cls: string) => (
+              <span key={s} className={cls}>
+                {s}
+                {fobSet.has(s) && (
+                  <span
+                    className="ml-1 inline-block px-1.5 py-0.5 rounded text-[9px] font-sans font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 align-middle"
+                    title="Compra vía exportación FOB"
+                  >
+                    FOB
+                  </span>
+                )}
+              </span>
+            );
+            if (r.skus.length > 1) {
+              return (
+                <div className="flex flex-col gap-0.5">
+                  {r.skus.map((s, i) => skuWithFobBadge(s, i === 0 ? "" : "text-xs text-slate-500"))}
+                </div>
+              );
+            }
+            return skuWithFobBadge(r.sku, "");
+          })()}
         </td>
         {mostrarClientes && (
           <td className="p-3 text-right text-slate-600 font-mono text-xs">{r.clientesCumplidos}/{r.clientesEnCB}</td>
