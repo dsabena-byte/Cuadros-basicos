@@ -127,6 +127,7 @@ function toRow(p: VentasPayloadRow, tipo: "FC" | "BO"): VentaRow {
     mes,
     vendedor: p.vendedor ?? "",
     ...(fechaFactura ? { fechaFactura } : {}),
+    ...(p.canal === "FOB" ? { canal: "FOB" as const } : {}),
   };
 }
 

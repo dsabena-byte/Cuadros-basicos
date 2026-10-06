@@ -31,6 +31,10 @@ export type ClasificacionCliente = {
 
 export type VentaTipo = "FC" | "BO";
 
+// Canal de venta. "FOB" = exportación (viene de las solapas FC_FOB / BO_FOB
+// del Excel). Opcional por compat con blobs antiguos sin este campo.
+export type VentaCanal = "SELL_IN" | "FOB";
+
 // Una línea de la solapa BO o FC de "FC + BO 2026 - Hanna.xlsx".
 // Un pedido (documentoVentas) puede tener para un mismo SKU una porción
 // facturada (fila en FC) y otra pendiente (fila en BO); ambas se unen por
@@ -49,6 +53,8 @@ export type VentaRow = {
                          // la factura, separada de "fecha" para mostrar
                          // en el detalle expandido (sino se ven todas
                          // como día 01 del mes por el calendario fiscal).
+  canal?: VentaCanal;    // "FOB" si vino de las solapas FC_FOB/BO_FOB.
+                         // Ausente o "SELL_IN" para ventas tradicionales.
 };
 
 export type VentasFile = {
@@ -70,6 +76,7 @@ export type VentasPayloadRow = {
   vendedor: string;
   fechaFactura?: string | number; // Opcional. Fecha real de emisión de
                                    // factura, distinta del período fiscal.
+  canal?: VentaCanal; // "FOB" para ventas de las solapas FC_FOB/BO_FOB.
 };
 
 export type VentasPayload = {
