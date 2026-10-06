@@ -57,11 +57,12 @@ export function enVentana(c: VentaRow, tip: Tipologia, ctx: VentanaCtx): boolean
  */
 export function filtrarCompras(
   rows: VentaRow[],
-  opts: { meses?: number[]; vendedor?: string | null },
+  opts: { meses?: number[]; vendedor?: string | null; vendedorPorCliente?: Map<string, string> },
 ): VentaRow[] {
   const mesesSel = new Set(opts.meses ?? []);
   const maxMesSel = mesesSel.size > 0 ? Math.max(...mesesSel) : null;
   const vendedor = opts.vendedor ?? null;
+  const vendedorPorCliente = opts.vendedorPorCliente ?? null;
   return rows.filter((c) => {
     if (mesesSel.size > 0) {
       if (c.tipo === "FC") {
@@ -70,7 +71,14 @@ export function filtrarCompras(
         return false;
       }
     }
-    if (vendedor && c.vendedor !== vendedor) return false;
+    if (vendedor) {
+      // El vendedor "oficial" sale de la clasificación del cliente (todos
+      // los filtros del dashboard —vendedor, gerencia, tipología— se
+      // resuelven por cliente). Si no hay map (uso legacy), caemos al
+      // campo c.vendedor que viene del Excel.
+      const v = vendedorPorCliente ? vendedorPorCliente.get(c.cliente) : c.vendedor;
+      if (v !== vendedor) return false;
+    }
     return true;
   });
 }
@@ -169,10 +177,11 @@ export const MESES_LABEL = [
 export function evolucionMensualCB(
   items: CuadroBasicoItem[],
   ventasRows: VentaRow[],
-  opts: { generatedAt: string; vendedor?: string | null },
+  opts: { generatedAt: string; vendedor?: string | null; vendedorPorCliente?: Map<string, string> },
 ): PuntoEvolucion[] {
   const mesActual = mesEnCursoDe(opts.generatedAt);
   const vendedor = opts.vendedor ?? null;
+  const vendedorPorCliente = opts.vendedorPorCliente ?? null;
   const out: PuntoEvolucion[] = [];
 
   for (let mes = 1; mes <= mesActual; mes++) {
@@ -184,7 +193,13 @@ export function evolucionMensualCB(
       } else if (mesEfectivo > mes) {
         return false;
       }
-      if (vendedor && c.vendedor !== vendedor) return false;
+      if (vendedor) {
+        // Mismo criterio que filtrarCompras: el vendedor se resuelve por
+        // cliente desde la clasificación (fallback a c.vendedor si no se
+        // pasó el map).
+        const v = vendedorPorCliente ? vendedorPorCliente.get(c.cliente) : c.vendedor;
+        if (v !== vendedor) return false;
+      }
       return true;
     });
     const cumplido = (item: CuadroBasicoItem) => {
