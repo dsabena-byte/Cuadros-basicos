@@ -4,6 +4,7 @@ import { writeVentas, readVentas } from "@/lib/storage";
 import { loadCuadroBasico } from "@/lib/data";
 import { withCors, corsPreflight } from "@/lib/cors";
 import { allSkusOfCB } from "@/lib/cb-match";
+import { normalizeCliente } from "@/lib/normalize-cliente";
 import type {
   VentasPayload,
   VentasPayloadRow,
@@ -84,13 +85,6 @@ function normalizeFecha(raw: string | number): string {
   const d = new Date(s);
   if (!Number.isNaN(d.getTime())) return d.toISOString().slice(0, 10);
   throw new Error(`Fecha inválida: "${raw}"`);
-}
-
-// Mismo cliente puede aparecer escrito como "FRAVEGA S A C I E I" o
-// "FRAVEGA  S A C I E I" según la fila del Excel. Normalizamos antes de
-// matchear contra cuadro-basico.json: trim, uppercase, espacios colapsados.
-function normalizeCliente(s: string): string {
-  return s.trim().toUpperCase().replace(/\s+/g, " ");
 }
 
 function toRow(p: VentasPayloadRow, tipo: "FC" | "BO"): VentaRow {

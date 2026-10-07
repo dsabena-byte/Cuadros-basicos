@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { loadCuadroBasico } from "@/lib/data";
 import { withCors, corsPreflight } from "@/lib/cors";
 import { allSkusOfCB } from "@/lib/cb-match";
+import { normalizeCliente } from "@/lib/normalize-cliente";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,10 +31,6 @@ function checkSecret(request: Request): boolean {
     url.searchParams.get("secret") ??
     "";
   return provided === expected;
-}
-
-function normalizeCliente(s: string): string {
-  return s.trim().toUpperCase().replace(/\s+/g, " ");
 }
 
 export async function GET(request: Request) {
