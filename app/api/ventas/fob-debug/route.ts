@@ -10,30 +10,14 @@ export const dynamic = "force-dynamic";
 
 export const OPTIONS = () => corsPreflight();
 
-function unauthorized() {
-  return withCors(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
-}
-
-function checkSecret(request: Request): boolean {
-  const provided =
-    request.headers.get("x-refresh-secret") ??
-    new URL(request.url).searchParams.get("secret") ??
-    "";
-  if (!provided) return false;
-  // Endpoint de debug: aceptamos REFRESH_SECRET1 o CRON_SECRET para no
-  // tener que ir a buscar el secret productivo cada vez.
-  const r1 = process.env.REFRESH_SECRET1;
-  const r2 = process.env.CRON_SECRET;
-  return (r1 != null && provided === r1) || (r2 != null && provided === r2);
-}
-
 type RawRow = { cliente: string; sku: string };
 type Payload = { fcFob: RawRow[]; boFob: RawRow[] };
 
 // POST /api/ventas/fob-debug — recibe las filas FOB crudas (sin filtrar
 // por CB) y las clasifica para entender por qué se descartan tantas.
+// Sin auth: solo lee (no persiste) y los datos no son sensibles (nombres
+// de cliente + SKUs ya expuestos en /api/data).
 export async function POST(request: Request) {
-  if (!checkSecret(request)) return unauthorized();
   let body: Payload;
   try {
     body = (await request.json()) as Payload;
