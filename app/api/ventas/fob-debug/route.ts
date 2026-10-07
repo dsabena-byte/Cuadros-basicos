@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { loadCuadroBasico } from "@/lib/data";
 import { allSkusOfCB } from "@/lib/cb-match";
 import { normalizeCliente } from "@/lib/normalize-cliente";
+import { readVentas } from "@/lib/storage";
 import { withCors, corsPreflight } from "@/lib/cors";
 
 export const runtime = "nodejs";
@@ -81,6 +82,25 @@ export async function POST(request: Request) {
     return { total, matcheados, descartados: total - matcheados, clientes };
   };
 
+  // --- Qué hay realmente en el blob persistido ---
+  const ventas = await readVentas();
+  const fobEnBlob = ventas.rows.filter((r) => r.canal === "FOB");
+  const porClienteBlob = new Map<string, { fc: number; bo: number; skus: Set<string> }>();
+  for (const r of fobEnBlob) {
+    const key = r.cliente;
+    let entry = porClienteBlob.get(key);
+    if (!entry) {
+      entry = { fc: 0, bo: 0, skus: new Set() };
+      porClienteBlob.set(key, entry);
+    }
+    if (r.tipo === "FC") entry.fc += 1;
+    else entry.bo += 1;
+    entry.skus.add(r.sku);
+  }
+  const clientesBlob = [...porClienteBlob.entries()]
+    .map(([cliente, v]) => ({ cliente, fc: v.fc, bo: v.bo, skus: [...v.skus].sort() }))
+    .sort((a, b) => (b.fc + b.bo) - (a.fc + a.bo));
+
   return withCors(NextResponse.json({
     ok: true,
     cbSummary: {
@@ -89,7 +109,14 @@ export async function POST(request: Request) {
       skusUnicos: cbSkus.size,
       paresValidos: cbPairs.size,
     },
-    fcFob: analyze(body.fcFob ?? []),
-    boFob: analyze(body.boFob ?? []),
+    deberiaAparecer: {
+      fcFob: analyze(body.fcFob ?? []),
+      boFob: analyze(body.boFob ?? []),
+    },
+    apareceEnBlob: {
+      generatedAt: ventas.generatedAt,
+      totalFobRows: fobEnBlob.length,
+      clientes: clientesBlob,
+    },
   }));
 }
