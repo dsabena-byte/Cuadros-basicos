@@ -15,13 +15,16 @@ function unauthorized() {
 }
 
 function checkSecret(request: Request): boolean {
-  const expected = process.env.REFRESH_SECRET1;
-  if (!expected) return false;
   const provided =
     request.headers.get("x-refresh-secret") ??
     new URL(request.url).searchParams.get("secret") ??
     "";
-  return provided === expected;
+  if (!provided) return false;
+  // Endpoint de debug: aceptamos REFRESH_SECRET1 o CRON_SECRET para no
+  // tener que ir a buscar el secret productivo cada vez.
+  const r1 = process.env.REFRESH_SECRET1;
+  const r2 = process.env.CRON_SECRET;
+  return (r1 != null && provided === r1) || (r2 != null && provided === r2);
 }
 
 type RawRow = { cliente: string; sku: string };
