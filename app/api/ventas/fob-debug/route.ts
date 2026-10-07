@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { loadCuadroBasico } from "@/lib/data";
 import { allSkusOfCB } from "@/lib/cb-match";
+import { normalizeCliente } from "@/lib/normalize-cliente";
 import { withCors, corsPreflight } from "@/lib/cors";
 
 export const runtime = "nodejs";
@@ -20,10 +21,6 @@ function checkSecret(request: Request): boolean {
     new URL(request.url).searchParams.get("secret") ??
     "";
   return provided === expected;
-}
-
-function normalizeCliente(s: string): string {
-  return String(s ?? "").trim().toUpperCase().replace(/\s+/g, " ");
 }
 
 type RawRow = { cliente: string; sku: string };
